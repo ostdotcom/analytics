@@ -1,0 +1,21 @@
+{
+  "name": "analytics",
+  "version": "1.0.0",
+  "private": true,
+  "description": "OST analytics",
+  "main": "index.js",
+  "dependencies": {
+    "aws-sdk": "2.290.0",
+    "bignumber.js": "4.1.0",
+    "mysql": "2.15.0",
+    "node-redshift": "0.1.5"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ostdotcom/analytics.git"
+  }
+}
