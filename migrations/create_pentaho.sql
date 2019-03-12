@@ -1,3 +1,17 @@
+-- SET @chain_id='${chain_id}';
+
+SET @chain_id = "200";
+
+SET @db_create = CONCAT('CREATE DATABASE ost_star_', @chain_id, ' ;');
+PREPARE stmt_create FROM @db_create;
+execute stmt_create;
+
+
+SET @db_use = CONCAT('USE ost_star_', @chain_id, ' ;');
+execute  @db_use;
+
+PREPARE stmt_use FROM @db_use;
+execute stmt_use;
 
 drop table if exists "dim_time" CASCADE;
   CREATE TABLE "dim_time" (
