@@ -61,41 +61,6 @@
           "rpcEndpoint": "http://127.0.0.2:8545"
         }
       ]
-    },
-    {
-      "chainId": 199,
-      "cache": {
-        "engine": "memcached",
-        "servers": [
-          "127.0.0.1:11211"
-        ],
-        "defaultTtl": 36000
-      },
-      "storage": {
-        "endpoint": "http://dynamodb.us-east-1.amazonaws.com",
-        "region": "us-east-1",
-        "apiKey": "AKIAIG7G5KJ53INDY36A",
-        "apiSecret": "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",
-        "apiVersion": "2012-08-10",
-        "enableSsl": "0",
-        "enableLogging": "0",
-        "enableAutoscaling": "0",
-        "autoScaling": {
-          "endpoint": "http://dynamodb.us-east-1.amazonaws.com",
-          "region": "us-east-1",
-          "apiKey": "AKIAIG7G5KJ53INDY36A",
-          "apiSecret": "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",
-          "apiVersion": "2016-02-06",
-          "enableSsl": "0"
-        }
-      },
-      "nodes": [
-        {
-          "client": "geth",
-          "wsEndpoint": "ws://127.0.0.1:8546",
-          "rpcEndpoint": "http://127.0.0.1:8545"
-        }
-      ]
     }
   ],
   "extraStorageColumns": {
