@@ -5,12 +5,13 @@
   "description": "OST analytics",
   "main": "index.js",
   "dependencies": {
+    "@ostdotcom/base": "^1.0.0-beta.1",
+    "@ostdotcom/ost-block-scanner": "1.0.0-beta.12",
     "aws-sdk": "2.290.0",
     "bignumber.js": "4.1.0",
-    "mysql": "2.15.0",
-    "node-redshift": "0.1.5",
     "commander": "2.19.0",
-    "@ostdotcom/ost-block-scanner": "1.0.0-beta.12"
+    "mysql": "2.15.0",
+    "node-redshift": "0.1.5"
   },
   "devDependencies": {},
   "scripts": {

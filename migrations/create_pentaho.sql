@@ -98,8 +98,8 @@ CREATE TABLE transactions
 )
 DISTKEY (client_id) SORTKEY (block_number);
 
-DROP TABLE IF EXISTS transactions;
-CREATE TABLE transactions
+DROP TABLE IF EXISTS ost_stag_staging.transactions;
+CREATE TABLE ost_stag_staging.transactions
 (
   transaction_uuid    VARCHAR(255) NOT NULL,
   transaction_hash    VARCHAR(255) NOT NULL,
@@ -114,8 +114,8 @@ CREATE TABLE transactions
 )
 DISTKEY (client_id) SORTKEY (block_number);
 
-DROP TABLE IF EXISTS tokens;
-CREATE TABLE tokens
+DROP TABLE IF EXISTS ost_stag_staging.tokens;
+CREATE TABLE ost_stag_staging.tokens
 (
   token_id            BIGINT NOT NULL,
   symbol              VARCHAR(255) NOT NULL,
@@ -123,8 +123,8 @@ CREATE TABLE tokens
   decimal             int NOT NULL
 )
 
-DROP TABLE IF EXISTS transfers;
-CREATE TABLE transfers
+DROP TABLE IF EXISTS ost_stag_staging.transfers;
+CREATE TABLE ost_stag_staging.transfers
 (
   transaction_hash    VARCHAR(255) NOT NULL,
   event_index         INT NOT NULL,
@@ -133,8 +133,8 @@ CREATE TABLE transfers
   amount              BIGINT NOT NULL
 )
 
-DROP TABLE IF EXISTS transaction_meta;
-CREATE TABLE transaction_meta
+DROP TABLE IF EXISTS ost_stag_staging.transaction_meta;
+CREATE TABLE ost_stag_staging.transaction_meta
 (
   transaction_meta_id    BIGINT NOT NULL,
   transaction_uuid       VARCHAR(255) NOT NULL,
