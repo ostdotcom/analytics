@@ -7,13 +7,13 @@
 const rootPrefix = '../..',
     util = require(rootPrefix + '/lib/util'),
     ModelBase = require(rootPrefix + '/models/mysql/base'),
-    coreConstants = require(rootPrefix + '/configs/coreConstants'),
+    Constants = require(rootPrefix + '/configs/constants'),
     responseHelper = require(rootPrefix + '/lib/formatter/response'),
     // basicHelper = require(rootPrefix + '/helpers/basic'),
-    tokenConstants = require(rootPrefix + '/lib/globalConstant/token');
+    tokenConstants = require(rootPrefix + '/lib/globalConstant/mysql/token');
 
 // Declare variables.
-const dbName = 'kit_saas_' + coreConstants.subEnvironment + '_' + coreConstants.environment,
+const dbName = 'kit_saas_' + Constants.SA_SUB_ENVIRONMENT + '_' + Constants.SA_ENVIRONMENT,
     statuses = {
         '1': tokenConstants.notDeployed,
         '2': tokenConstants.deploymentStarted,
