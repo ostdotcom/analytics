@@ -10,12 +10,7 @@ function define(key, value) {
     });
 }
 
-define('SA_SUB_ENVIRONMENT', process.env.SA_SUB_ENVIRONMENT);
-define('SA_ENVIRONMENT', process.env.SA_ENVIRONMENT);
-define('SA_KIT_SAAS_SUBENV_MYSQL_PASSWORD', process.env.SA_KIT_SAAS_SUBENV_MYSQL_PASSWORD);
-define('SA_KIT_SAAS_SUBENV_MYSQL_USER', process.env.SA_KIT_SAAS_SUBENV_MYSQL_USER);
-define('SA_KIT_SAAS_SUBENV_MYSQL_HOST', process.env.SA_KIT_SAAS_SUBENV_MYSQL_HOST);
-define('SA_MYSQL_CONNECTION_POOL_SIZE', process.env.SA_MYSQL_CONNECTION_POOL_SIZE);
+
 define('REDSHIFT_USER', process.env.REDSHIFT_USER);
 define('REDSHIFT_DATABASE', process.env.REDSHIFT_DATABASE);
 define('REDSHIFT_PASSWORD', process.env.REDSHIFT_PASSWORD);
@@ -26,15 +21,8 @@ define('REDSHIFT_CLIENT', {
     database: process.env.REDSHIFT_DATABASE,
     password: process.env.REDSHIFT_PASSWORD,
     port: process.env.REDSHIFT_PORT,
-    host: process.env.REDSHIFT_HOST
+    host: process.env.REDSHIFT_HOST,
 });
-define('TRANSFER_TOKEN_COUNT', 80);
-define('TRANSACTION_COUNT', 60);
-define('MAX_SPLIT_COUNT', 10);
-define('NO_OF_BLOCKS_TO_PROCESS_TOGETHER', 2);
-define('S3_WRITE_COUNT', 10);
-
-
 
 
 module.exports = new Constants();

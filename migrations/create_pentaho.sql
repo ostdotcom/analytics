@@ -141,3 +141,13 @@ CREATE TABLE ost_stag_staging.transaction_meta
   token_id               BIGINT NOT NULL,
   kind                   INT NOT NULL
 )
+
+
+DROP TABLE IF EXISTS data_processing_info;
+CREATE TABLE data_processing_info
+(
+  property    VARCHAR(255) NOT NULL,
+  value               BIGINT NOT NULL
+)
+DISTKEY(property);
+COMMIT;
