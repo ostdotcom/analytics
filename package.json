@@ -11,7 +11,8 @@
     "bignumber.js": "4.1.0",
     "commander": "2.19.0",
     "mysql": "2.15.0",
-    "node-redshift": "0.1.5"
+    "node-redshift": "0.1.5",
+    "shelljs": "^0.8.3"
   },
   "devDependencies": {},
   "scripts": {

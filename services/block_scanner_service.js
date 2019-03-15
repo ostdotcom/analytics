@@ -1,6 +1,8 @@
 const rootPrefix = "..",
+    shell = require("shelljs"),
     BlockScanner = require("@ostdotcom/ost-block-scanner"),
-    BlockScannerWrapper = require(rootPrefix + "/lib/blockScannerWrapper")
+    BlockScannerWrapper = require(rootPrefix + "/lib/blockScannerWrapper"),
+    Constants = require(rootPrefix + "configs/constants"),
 blockScannerGC = require(rootPrefix + "/lib/globalConstants/blockScanner")
 
 
@@ -14,25 +16,30 @@ class BlockScannerService {
         oThis.endBlock = endBlock;
         oThis.nextBatchBlockToProcess = startBlock;
         oThis.nextBlockToProcess = startBlock;
-        oThis.blockScannerWrapper = new BlockScannerWrapper(chainId);
+        oThis.localDirFullFilePath = Constants.LOCAL_DIR_FILE_PATH  + "/" + Constants.SUB_ENV + "/" + chainId
+            + "/" + Date.now();
+
+
+        oThis.blockScannerWrapper = new BlockScannerWrapper(chainId, oThis.localDirFullFilePath);
         oThis.blockScannerResponse = [];
 
+        shell.mkdir("-p", oThis.localDirFullFilePath );
 
     }
 
 
     async perform() {
         const oThis = this;
-        await oThis.runBatchBlockScanning(oThis.nextBatchBlockToProcess, oThis.getBatchLastBlockToProcess);
-
+        while (oThis.nextBatchBlockToProcess <= oThis.endBlock) {
+            await oThis.runBatchBlockScanning(oThis.nextBatchBlockToProcess);
+        }
     }
 
-    async runBatchBlockScanning(startBlock, endBlock) {
+    async runBatchBlockScanning(startBlock) {
         const oThis = this;
         let promiseArray = [];
         for (let i = 0; i < blockScannerGC.noOfBlocksToProcessTogether; i++) {
             promiseArray.push(new Promise(function (resolve, reject) {
-
                 oThis.nextBlockToProcess = startBlock + i;
                 oThis.processBlock(oThis.nextBlockToProcess, i).then(function (res) {
                     resolve(res);
@@ -42,23 +49,20 @@ class BlockScannerService {
             }));
 
         }
-        Promise.all(promiseArray).then(
+        return Promise.all(promiseArray).then(
             function (res) {
-                console.log("promisealllllll resolveddddddddd");
-                console.log(res);
+                console.log("promise all resolved", res);
                 // with awaits
                 // write to s3
                 // s3 to redshift
-
+                oThis.nextBatchBlockToProcess = oThis.getBatchLastBlockToProcess + 1;
             }
         )
 
     }
 
-    processBlock(blockNumber, i ) {
-        console.log("iiiiiiiiiiiiiiiii--------------------");
-
-        console.log(i);
+    processBlock(blockNumber, i) {
+        console.log("main promise identifier", i);
         const oThis = this;
         return new Promise(function (resolve, reject) {
             if (oThis.getBatchLastBlockToProcess < blockNumber) {

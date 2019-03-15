@@ -33,6 +33,8 @@ define('TRANSACTION_COUNT', 60);
 define('MAX_SPLIT_COUNT', 10);
 define('NO_OF_BLOCKS_TO_PROCESS_TOGETHER', 2);
 define('S3_WRITE_COUNT', 10);
+define("LOCAL_DIR_FILE_PATH", process.env.LOCAL_DIR_FILE_PATH);
+define("SUB_ENV", process.env.SUB_ENV);
 
 
 
