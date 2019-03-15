@@ -52,13 +52,17 @@ COMMIT;
 
 
 
-DROP TABLE IF EXISTS tokens;
-CREATE TABLE tokens
+DROP TABLE IF EXISTS tokens_199;
+CREATE TABLE tokens_199
 (
-  token_id          BIGINT         NOT NULL,
-  symbol            VARCHAR(255)   NOT NULL,
-  conversion_factor decimal(15, 6) NOT NULL,
-  decimal           int            NOT NULL,
-  from_address      VARCHAR(255)   NOT NULL,
-  to_address        VARCHAR(255)   NOT NULL,
+  token_id                  BIGINT NOT NULL,
+  client_id                 int NOT NULL,
+  name                      VARCHAR(255) NOT NULL,
+  symbol                    VARCHAR(255) NOT NULL,
+  conversion_factor         decimal(15,6) NOT NULL,
+  decimal                   int NULL,
+  delayed_recovery_interval int NOT NULL,
+  status                    tinyint NOT NULL,
+  created_at                timestamp NOT NULL,
+  updated_at                timestamp NOT NULL
 )
