@@ -1,11 +1,11 @@
 'use strict';
 const rootPrefix = '../..'
     , constants = require(rootPrefix + '/configs/constants')
-    , transactionsGC = require(rootPrefix + '/lib/globalConstants/redshift/transactions')
+    , transfersGC = require(rootPrefix + '/lib/globalConstants/redshift/transfers')
     , Base = require("./base");
 ;
 
-class Transactions extends Base {
+class Transfers extends Base {
 
     constructor(params){
         super(params)
@@ -13,12 +13,12 @@ class Transactions extends Base {
 
 
     get fullTableName(){
-        return `${transactionsGC.getTableNameWithSchema}_${this.chainId}`;
+        return `${transfersGC.getTableNameWithSchema}_${this.chainId}`;
     }
 
 
     static get mapping(){
-        return transactionsGC.mapping;
+        return transfersGC.mapping;
     }
 
 
@@ -30,4 +30,4 @@ class Transactions extends Base {
 
 
 }
-module.exports = Transactions;
+module.exports = Transfers;

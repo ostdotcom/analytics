@@ -4,7 +4,7 @@ const rootPrefix = "..",
     Constant = require(rootPrefix + "/configs/constants"),
     dataProcessingInfoGC = require(rootPrefix + "/lib/globalConstants/redShift/dataProcessingInfo");
     BlockScannerService = require(rootPrefix + "/services/block_scanner_service.js"),
-    BlockScannerWrapper = require(rootPrefix + "/lib/block_scanner_wrapper");
+    BlockScanner = require(rootPrefix + "/lib/blockScanner/base");
 
 
 //
@@ -26,7 +26,7 @@ class ExtractData {
         const oThis = this;
         oThis.chainId = program.chainId;
 
-        oThis.blockScannerWrapper = new BlockScannerWrapper(chainId);
+        oThis.blockScanner = new BlockScanner(oThis.chainId);
         oThis.redshiftClient = new RedshiftClient(Constant.REDSHIFT_CLIENT)
 
     }
@@ -56,8 +56,8 @@ class ExtractData {
 
     extractBlockScannerData(startBlock, endBlock) {
         const oThis = this;
-        let blockScannerService = new BlockScannerService(oThis.chainId, startBlock, endBlock);
-        return blockScannerService.perform();
+        let blockScannerService = new BlockScannerService(oThis.chainId);
+        return blockScannerService.processTransactions(startBlock, endBlock);
     }
 
 
@@ -82,10 +82,14 @@ class ExtractData {
 
     async getEndBlockFromBlockScanner() {
         const oThis = this,
-            finalizedBlockResp = await oThis.blockScannerWrapper.getChainCronData();
+            finalizedBlockResp = await oThis.blockScanner.getChainCronData();
         return finalizedBlockResp[oThis.chainId]["lastFinalizedBlock"];
 
     }
 
 
 }
+
+
+const extractData = new ExtractData();
+extractData.perform();
