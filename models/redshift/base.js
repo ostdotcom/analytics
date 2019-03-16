@@ -17,6 +17,7 @@ class Base {
             // copyIfNotPresent: 'transactionStatus'}
             if (column[1]['required'] && !(column[1]['name'] in oThis.object)) {
                 //todo: send email on fail
+                console.log(column[1]['name']);
                 return responseHelper.error(
                     {
                         internal_error_identifier: 'm_r_b_vaf',

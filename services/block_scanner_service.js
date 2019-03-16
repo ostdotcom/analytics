@@ -33,7 +33,6 @@ class BlockScannerService {
 
 
     async process(startBlock, endBlock) {
-        console.log("I m freaked", startBlock, endBlock);
         const oThis = this;
         oThis.startBlock = oThis.nextBatchBlockToProcess = oThis.nextBlockToProcess = startBlock;
         oThis.endBlock = endBlock;
@@ -78,9 +77,11 @@ class BlockScannerService {
                 return oThis.blockScanner.asyncPerform(blockNumber)
                     .then(function (res) {
                         oThis.blockScannerResponse.push(res);
+                        console.log(res);
                         return resolve(oThis.processBlock(++oThis.nextBlockToProcess));
                     })
                     .catch(function (err) {
+                        console.log(err);
                         // todo: send mail
                         //tomorrow we can exit from here i.e. reject({success: false})
                         return resolve(oThis.processBlock(++oThis.nextBlockToProcess));
