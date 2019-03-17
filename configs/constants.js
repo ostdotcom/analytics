@@ -36,6 +36,13 @@ define('S3_WRITE_COUNT', 10);
 define("LOCAL_DIR_FILE_PATH", process.env.LOCAL_DIR_FILE_PATH);
 define("SUB_ENV", process.env.SUB_ENV);
 
+define("S3_REGION", "us-east-1"  );
+define("S3_ACCESS_KEY", "AKIAJ4KB25BTIAYS6YRA");
+define("S3_ACCESS_SECRET", "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" );
+define("S3_BUCKET_LINK", "temp-analytics.ost.com");
+
+
+
 
 
 

@@ -2,9 +2,8 @@ const rootPrefix = "..",
     Constants = require(rootPrefix + "/configs/constants"),
     blockScannerGC = require(rootPrefix + "/lib/globalConstants/blockScanner"),
     Transactions = require(rootPrefix + "/lib/blockScanner/transactions"),
-    Transfers = require(rootPrefix + "/lib/blockScanner/transfers");
-
-
+    Transfers = require(rootPrefix + "/lib/blockScanner/transfers"),
+    S3Write = require(rootPrefix + "/lib/S3_write")
 ;
 
 class BlockScannerService {
@@ -17,9 +16,8 @@ class BlockScannerService {
 
     async processTransactions(startBlock, endBlock) {
         const oThis = this;
-
-
         oThis.blockScannerOperation = Transactions; // new Transactions(oThis.chainId, oThis.localDirFullFilePath);
+        oThis.s3DirPathSuffix = "/transactions";
         let response = await oThis.process(startBlock, endBlock);
         return response;
     }
@@ -27,10 +25,10 @@ class BlockScannerService {
     async processTransfers(startBlock, endBlock) {
         const oThis = this;
         oThis.blockScannerOperation = Transfers;
+        oThis.s3DirPathSuffix = "/transfers";
         let response = await oThis.process(startBlock, endBlock);
         return response;
     }
-
 
     async process(startBlock, endBlock) {
         const oThis = this;
@@ -44,8 +42,8 @@ class BlockScannerService {
     async runBatchBlockScanning(startBlock) {
         const oThis = this;
         let promiseArray = [],
-            localDirFullFilePath = Constants.LOCAL_DIR_FILE_PATH + "/" + Constants.SUB_ENV + "/" + oThis.chainId
-                + "/" + Date.now();
+            s3UploadPath = `${Constants.SUB_ENV}/${oThis.chainId}/${Date.now()}`,
+            localDirFullFilePath = `${Constants.LOCAL_DIR_FILE_PATH}/${s3UploadPath}`;
 
         oThis.blockScanner = new oThis.blockScannerOperation(oThis.chainId, localDirFullFilePath);
         for (let i = 0; i < blockScannerGC.noOfBlocksToProcessTogether; i++) {
@@ -59,13 +57,37 @@ class BlockScannerService {
             }));
         }
         return Promise.all(promiseArray).then(
-            function (res) {
+            async function (res) {
+
+                await oThis.uploadToS3(`${s3UploadPath}${oThis.s3DirPathSuffix}`,
+                    `${localDirFullFilePath}${oThis.s3DirPathSuffix}`);
+
+
                 // with awaits
                 // write to s3
                 // s3 to redshift
                 oThis.nextBatchBlockToProcess = oThis.getBatchLastBlockToProcess + 1;
             }
         )
+    }
+
+
+    async uploadToS3(s3UploadPath, localDirFullFilePath) {
+
+        let s3Write = new S3Write({
+                "region": Constants.S3_REGION,
+                "accessKeyId": Constants.S3_ACCESS_KEY,
+                "secretAccessKey": Constants.S3_ACCESS_SECRET
+            },
+            {
+                s3_bucket_link: Constants.S3_BUCKET_LINK,
+                bucket_path: s3UploadPath,
+                dir_path: localDirFullFilePath
+            });
+
+        s3Write.uploadFiles();
+
+
     }
 
     processBlock(blockNumber) {
@@ -77,11 +99,9 @@ class BlockScannerService {
                 return oThis.blockScanner.asyncPerform(blockNumber)
                     .then(function (res) {
                         oThis.blockScannerResponse.push(res);
-                        console.log(res);
                         return resolve(oThis.processBlock(++oThis.nextBlockToProcess));
                     })
                     .catch(function (err) {
-                        console.log(err);
                         // todo: send mail
                         //tomorrow we can exit from here i.e. reject({success: false})
                         return resolve(oThis.processBlock(++oThis.nextBlockToProcess));
