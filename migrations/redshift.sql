@@ -1,9 +1,9 @@
-set search_path to ost_warehouse_sandbox_s6;
+set search_path= ost_warehouse_${SUB_ENVIRONMENT}${ENV_PREFIX};
 
 
 
-DROP TABLE IF EXISTS temp_transactions_199;
-CREATE TABLE temp_transactions_199
+DROP TABLE IF EXISTS temp_transactions_${CHAIN_ID};
+CREATE TABLE temp_transactions_${CHAIN_ID}
 (
   id                    BIGINT NOT NULL IDENTITY(1,1), //
   tx_uuid               VARCHAR(36), //
@@ -30,8 +30,8 @@ CREATE TABLE temp_transactions_199
 commit;
 
 
-DROP TABLE IF EXISTS transactions_199;
-CREATE TABLE transactions_199
+DROP TABLE IF EXISTS transactions_${CHAIN_ID};
+CREATE TABLE transactions_${CHAIN_ID}
 (
   id                    BIGINT NOT NULL IDENTITY(1,1), //
   tx_uuid               VARCHAR(36), //
@@ -58,16 +58,16 @@ CREATE TABLE transactions_199
 commit;
 
 
-DROP TABLE IF EXISTS temp_transfers_199;
-CREATE TABLE temp_transfers_199
+DROP TABLE IF EXISTS temp_transfers_${CHAIN_ID};
+CREATE TABLE temp_transfers_${CHAIN_ID}
 (
   id                    BIGINT NOT NULL IDENTITY(1,1),
   tx_hash          VARCHAR(255) NOT NULL,
   event_index      INT          NOT NULL,
   block_number     BIGINT       NOT NULL,
   from_address     VARCHAR(255) NOT NULL,
-  to_address       VARCHAR(255) NOT NULL,
-  contract_address VARCHAR(255) NOT NULL,
+  to_address       VARCHAR(255),
+  contract_address VARCHAR(255),
   amount           BIGINT       NOT NULL
 )
   DISTKEY (tx_hash) SORTKEY(block_number);
@@ -75,8 +75,8 @@ CREATE TABLE temp_transfers_199
 
 
 
-DROP TABLE IF EXISTS transfers_199;
-CREATE TABLE transfers_199
+DROP TABLE IF EXISTS transfers_${CHAIN_ID};
+CREATE TABLE transfers_${CHAIN_ID}
 (
   id                    BIGINT NOT NULL IDENTITY(1,1),
   tx_hash          VARCHAR(255) NOT NULL,
@@ -103,10 +103,9 @@ COMMIT;
 
 
 
-DROP TABLE IF EXISTS tokens_199;
-CREATE TABLE tokens_199
+DROP TABLE IF EXISTS tokens_${CHAIN_ID};
+CREATE TABLE tokens_${CHAIN_ID}
 (
-  id                    BIGINT NOT NULL IDENTITY(1,1),
   token_id                  INT NOT NULL,
   client_id                 int NOT NULL,
   name                      VARCHAR(255) NOT NULL,
@@ -117,4 +116,4 @@ CREATE TABLE tokens_199
   status                    tinyint NOT NULL,
   created_at                timestamp NOT NULL,
   updated_at                timestamp NOT NULL
-)
+)SORTKEY(token_id);
