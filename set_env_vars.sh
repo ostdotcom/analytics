@@ -11,6 +11,7 @@ export SA_KIT_SAAS_SUBENV_MYSQL_USER='root'
 export SA_KIT_SAAS_SUBENV_MYSQL_PASSWORD='root'
 export SA_SUB_ENVIRONMENT='sandbox'
 export SA_ENVIRONMENT='development'
+export DEBUG_ENABLED=true
 export REDSHIFT_SCHEMA='ost_stag_staging'
 export LOCAL_DIR_FILE_PATH='/tmp/analytics_prestaging_data'
 export SUB_ENV='sandbox_s6'

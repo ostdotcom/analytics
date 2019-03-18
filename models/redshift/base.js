@@ -1,5 +1,6 @@
 const rootPrefix = "../.."
-    , responseHelper = require(rootPrefix + '/lib/formatter/response');
+    , responseHelper = require(rootPrefix + '/lib/formatter/response'),
+    emailNotifier = require(rootPrefix + '/lib/notifier');
 
 class Base {
 
@@ -17,6 +18,7 @@ class Base {
             // copyIfNotPresent: 'transactionStatus'}
             if (column[1]['required'] && !(column[1]['name'] in oThis.object)) {
                 //todo: send email on fail
+                emailNotifier.perform('internal_id', 'subject', err, {});
                 console.log(column[1]['name']);
                 return responseHelper.error(
                     {
@@ -27,6 +29,7 @@ class Base {
                 )
             }
             let value = oThis.object[column[1]['name']];
+            // value = value.split("|").join("I");
             if (column[1]['isSerialized'] == true && value) {
                 let fieldData = JSON.parse(value);
                 value = fieldData[column[1]['property']];

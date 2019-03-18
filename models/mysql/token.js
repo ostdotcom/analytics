@@ -10,7 +10,7 @@ const rootPrefix = '../..',
     Constants = require(rootPrefix + '/configs/constants'),
     responseHelper = require(rootPrefix + '/lib/formatter/response'),
     // basicHelper = require(rootPrefix + '/helpers/basic'),
-    tokenConstants = require(rootPrefix + '/lib/globalConstant/mysql/token');
+    tokenConstants = require(rootPrefix + '/lib/globalConstants/redShift/token');
 
 // Declare variables.
 const dbName = 'kit_saas_' + Constants.SA_SUB_ENVIRONMENT + '_' + Constants.SA_ENVIRONMENT,
@@ -100,31 +100,11 @@ class Token extends ModelBase {
             decimal: dbRow.decimal,
             status: dbRow.status,
             delayedRecoveryInterval: dbRow.delayed_recovery_interval,
-            createdAt: dbRow.created_at
-            // updatedTimestamp: basicHelper.dateToSecondsTimestamp(dbRow.updated_at)
+            createdAt: dbRow.created_at,
+            updatedTimestamp: dbRow.updated_at
         };
     }
 
-    /***
-     * Flush cache
-     *
-     * @param {object} params
-     *
-     * @returns {Promise<*>}
-     */
-    static async flushCache(params) {
-        const TokenByClientIdCache = require(rootPrefix + '/lib/cacheManagement/kitSaas/Token');
-
-        await new TokenByClientIdCache({
-            clientId: params.clientId
-        }).clear();
-
-        const TokenByTokenIdCache = require(rootPrefix + '/lib/cacheManagement/kitSaas/TokenByTokenId');
-
-        await new TokenByTokenIdCache({
-            tokenId: params.tokenId
-        }).clear();
-    }
 }
 
 module.exports = Token;

@@ -1,5 +1,6 @@
 const rootPrefix = "..",
     Constants = require(rootPrefix + "/configs/constants"),
+    emailNotifier = require(rootPrefix + '/lib/notifier'),
     blockScannerGC = require(rootPrefix + "/lib/globalConstants/blockScanner"),
     Transactions = require(rootPrefix + "/lib/blockScanner/transactions"),
     Transfers = require(rootPrefix + "/lib/blockScanner/transfers"),
@@ -103,6 +104,7 @@ class BlockScannerService {
                     })
                     .catch(function (err) {
                         // todo: send mail
+                        emailNotifier.perform('bss_processBlock_failed_1', 'Process Block exited unexpectedly.', err, {});
                         //tomorrow we can exit from here i.e. reject({success: false})
                         return resolve(oThis.processBlock(++oThis.nextBlockToProcess));
                     });
