@@ -40,6 +40,9 @@ define("S3_REGION", "us-east-1"  );
 define("S3_ACCESS_KEY", "AKIAJ4KB25BTIAYS6YRA");
 define("S3_ACCESS_SECRET", "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" );
 define("S3_BUCKET_LINK", "temp-analytics.ost.com");
+define ("OS_S3_IAM_ROLE", process.env.OS_S3_IAM_ROLE);
+
+define("STAG_SCHEMA_NAME", "ost_warehouse_"+ process.env.SUB_ENV);
 
 
 
