@@ -42,6 +42,6 @@ define('NO_OF_BLOCKS_TO_PROCESS_TOGETHER', 2);
 define('S3_WRITE_COUNT', 10);
 define("LOCAL_DIR_FILE_PATH", process.env.LOCAL_DIR_FILE_PATH);
 
-define("PRESTAGING_SCHEMA_NAME",process.env.PRESTAGING_SCHEMA_PREFIX + process.env.SUB_ENVIRONMENT);
+define("PRESTAGING_SCHEMA_NAME",process.env.PRESTAGING_SCHEMA_PREFIX + process.env.SUB_ENVIRONMENT + process.env.ENV_SUFFIX);
 
 module.exports = new Constants();

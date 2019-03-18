@@ -68,10 +68,9 @@ class ExtractData {
 
     getStartBlockFromRedShift() {
         const oThis = this;
-        //todo: use where clause
-        return oThis.redshiftClient.query("select * from " + dataProcessingInfoGC.getTableNameWithSchema).then((res) => {
-            let lastProcessedBlock = res.rows.filter((row) => (row.property == dataProcessingInfoGC.lastProcessedBlockProperty));
-            return parseInt(lastProcessedBlock[0].value);
+        return oThis.redshiftClient.query("select * from " + dataProcessingInfoGC.getTableNameWithSchema + " where property = " +
+            dataProcessingInfoGC.lastProcessedBlockProperty).then((res) => {
+            return parseInt(res[0].value);
         });
     }
 
