@@ -1,5 +1,9 @@
 const rootPrefix = "../.."
-    , responseHelper = require(rootPrefix + '/lib/formatter/response'),
+    , Redshift = require('node-redshift')
+    , responseHelper = require(rootPrefix + '/lib/formatter/response')
+    , constants = require(rootPrefix + '/configs/constants')
+    , Util = require('util')
+    , logger = require(rootPrefix + '/helpers/custom_console_logger.js')
     emailNotifier = require(rootPrefix + '/lib/notifier');
 
 class Base {
@@ -7,7 +11,7 @@ class Base {
     constructor(params) {
         const oThis = this;
         oThis.chainId = params.config.chainId;
-        oThis.object = params.object;
+        oThis.object = params.object || {};
     }
 
     validateAndFormatBlockScannerData() {
@@ -54,7 +58,132 @@ class Base {
     }
 
 
-}
+    async create(insertParams) {
+        const oThis = this
+        ;
+        return new Promise(function (resolve, reject) {
+            try {
+                oThis.tableModel.create(insertParams, function (err, response) {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        logger.log("batch data inserted successfully");
+                        resolve(response);
+                    }
+                });
+            } catch (err) {
+                reject(err);
+            }
+        });
+    }
 
+
+    initRedshift(){
+        const oThis = this;
+        oThis.redshiftClient = new Redshift(constants.REDSHIFT_CLIENT);
+    }
+
+
+    copyFromS3(fullFilePath) {
+
+        const oThis = this
+            , s3BucketPath = 's3://' + constants.S3_BUCKET_LINK + '/'
+
+
+            , copyTable = Util.format('copy %s (%s) from \'%s\' iam_role \'%s\' delimiter \'|\';', oThis.getTempTableName(), oThis.getColumnList, s3BucketPath + fullFilePath, oThis.getIamRole())
+            , commit = 'COMMIT;'
+            ;
+
+            const deleteDuplicateIds = Util.format('DELETE from %s WHERE %s IN (SELECT %s from %s);', oThis.getTableNameWithSchema(), oThis.getTablePrimaryKey(), oThis.getTablePrimaryKey(), oThis.getTempTableName());
+
+
+            const insertRemainingEntries = Util.format('INSERT into %s (%s) (select %s from %s);', oThis.getTableNameWithSchema(), oThis.getColumnList,oThis.getColumnList, oThis.getTempTableName())
+            , truncateTempTable = Util.format('TRUNCATE TABLE %s;', oThis.getTempTableName())
+        ;
+        logger.log(s3BucketPath + fullFilePath);
+
+        logger.log("Temp table delete if exists", truncateTempTable);
+        return oThis.query(truncateTempTable)
+            .then(function () {
+                logger.log("Copying of table started", copyTable);
+                return oThis.query(copyTable);
+            }).then(function () {
+                logger.log("Commit started", commit);
+                return oThis.query(commit);
+            }).then(function () {
+                logger.log("Deletion of duplicate Ids started", deleteDuplicateIds);
+                return oThis.query(deleteDuplicateIds);
+            }).then(function () {
+                logger.log("Insertion of remaining entries started", insertRemainingEntries);
+                return oThis.query(insertRemainingEntries);
+            }).then(function () {
+                logger.log("Dropping temp table", truncateTempTable);
+                return oThis.query(truncateTempTable);
+            }).then(function () {
+                logger.log('Copy from S3 complete')
+            }).catch(function (err) {
+                logger.error("S3 copy hampered", err);
+                throw new Error("S3 copy hampered" + err);
+            });
+
+    };
+
+
+    async query(commandString) {
+        const oThis = this
+        ;
+        logger.debug('Redshift query String', commandString);
+        return new Promise(function (resolve, reject) {
+            try {
+                oThis.redshiftClient.query(commandString, function (err, result) {
+                    if (err) {
+                        reject("Error in query " + err);
+                    } else {
+                        resolve(result);
+                    }
+                })
+            } catch (err) {
+                reject(err);
+            }
+        });
+
+    }
+
+    get getColumnList(){
+        const oThis = this;
+        const mapping = oThis.constructor.mapping,
+        columns = [];
+        for (let col of mapping){
+            columns.push(col[0]);
+        }
+        return columns.join(", ");
+    }
+
+    getModelImportString() {
+        throw 'getModelImportString not implemented'
+    };
+
+    getTableNameWithSchema() {
+        throw 'getModelImportString not implemented'
+    };
+
+    getTablePrimaryKey() {
+        throw 'getTablePrimaryKey not implemented'
+    };
+
+    getTempTableName() {
+        throw 'getTempTableName not implemented'
+    };
+
+    getS3FilePath() {
+        throw 'getS3FilePath not implemented'
+    };
+
+    getIamRole() {
+        return constants.OS_S3_IAM_ROLE
+    };
+
+
+}
 
 module.exports = Base;

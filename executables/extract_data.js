@@ -57,7 +57,9 @@ class ExtractData {
     extractBlockScannerData(startBlock, endBlock) {
         const oThis = this;
         let blockScannerService = new BlockScannerService(oThis.chainId);
-        return blockScannerService.processTransactions(startBlock, endBlock);
+        // return blockScannerService.processTransactions(startBlock, endBlock);
+
+        return blockScannerService.processTransfers(startBlock, endBlock);
     }
 
 

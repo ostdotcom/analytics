@@ -3,6 +3,8 @@ const rootPrefix = "..",
     emailNotifier = require(rootPrefix + '/lib/notifier'),
     blockScannerGC = require(rootPrefix + "/lib/globalConstants/blockScanner"),
     Transactions = require(rootPrefix + "/lib/blockScanner/transactions"),
+    TransactionsModel = require(rootPrefix + "/models/redshift/transactions"),
+    TransfersModel = require(rootPrefix + "/models/redshift/transfers"),
     Transfers = require(rootPrefix + "/lib/blockScanner/transfers"),
     S3Write = require(rootPrefix + "/lib/S3_write")
 ;
@@ -17,7 +19,8 @@ class BlockScannerService {
 
     async processTransactions(startBlock, endBlock) {
         const oThis = this;
-        oThis.blockScannerOperation = Transactions; // new Transactions(oThis.chainId, oThis.localDirFullFilePath);
+        oThis.blockScannerOperation = Transactions;
+        oThis.OperationModel = TransactionsModel;
         oThis.s3DirPathSuffix = "/transactions";
         let response = await oThis.process(startBlock, endBlock);
         return response;
@@ -26,6 +29,7 @@ class BlockScannerService {
     async processTransfers(startBlock, endBlock) {
         const oThis = this;
         oThis.blockScannerOperation = Transfers;
+        oThis.OperationModel = TransfersModel;
         oThis.s3DirPathSuffix = "/transfers";
         let response = await oThis.process(startBlock, endBlock);
         return response;
@@ -60,10 +64,17 @@ class BlockScannerService {
         return Promise.all(promiseArray).then(
             async function (res) {
 
-                await oThis.uploadToS3(`${s3UploadPath}${oThis.s3DirPathSuffix}`,
+                let r = await oThis.uploadToS3(`${s3UploadPath}${oThis.s3DirPathSuffix}/`,
                     `${localDirFullFilePath}${oThis.s3DirPathSuffix}`);
 
+                if (r.hasFiles){
+                    let operationModel = new oThis.OperationModel({config: {chainId: oThis.chainId}});
 
+                    operationModel.initRedshift();
+                    //`${s3UploadPath}${oThis.s3DirPathSuffix}/`
+                    await operationModel.copyFromS3(`${s3UploadPath}${oThis.s3DirPathSuffix}/`);
+
+                }
                 // with awaits
                 // write to s3
                 // s3 to redshift
@@ -86,7 +97,7 @@ class BlockScannerService {
                 dir_path: localDirFullFilePath
             });
 
-        s3Write.uploadFiles();
+        return await s3Write.uploadFiles();
 
 
     }

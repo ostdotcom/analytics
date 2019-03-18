@@ -21,13 +21,23 @@ class Transfers extends Base {
         return transfersGC.mapping;
     }
 
+    getTableNameWithSchema() {
+        const oThis = this;
+        return constants.STAG_SCHEMA_NAME + '.transfers_'+ oThis.chainId;
+    };
 
+    getTablePrimaryKey() {
+        return 'id';
+    };
 
+    getTempTableName() {
+        const oThis = this;
+        return constants.STAG_SCHEMA_NAME + '.temp_transfers_'+ oThis.chainId;
+    };
 
-
-
-
-
+    getS3FilePath() {
+        return `s3://${ constants.S3_BUCKET_LINK}/`
+    };
 
 }
 module.exports = Transfers;
