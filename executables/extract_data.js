@@ -18,8 +18,6 @@ program
     .option('--token <token>', 'Extract token data')
     .parse(process.argv);
 
-
-
 class ExtractData {
 
     constructor() {
@@ -70,6 +68,7 @@ class ExtractData {
 
     getStartBlockFromRedShift() {
         const oThis = this;
+        //todo: use where clause
         return oThis.redshiftClient.query("select * from " + dataProcessingInfoGC.getTableNameWithSchema).then((res) => {
             let lastProcessedBlock = res.rows.filter((row) => (row.property == dataProcessingInfoGC.lastProcessedBlockProperty));
             return parseInt(lastProcessedBlock[0].value);
@@ -79,14 +78,13 @@ class ExtractData {
     async getEndBlock() {
         const oThis = this;
         let lastFinalizedBlock = await oThis.getEndBlockFromBlockScanner();
-        return program.endBlock && program.endBlock < lastFinalizedBlock ? parseInt(program.endBlock) : lastFinalizedBlock;
+        return program.endBlock && program.endBlock <= lastFinalizedBlock ? parseInt(program.endBlock) : lastFinalizedBlock;
     }
 
     async getEndBlockFromBlockScanner() {
         const oThis = this,
             finalizedBlockResp = await oThis.blockScanner.getChainCronData();
         return finalizedBlockResp[oThis.chainId]["lastFinalizedBlock"];
-
     }
 
 

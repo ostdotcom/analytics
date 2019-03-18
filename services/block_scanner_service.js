@@ -12,19 +12,19 @@ class BlockScannerService {
         const oThis = this;
         oThis.chainId = chainId;
         oThis.blockScannerResponse = [];
-        oThis.startBlock = oThis.nextBatchBlockToProcess = oThis.nextBlockToProcess = startBlock;
+        oThis.batchStartBlock = oThis.nextBlockToProcess = startBlock;
         oThis.endBlock = endBlock;
     }
 
     async process() {
         const oThis = this;
 
-        while (oThis.nextBatchBlockToProcess <= oThis.endBlock) {
-            await oThis.runBatchBlockScanning(oThis.nextBatchBlockToProcess);
+        while (oThis.batchStartBlock <= oThis.endBlock) {
+            await oThis.runBatchBlockScanning(oThis.batchStartBlock);
         }
     }
 
-    async runBatchBlockScanning(startBlock) {
+    async runBatchBlockScanning(currentBatchStartBlock) {
         const oThis = this;
         let promiseArray = [],
             s3UploadPath = `${Constants.SUB_ENVIRONMENT}${Constants.ENV_SUFFIX}/${oThis.chainId}/${Date.now()}`,
@@ -33,7 +33,7 @@ class BlockScannerService {
         oThis.blockScanner = new BlockScanner(oThis.chainId, localDirFullFilePath);
         for (let i = 0; i < blockScannerGC.noOfBlocksToProcessTogether; i++) {
             promiseArray.push(new Promise(function (resolve, reject) {
-                oThis.nextBlockToProcess = startBlock + i;
+                oThis.nextBlockToProcess = currentBatchStartBlock + i;
                 oThis.processBlock(oThis.nextBlockToProcess).then(function (res) {
                     resolve(res);
                 }).catch(function (err) {
@@ -41,6 +41,7 @@ class BlockScannerService {
                 });
             }));
         }
+        
         return Promise.all(promiseArray).then(
             async function (res) {
 
@@ -48,6 +49,7 @@ class BlockScannerService {
                     [{localPath: "/transactions", model: TransactionsModel},
                         {localPath: "/transfers", model: TransfersModel}]) {
 
+                    //todo: parallel process transactions & transfers
                     let r = await oThis.uploadToS3(`${s3UploadPath}${modelToPerform.localPath}/`,
                         `${localDirFullFilePath}${modelToPerform.localPath}`);
 
@@ -55,10 +57,12 @@ class BlockScannerService {
                         let operationModel = new modelToPerform.model({config: {chainId: oThis.chainId}});
 
                         operationModel.initRedshift();
+                        //todo: delete duplicate rows based on tx_hash
                         await operationModel.copyFromS3(`${s3UploadPath}${modelToPerform.localPath}/`);
                     }
                 }
-                oThis.nextBatchBlockToProcess = oThis.getBatchLastBlockToProcess + 1;
+			          //todo:    update temp table block number
+                oThis.batchStartBlock = oThis.batchEndBlock + 1;
             }
         )
     }
@@ -77,15 +81,15 @@ class BlockScannerService {
                 dir_path: localDirFullFilePath
             });
 
+        //todo: reject handle
         return await s3Write.uploadFiles();
-
 
     }
 
     processBlock(blockNumber) {
         const oThis = this;
         return new Promise(function (resolve, reject) {
-            if (oThis.getBatchLastBlockToProcess < blockNumber) {
+            if (oThis.batchEndBlock < blockNumber) {
                 return resolve({success: true});
             } else {
                 return oThis.blockScanner.asyncPerform(blockNumber)
@@ -103,12 +107,12 @@ class BlockScannerService {
     }
 
 
-    get getBatchLastBlockToProcess() {
+    get batchEndBlock() {
         const oThis = this;
         let noOfBlocks = blockScannerGC.noOfBlocksToProcessTogether * blockScannerGC.S3WriteCount;
 
-        return (oThis.nextBatchBlockToProcess + noOfBlocks - 1) > oThis.endBlock ? oThis.endBlock :
-            (oThis.nextBatchBlockToProcess + noOfBlocks - 1);
+        return (oThis.batchStartBlock + noOfBlocks - 1) > oThis.endBlock ? oThis.endBlock :
+            (oThis.batchStartBlock + noOfBlocks - 1);
     }
 }
 
