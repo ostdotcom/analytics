@@ -10,45 +10,38 @@ function define(key, value) {
     });
 }
 
-define('SA_SUB_ENVIRONMENT', process.env.SA_SUB_ENVIRONMENT);
-define('SA_ENVIRONMENT', process.env.SA_ENVIRONMENT);
-define('SA_KIT_SAAS_SUBENV_MYSQL_PASSWORD', process.env.SA_KIT_SAAS_SUBENV_MYSQL_PASSWORD);
-define('SA_KIT_SAAS_SUBENV_MYSQL_USER', process.env.SA_KIT_SAAS_SUBENV_MYSQL_USER);
-define('SA_KIT_SAAS_SUBENV_MYSQL_HOST', process.env.SA_KIT_SAAS_SUBENV_MYSQL_HOST);
-define('SA_MYSQL_CONNECTION_POOL_SIZE', process.env.SA_MYSQL_CONNECTION_POOL_SIZE);
-define('DEBUG_ENABLED', process.env.DEBUG_ENABLED);
-define('REDSHIFT_USER', process.env.REDSHIFT_USER);
-define('REDSHIFT_DATABASE', process.env.REDSHIFT_DATABASE);
-define('REDSHIFT_PASSWORD', process.env.REDSHIFT_PASSWORD);
-define('REDSHIFT_PORT', process.env.REDSHIFT_PORT);
-define('REDSHIFT_HOST', process.env.REDSHIFT_HOST);
-define('REDSHIFT_CLIENT', {
-    user: process.env.REDSHIFT_USER,
-    database: process.env.REDSHIFT_DATABASE,
-    password: process.env.REDSHIFT_PASSWORD,
-    port: process.env.REDSHIFT_PORT,
-    host: process.env.REDSHIFT_HOST
+define('SUB_ENVIRONMENT', process.env.SUB_ENVIRONMENT);
+define('ENVIRONMENT', process.env.ENVIRONMENT);
+define('ENV_SUFFIX', process.env.ENV_SUFFIX);
+
+
+define('KIT_SAAS_SUBENV_MYSQL_PASSWORD', process.env.KIT_SAAS_SUBENV_MYSQL_PASSWORD);
+define('KIT_SAAS_SUBENV_MYSQL_USER', process.env.KIT_SAAS_SUBENV_MYSQL_USER);
+define('KIT_SAAS_SUBENV_MYSQL_HOST', process.env.KIT_SAAS_SUBENV_MYSQL_HOST);
+define('KIT_MYSQL_CONNECTION_POOL_SIZE', process.env.KIT_MYSQL_CONNECTION_POOL_SIZE);
+
+define('PRESTAGING_REDSHIFT_CLIENT', {
+    user: process.env.PRESTAGING_REDSHIFT_USER,
+    database: process.env.PRESTAGING_REDSHIFT_DATABASE,
+    password: process.env.PRESTAGING_REDSHIFT_PASSWORD,
+    port: process.env.PRESTAGING_REDSHIFT_PORT,
+    host: process.env.PRESTAGING_REDSHIFT_HOST
 });
-define('TRANSFER_TOKEN_COUNT', 80);
-define('TRANSACTION_COUNT', 60);
+
+define("S3_REGION",process.env.S3_REGION );
+define("S3_ACCESS_KEY", process.env.S3_ACCESS_KEY);
+define("S3_ACCESS_SECRET", process.env.S3_ACCESS_SECRET );
+define("S3_BUCKET_NAME", process.env.S3_BUCKET_NAME);
+define ("S3_IAM_ROLE", process.env.S3_IAM_ROLE);
+
+define('TRANSFERS_BATCH_SIZE', 80);
+define('TRANSACTION_BATCH_SIZE', 60);
+
 define('MAX_SPLIT_COUNT', 10);
 define('NO_OF_BLOCKS_TO_PROCESS_TOGETHER', 2);
 define('S3_WRITE_COUNT', 10);
 define("LOCAL_DIR_FILE_PATH", process.env.LOCAL_DIR_FILE_PATH);
-define("SUB_ENV", process.env.SUB_ENV);
-define("REDSHIFT_SCHEMA", process.env.REDSHIFT_SCHEMA);
 
-define("S3_REGION", "us-east-1"  );
-define("S3_ACCESS_KEY", "AKIAJ4KB25BTIAYS6YRA");
-define("S3_ACCESS_SECRET", "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" );
-define("S3_BUCKET_LINK", "temp-analytics.ost.com");
-define ("OS_S3_IAM_ROLE", process.env.OS_S3_IAM_ROLE);
-
-define("STAG_SCHEMA_NAME", "ost_warehouse_"+ process.env.SUB_ENV);
-
-
-
-
-
+define("PRESTAGING_SCHEMA_NAME",process.env.PRESTAGING_SCHEMA_PREFIX + process.env.SUB_ENVIRONMENT);
 
 module.exports = new Constants();

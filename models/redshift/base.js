@@ -33,7 +33,6 @@ class Base {
                 )
             }
             let value = oThis.object[column[1]['name']];
-            // value = value.split("|").join("I");
             if (column[1]['isSerialized'] == true && value) {
                 let fieldData = JSON.parse(value);
                 value = fieldData[column[1]['property']];
@@ -80,25 +79,25 @@ class Base {
 
     initRedshift(){
         const oThis = this;
-        oThis.redshiftClient = new Redshift(constants.REDSHIFT_CLIENT);
+        oThis.redshiftClient = new Redshift(constants.PRESTAGING_REDSHIFT_CLIENT);
     }
 
 
     copyFromS3(fullFilePath) {
 
         const oThis = this
-            , s3BucketPath = 's3://' + constants.S3_BUCKET_LINK + '/'
+            , s3BucketPath = 's3://' + constants.S3_BUCKET_NAME + '/'
 
 
-            , copyTable = Util.format('copy %s (%s) from \'%s\' iam_role \'%s\' delimiter \'|\';', oThis.getTempTableName(), oThis.getColumnList, s3BucketPath + fullFilePath, oThis.getIamRole())
+            , copyTable = Util.format('copy %s (%s) from \'%s\' iam_role \'%s\' delimiter \'|\';', oThis.getTempTableNameWithSchema(), oThis.getColumnList, s3BucketPath + fullFilePath, oThis.getIamRole())
             , commit = 'COMMIT;'
             ;
 
-            const deleteDuplicateIds = Util.format('DELETE from %s WHERE %s IN (SELECT %s from %s);', oThis.getTableNameWithSchema(), oThis.getTablePrimaryKey(), oThis.getTablePrimaryKey(), oThis.getTempTableName());
+            const deleteDuplicateIds = Util.format('DELETE from %s WHERE %s IN (SELECT %s from %s);', oThis.getTableNameWithSchema(), oThis.getTablePrimaryKey(), oThis.getTablePrimaryKey(), oThis.getTempTableNameWithSchema());
 
 
-            const insertRemainingEntries = Util.format('INSERT into %s (%s) (select %s from %s);', oThis.getTableNameWithSchema(), oThis.getColumnList,oThis.getColumnList, oThis.getTempTableName())
-            , truncateTempTable = Util.format('TRUNCATE TABLE %s;', oThis.getTempTableName())
+            const insertRemainingEntries = Util.format('INSERT into %s (%s) (select %s from %s);', oThis.getTableNameWithSchema(), oThis.getColumnList,oThis.getColumnList, oThis.getTempTableNameWithSchema())
+            , truncateTempTable = Util.format('TRUNCATE TABLE %s;', oThis.getTempTableNameWithSchema())
         ;
         logger.log(s3BucketPath + fullFilePath);
 
@@ -171,16 +170,12 @@ class Base {
         throw 'getTablePrimaryKey not implemented'
     };
 
-    getTempTableName() {
-        throw 'getTempTableName not implemented'
-    };
-
-    getS3FilePath() {
-        throw 'getS3FilePath not implemented'
+    getTempTableNameWithSchema() {
+        throw 'getTempTableNameWithSchema not implemented'
     };
 
     getIamRole() {
-        return constants.OS_S3_IAM_ROLE
+        return constants.S3_IAM_ROLE
     };
 
 

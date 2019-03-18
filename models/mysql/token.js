@@ -13,7 +13,7 @@ const rootPrefix = '../..',
     tokenConstants = require(rootPrefix + '/lib/globalConstants/redShift/token');
 
 // Declare variables.
-const dbName = 'kit_saas_' + Constants.SA_SUB_ENVIRONMENT + '_' + Constants.SA_ENVIRONMENT,
+const dbName = 'kit_saas_' + Constants.SUB_ENVIRONMENT + '_' + Constants.ENVIRONMENT,
     statuses = {
         '1': tokenConstants.notDeployed,
         '2': tokenConstants.deploymentStarted,

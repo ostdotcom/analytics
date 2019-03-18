@@ -2,58 +2,39 @@ const rootPrefix = "..",
     Constants = require(rootPrefix + "/configs/constants"),
     emailNotifier = require(rootPrefix + '/lib/notifier'),
     blockScannerGC = require(rootPrefix + "/lib/globalConstants/blockScanner"),
-    Transactions = require(rootPrefix + "/lib/blockScanner/transactions"),
     TransactionsModel = require(rootPrefix + "/models/redshift/transactions"),
     TransfersModel = require(rootPrefix + "/models/redshift/transfers"),
-    Transfers = require(rootPrefix + "/lib/blockScanner/transfers"),
     S3Write = require(rootPrefix + "/lib/S3_write")
 ;
 
 class BlockScannerService {
 
-    constructor(chainId) {
+    constructor(chainId, startBlock, endBlock) {
         const oThis = this;
         oThis.chainId = chainId;
         oThis.blockScannerResponse = [];
-    }
-
-    async processTransactions(startBlock, endBlock) {
-        const oThis = this;
-        oThis.blockScannerOperation = Transactions;
-        oThis.OperationModel = TransactionsModel;
-        oThis.s3DirPathSuffix = "/transactions";
-        let response = await oThis.process(startBlock, endBlock);
-        return response;
-    }
-
-    async processTransfers(startBlock, endBlock) {
-        const oThis = this;
-        oThis.blockScannerOperation = Transfers;
-        oThis.OperationModel = TransfersModel;
-        oThis.s3DirPathSuffix = "/transfers";
-        let response = await oThis.process(startBlock, endBlock);
-        return response;
-    }
-
-    async process(startBlock, endBlock) {
-        const oThis = this;
-        oThis.startBlock = oThis.nextBatchBlockToProcess = oThis.nextBlockToProcess = startBlock;
+        oThis.batchStartBlock = oThis.nextBlockToProcess = startBlock;
         oThis.endBlock = endBlock;
-        while (oThis.nextBatchBlockToProcess <= oThis.endBlock) {
-            await oThis.runBatchBlockScanning(oThis.nextBatchBlockToProcess);
+    }
+
+    async process() {
+        const oThis = this;
+
+        while (oThis.batchStartBlock <= oThis.endBlock) {
+            await oThis.runBatchBlockScanning(oThis.batchStartBlock);
         }
     }
 
-    async runBatchBlockScanning(startBlock) {
+    async runBatchBlockScanning(currentBatchStartBlock) {
         const oThis = this;
         let promiseArray = [],
-            s3UploadPath = `${Constants.SUB_ENV}/${oThis.chainId}/${Date.now()}`,
+            s3UploadPath = `${Constants.SUB_ENVIRONMENT}${Constants.ENV_SUFFIX}/${oThis.chainId}/${Date.now()}`,
             localDirFullFilePath = `${Constants.LOCAL_DIR_FILE_PATH}/${s3UploadPath}`;
 
-        oThis.blockScanner = new oThis.blockScannerOperation(oThis.chainId, localDirFullFilePath);
+        oThis.blockScanner = new BlockScanner(oThis.chainId, localDirFullFilePath);
         for (let i = 0; i < blockScannerGC.noOfBlocksToProcessTogether; i++) {
             promiseArray.push(new Promise(function (resolve, reject) {
-                oThis.nextBlockToProcess = startBlock + i;
+                oThis.nextBlockToProcess = currentBatchStartBlock + i;
                 oThis.processBlock(oThis.nextBlockToProcess).then(function (res) {
                     resolve(res);
                 }).catch(function (err) {
@@ -61,24 +42,28 @@ class BlockScannerService {
                 });
             }));
         }
+        
         return Promise.all(promiseArray).then(
             async function (res) {
 
-                let r = await oThis.uploadToS3(`${s3UploadPath}${oThis.s3DirPathSuffix}/`,
-                    `${localDirFullFilePath}${oThis.s3DirPathSuffix}`);
+                for (let modelToPerform of
+                    [{localPath: "/transactions", model: TransactionsModel},
+                        {localPath: "/transfers", model: TransfersModel}]) {
 
-                if (r.hasFiles){
-                    let operationModel = new oThis.OperationModel({config: {chainId: oThis.chainId}});
+                    //todo: parallel process transactions & transfers
+                    let r = await oThis.uploadToS3(`${s3UploadPath}${modelToPerform.localPath}/`,
+                        `${localDirFullFilePath}${modelToPerform.localPath}`);
 
-                    operationModel.initRedshift();
-                    //`${s3UploadPath}${oThis.s3DirPathSuffix}/`
-                    await operationModel.copyFromS3(`${s3UploadPath}${oThis.s3DirPathSuffix}/`);
+                    if (r.hasFiles) {
+                        let operationModel = new modelToPerform.model({config: {chainId: oThis.chainId}});
 
+                        operationModel.initRedshift();
+                        //todo: delete duplicate rows based on tx_hash
+                        await operationModel.copyFromS3(`${s3UploadPath}${modelToPerform.localPath}/`);
+                    }
                 }
-                // with awaits
-                // write to s3
-                // s3 to redshift
-                oThis.nextBatchBlockToProcess = oThis.getBatchLastBlockToProcess + 1;
+			          //todo:    update temp table block number
+                oThis.batchStartBlock = oThis.batchEndBlock + 1;
             }
         )
     }
@@ -92,20 +77,20 @@ class BlockScannerService {
                 "secretAccessKey": Constants.S3_ACCESS_SECRET
             },
             {
-                s3_bucket_link: Constants.S3_BUCKET_LINK,
+                s3_bucket_name: Constants.S3_BUCKET_NAME,
                 bucket_path: s3UploadPath,
                 dir_path: localDirFullFilePath
             });
 
+        //todo: reject handle
         return await s3Write.uploadFiles();
-
 
     }
 
     processBlock(blockNumber) {
         const oThis = this;
         return new Promise(function (resolve, reject) {
-            if (oThis.getBatchLastBlockToProcess < blockNumber) {
+            if (oThis.batchEndBlock < blockNumber) {
                 return resolve({success: true});
             } else {
                 return oThis.blockScanner.asyncPerform(blockNumber)
@@ -124,12 +109,12 @@ class BlockScannerService {
     }
 
 
-    get getBatchLastBlockToProcess() {
+    get batchEndBlock() {
         const oThis = this;
         let noOfBlocks = blockScannerGC.noOfBlocksToProcessTogether * blockScannerGC.S3WriteCount;
 
-        return (oThis.nextBatchBlockToProcess + noOfBlocks - 1) > oThis.endBlock ? oThis.endBlock :
-            (oThis.nextBatchBlockToProcess + noOfBlocks - 1);
+        return (oThis.batchStartBlock + noOfBlocks - 1) > oThis.endBlock ? oThis.endBlock :
+            (oThis.batchStartBlock + noOfBlocks - 1);
     }
 }
 

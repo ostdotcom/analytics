@@ -11,32 +11,22 @@ class Transfers extends Base {
         super(params)
     }
 
-
-    get fullTableName(){
-        return `${transfersGC.getTableNameWithSchema}_${this.chainId}`;
-    }
-
-
     static get mapping(){
         return transfersGC.mapping;
     }
 
     getTableNameWithSchema() {
         const oThis = this;
-        return constants.STAG_SCHEMA_NAME + '.transfers_'+ oThis.chainId;
+        return constants.PRESTAGING_SCHEMA_NAME + '.transfers_'+ oThis.chainId;
     };
 
     getTablePrimaryKey() {
         return 'id';
     };
 
-    getTempTableName() {
+    getTempTableNameWithSchema() {
         const oThis = this;
-        return constants.STAG_SCHEMA_NAME + '.temp_transfers_'+ oThis.chainId;
-    };
-
-    getS3FilePath() {
-        return `s3://${ constants.S3_BUCKET_LINK}/`
+        return constants.PRESTAGING_SCHEMA_NAME + '.temp_transfers_'+ oThis.chainId;
     };
 
 }

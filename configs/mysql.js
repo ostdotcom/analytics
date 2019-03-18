@@ -5,7 +5,7 @@ const rootPrefix = '..',
 
 const mysqlConfig = {
     commonNodeConfig: {
-        connectionLimit: Constants.SA_MYSQL_CONNECTION_POOL_SIZE,
+        connectionLimit: Constants.KIT_MYSQL_CONNECTION_POOL_SIZE,
         charset: 'UTF8_UNICODE_CI',
         bigNumberStrings: true,
         supportBigNumbers: true,
@@ -21,9 +21,9 @@ const mysqlConfig = {
     clusters: {
         cluster1: {
             master: {
-                host: Constants.SA_KIT_SAAS_SUBENV_MYSQL_HOST,
-                user: Constants.SA_KIT_SAAS_SUBENV_MYSQL_USER,
-                password: Constants.SA_KIT_SAAS_SUBENV_MYSQL_PASSWORD
+                host: Constants.KIT_SAAS_SUBENV_MYSQL_HOST,
+                user: Constants.KIT_SAAS_SUBENV_MYSQL_USER,
+                password: Constants.KIT_SAAS_SUBENV_MYSQL_PASSWORD
             }
         }
     },
@@ -31,6 +31,6 @@ const mysqlConfig = {
 };
 
 // kit_saas_subenv database
-mysqlConfig['databases']['kit_saas_' + Constants.SA_SUB_ENVIRONMENT + '_' + Constants.SA_ENVIRONMENT] = ['cluster1'];
+mysqlConfig['databases']['kit_saas_' + Constants.SUB_ENVIRONMENT + '_' + Constants.ENVIRONMENT] = ['cluster1'];
 
 module.exports = mysqlConfig;

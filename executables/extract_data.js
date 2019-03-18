@@ -4,7 +4,7 @@ const rootPrefix = "..",
     Constant = require(rootPrefix + "/configs/constants"),
     dataProcessingInfoGC = require(rootPrefix + "/lib/globalConstants/redShift/dataProcessingInfo");
     BlockScannerService = require(rootPrefix + "/services/block_scanner_service.js"),
-    BlockScanner = require(rootPrefix + "/lib/blockScanner/base");
+    BlockScanner = require(rootPrefix + "/lib/blockScanner");
 
 
 //
@@ -18,8 +18,6 @@ program
     .option('--token <token>', 'Extract token data')
     .parse(process.argv);
 
-
-
 class ExtractData {
 
     constructor() {
@@ -27,7 +25,7 @@ class ExtractData {
         oThis.chainId = program.chainId;
 
         oThis.blockScanner = new BlockScanner(oThis.chainId);
-        oThis.redshiftClient = new RedshiftClient(Constant.REDSHIFT_CLIENT)
+        oThis.redshiftClient = new RedshiftClient(Constant.PRESTAGING_REDSHIFT_CLIENT)
 
     }
 
@@ -56,10 +54,10 @@ class ExtractData {
 
     extractBlockScannerData(startBlock, endBlock) {
         const oThis = this;
-        let blockScannerService = new BlockScannerService(oThis.chainId);
+        let blockScannerService = new BlockScannerService(oThis.chainId, startBlock, endBlock);
         // return blockScannerService.processTransactions(startBlock, endBlock);
 
-        return blockScannerService.processTransfers(startBlock, endBlock);
+        return blockScannerService.process();
     }
 
 
@@ -70,6 +68,7 @@ class ExtractData {
 
     getStartBlockFromRedShift() {
         const oThis = this;
+        //todo: use where clause
         return oThis.redshiftClient.query("select * from " + dataProcessingInfoGC.getTableNameWithSchema).then((res) => {
             let lastProcessedBlock = res.rows.filter((row) => (row.property == dataProcessingInfoGC.lastProcessedBlockProperty));
             return parseInt(lastProcessedBlock[0].value);
@@ -79,14 +78,13 @@ class ExtractData {
     async getEndBlock() {
         const oThis = this;
         let lastFinalizedBlock = await oThis.getEndBlockFromBlockScanner();
-        return program.endBlock && program.endBlock < lastFinalizedBlock ? parseInt(program.endBlock) : lastFinalizedBlock;
+        return program.endBlock && program.endBlock <= lastFinalizedBlock ? parseInt(program.endBlock) : lastFinalizedBlock;
     }
 
     async getEndBlockFromBlockScanner() {
         const oThis = this,
             finalizedBlockResp = await oThis.blockScanner.getChainCronData();
         return finalizedBlockResp[oThis.chainId]["lastFinalizedBlock"];
-
     }
 
 
