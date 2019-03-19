@@ -2,9 +2,10 @@ const rootPrefix = "..",
     RedshiftClient = require("node-redshift"),
     program = require("commander"),
     Constant = require(rootPrefix + "/configs/constants"),
-    dataProcessingInfoGC = require(rootPrefix + "/lib/globalConstants/redShift/dataProcessingInfo");
+    dataProcessingInfoGC = require(rootPrefix + "/lib/globalConstants/redShift/dataProcessingInfo"),
     BlockScannerService = require(rootPrefix + "/services/block_scanner_service.js"),
-    BlockScanner = require(rootPrefix + "/lib/blockScanner");
+    BlockScanner = require(rootPrefix + "/lib/blockScanner"),
+    logger = require(rootPrefix + "/helpers/custom_console_logger");
 
 
 //
@@ -34,7 +35,7 @@ class ExtractData {
         // it means no parameter is given, in this case we need to extract data from block-scanner as well as
         if (process.argv.length == 2) {
             await oThis.extractTokens();
-            await oThis.extractBlockScannerData(await oThis.getStartBlock(), await oThis.getEndBlock());
+            await oThis.extractBlockScannerDataextractBlockScannerData(await oThis.getStartBlock(), await oThis.getEndBlock());
 
         } else {
 
@@ -52,12 +53,23 @@ class ExtractData {
 
     }
 
-    extractBlockScannerData(startBlock, endBlock) {
+    async extractBlockScannerData(startBlock, endBlock) {
         const oThis = this;
+        let startTime = Date.now();
+        logger.log("block processing started start block =>" + startBlock + ". end block => " + endBlock);
+
+        logger.log("processing started at", startTime);
+
+
         let blockScannerService = new BlockScannerService(oThis.chainId, startBlock, endBlock);
         // return blockScannerService.processTransactions(startBlock, endBlock);
 
-        return blockScannerService.process();
+        let lastProcessedBlock = await blockScannerService.process();
+
+        let endTime = Date.now();
+        logger.log("processing finished at", startTime);
+
+        logger.log("Total time to process in milliseconds", (endTime - startTime));
     }
 
 
@@ -68,21 +80,27 @@ class ExtractData {
 
     getStartBlockFromRedShift() {
         const oThis = this;
-        return oThis.redshiftClient.query("select * from " + dataProcessingInfoGC.getTableNameWithSchema + " where property = " +
-            dataProcessingInfoGC.lastProcessedBlockProperty).then((res) => {
-            return parseInt(res[0].value);
+        return oThis.redshiftClient.query("select * from " + dataProcessingInfoGC.getTableNameWithSchema + "_" + oThis.chainId + " where property = '" +
+            dataProcessingInfoGC.lastProcessedBlockProperty + "'").then((res) => {
+            return parseInt(res.rows[0].value) + 1;
         });
     }
 
     async getEndBlock() {
         const oThis = this;
         let lastFinalizedBlock = await oThis.getEndBlockFromBlockScanner();
-        return program.endBlock && program.endBlock <= lastFinalizedBlock ? parseInt(program.endBlock) : lastFinalizedBlock;
+        return program.endBlock && program.endBlock <= lastFinalizedBlock ? parseInt(program.endBlock) : parseInt(lastFinalizedBlock);
     }
 
     async getEndBlockFromBlockScanner() {
+
+
         const oThis = this,
             finalizedBlockResp = await oThis.blockScanner.getChainCronData();
+
+        console.log("======= =================");
+        console.log(finalizedBlockResp, oThis.chainId );
+        console.log("======= =================");
         return finalizedBlockResp[oThis.chainId]["lastFinalizedBlock"];
     }
 

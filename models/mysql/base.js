@@ -10,7 +10,7 @@ const rootPrefix = '../..',
     Util = require('util'),
     logger = require(rootPrefix + '/lib/logger/customConsoleLogger'),
     responseHelper = require(rootPrefix + '/lib/formatter/response'),
-    emailNotifier = require(rootPrefix + '/lib/notifier');
+    ApplicationMailer = require(rootPrefix + '/lib/applicationMailer');
 
 class ModelBase extends MysqlQueryBuilders {
     /**
@@ -79,7 +79,7 @@ class ModelBase extends MysqlQueryBuilders {
         for (let column of oThis.constructor.mapping) {
             //eg. column[0] => token_id, column[1] => {name: 'id', isSerialized: false, required: true}
             if (column[1]['required'] && !(column[1]['name'] in object)) {
-                //todo: send email on fail
+
                 emailNotifier.perform('m_m_b_vafbsd_1', 'Unknown column present in the record', {}, {});
                 console.log(column[1]['name']);
                 return responseHelper.error(

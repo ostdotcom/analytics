@@ -21,7 +21,7 @@ class Transfers extends Base {
     };
 
     getTablePrimaryKey() {
-        return 'id';
+        return 'tx_hash';
     };
 
     getTempTableNameWithSchema() {

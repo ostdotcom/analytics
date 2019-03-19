@@ -1,5 +1,5 @@
 
-export SUB_ENVIRONMENT='sandbox'
+export SUB_ENVIRONMENT='main'
 export ENVIRONMENT='development'
 export ENV_SUFFIX='_s6'
 

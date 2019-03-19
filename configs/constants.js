@@ -37,8 +37,8 @@ define ("S3_IAM_ROLE", process.env.S3_IAM_ROLE);
 define('TRANSFERS_BATCH_SIZE', 80);
 define('TRANSACTION_BATCH_SIZE', 60);
 
-define('MAX_SPLIT_COUNT', 10);
-define('NO_OF_BLOCKS_TO_PROCESS_TOGETHER', 2);
+define('MAX_SPLIT_COUNT', 1);
+define('NO_OF_BLOCKS_TO_PROCESS_TOGETHER', 1);
 define('S3_WRITE_COUNT', 10);
 define("LOCAL_DIR_FILE_PATH", process.env.LOCAL_DIR_FILE_PATH);
 

@@ -4,7 +4,7 @@ const rootPrefix = "../.."
     , constants = require(rootPrefix + '/configs/constants')
     , Util = require('util')
     , logger = require(rootPrefix + '/helpers/custom_console_logger.js')
-    emailNotifier = require(rootPrefix + '/lib/notifier');
+    , ApplicationMailer = require(rootPrefix + '/lib/applicationMailer');
 
 class Base {
 
@@ -12,6 +12,7 @@ class Base {
         const oThis = this;
         oThis.chainId = params.config.chainId;
         oThis.object = params.object || {};
+        oThis.applicationMailer = new ApplicationMailer();
     }
 
     validateAndFormatBlockScannerData() {
@@ -21,16 +22,16 @@ class Base {
             //eg. column[0] => tx_uuid, column[1] => {name: 'transactionUuid', isSerialized: false, required: true,
             // copyIfNotPresent: 'transactionStatus'}
             if (column[1]['required'] && !(column[1]['name'] in oThis.object)) {
-                //todo: send email on fail
-                emailNotifier.perform('internal_id', 'subject', err, {});
                 console.log(column[1]['name']);
-                return responseHelper.error(
+                let rh = responseHelper.error(
                     {
                         internal_error_identifier: 'm_r_b_vaf',
                         api_error_identifier: '',
-                        debug_options: {}
+                        debug_options: oThis.object
                     }
-                )
+                );
+                oThis.applicationMailer.perform(rh);
+                return rh;
             }
             let value = oThis.object[column[1]['name']];
             if (column[1]['isSerialized'] == true && value) {

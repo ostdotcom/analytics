@@ -21,7 +21,7 @@ class Transactions extends Base {
     };
 
     getTablePrimaryKey() {
-        return 'id'
+        return 'tx_hash';
     };
 
     getTempTableNameWithSchema() {

@@ -102,7 +102,6 @@ class token {
         for (let modelToPerform of
             [{localPath: "/tokens", model: tokenModel}]) {
 
-            //todo: parallel process transactions & transfers
             let r = await oThis.uploadToS3(`${oThis.s3UploadPath}${modelToPerform.localPath}/`,
                 `${oThis.localDirFullFilePath}${modelToPerform.localPath}`);
 
@@ -110,7 +109,6 @@ class token {
                 let operationModel = new modelToPerform.model({chainId: oThis.chainId});
 
                 operationModel.initRedshift();
-                //todo: delete duplicate rows based on tx_hash
                 await operationModel.copyFromS3(`${oThis.s3UploadPath}${modelToPerform.localPath}/`);
             }
         }
