@@ -113,7 +113,7 @@ CREATE TABLE tokens_${CHAIN_ID}
   conversion_factor         decimal(15,6) NOT NULL,
   decimal                   int NULL,
   delayed_recovery_interval int NOT NULL,
-  status                    tinyint NOT NULL,
+  status                    int NOT NULL,
   created_at                timestamp NOT NULL,
   updated_at                timestamp NOT NULL
 )SORTKEY(token_id);

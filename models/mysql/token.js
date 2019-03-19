@@ -8,17 +8,15 @@ const rootPrefix = '../..',
     util = require(rootPrefix + '/lib/util'),
     ModelBase = require(rootPrefix + '/models/mysql/base'),
     Constants = require(rootPrefix + '/configs/constants'),
-    responseHelper = require(rootPrefix + '/lib/formatter/response'),
-    // basicHelper = require(rootPrefix + '/helpers/basic'),
-    tokenConstants = require(rootPrefix + '/lib/globalConstants/redShift/token');
+    tokensGC = require(rootPrefix + '/lib/globalConstants/redshift/token');
 
 // Declare variables.
 const dbName = 'kit_saas_' + Constants.SUB_ENVIRONMENT + '_' + Constants.ENVIRONMENT,
     statuses = {
-        '1': tokenConstants.notDeployed,
-        '2': tokenConstants.deploymentStarted,
-        '3': tokenConstants.deploymentCompleted,
-        '4': tokenConstants.deploymentFailed
+        '1': tokensGC.notDeployed,
+        '2': tokensGC.deploymentStarted,
+        '3': tokensGC.deploymentCompleted,
+        '4': tokensGC.deploymentFailed
     },
     invertedStatuses = util.invert(statuses);
 
@@ -33,56 +31,23 @@ class Token extends ModelBase {
      *
      * @constructor
      */
-    constructor() {
-        super({ dbName: dbName });
+    constructor(params) {
+        super({ dbName: dbName,
+            object: params.object || {},
+            chainId: params.chainId });
 
         const oThis = this;
 
         oThis.tableName = 'tokens';
     }
 
-    get statuses() {
-        return statuses;
+    get fullTableName(){
+        return `${tokensGC.getTableNameWithSchema}_${this.chainId}`;
     }
 
-    get invertedStatuses() {
-        return invertedStatuses;
-    }
 
-    async getDetailsByTokenId(tokenId) {
-        const oThis = this;
-
-        let dbRows = await oThis
-            .select('client_id')
-            .where({
-                id: tokenId
-            })
-            .fire();
-
-        if (dbRows.length === 0) {
-            return responseHelper.successWithData({});
-        }
-
-        return responseHelper.successWithData({
-            clientId: dbRows[0].client_id
-        });
-    }
-
-    async getDetailsByClientId(clientId) {
-        const oThis = this;
-
-        let dbRows = await oThis
-            .select('*')
-            .where({
-                client_id: clientId
-            })
-            .fire();
-
-        if (dbRows.length === 0) {
-            return responseHelper.successWithData({});
-        }
-
-        return responseHelper.successWithData(oThis.formatDbData(dbRows[0]));
+    static get mapping(){
+        return tokensGC.mapping;
     }
 
     /**
@@ -104,6 +69,39 @@ class Token extends ModelBase {
             updatedTimestamp: dbRow.updated_at
         };
     }
+
+
+    formatData(arrayToFormat) {
+        const oThis = this;
+        let arrayOfObjects = [];
+        for (let object of arrayToFormat) {
+            // let model = new tokensModel({object: object, chainId: oThis.chainId});
+            let r = oThis.formatBlockScannerDataToArray(object);
+            if (!r.success) {
+                continue;
+            }
+            arrayOfObjects.push(r.data.data);
+        }
+        return arrayOfObjects;
+    }
+
+    getTableNameWithSchema() {
+        const oThis = this;
+        return Constants.STAG_SCHEMA_NAME + '.tokens_'+ oThis.chainId;
+    };
+
+    getTablePrimaryKey() {
+        return 'token_id'
+    };
+
+    getTempTableName() {
+        const oThis = this;
+        return Constants.STAG_SCHEMA_NAME + '.temp_tokens_'+ oThis.chainId;
+    };
+
+    getS3FilePath() {
+        return `s3://${ Constants.S3_BUCKET_LINK}/`
+    };
 
 }
 
