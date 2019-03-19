@@ -4,7 +4,10 @@ const rootPrefix = "..",
     blockScannerGC = require(rootPrefix + "/lib/globalConstants/blockScanner"),
     TransactionsModel = require(rootPrefix + "/models/redshift/transactions"),
     TransfersModel = require(rootPrefix + "/models/redshift/transfers"),
-    S3Write = require(rootPrefix + "/lib/S3_write")
+    S3Write = require(rootPrefix + "/lib/S3_write"),
+    BlockScanner = require(rootPrefix + "/lib/blockScanner"),
+    logger = require(rootPrefix + "/helpers/custom_console_logger"),
+    responseHelper = require(rootPrefix + '/lib/formatter/response');
 ;
 
 class BlockScannerService {
@@ -19,16 +22,19 @@ class BlockScannerService {
 
     async process() {
         const oThis = this;
+        let r;
 
         while (oThis.batchStartBlock <= oThis.endBlock) {
-            await oThis.runBatchBlockScanning(oThis.batchStartBlock);
+            r = await oThis.runBatchBlockScanning(oThis.batchStartBlock);
         }
+
     }
 
     async runBatchBlockScanning(currentBatchStartBlock) {
         const oThis = this;
         let promiseArray = [],
             s3UploadPath = `${Constants.SUB_ENVIRONMENT}${Constants.ENV_SUFFIX}/${oThis.chainId}/${Date.now()}`,
+            copyToRedshiftPromise = [],
             localDirFullFilePath = `${Constants.LOCAL_DIR_FILE_PATH}/${s3UploadPath}`;
 
         oThis.blockScanner = new BlockScanner(oThis.chainId, localDirFullFilePath);
@@ -42,28 +48,50 @@ class BlockScannerService {
                 });
             }));
         }
-        
         return Promise.all(promiseArray).then(
             async function (res) {
 
-                for (let modelToPerform of
-                    [{localPath: "/transactions", model: TransactionsModel},
-                        {localPath: "/transfers", model: TransfersModel}]) {
+                const operationIterator = [{localPath: "/transactions", model: TransactionsModel},
+                    {localPath: "/transfers", model: TransfersModel}];
 
-                    //todo: parallel process transactions & transfers
-                    let r = await oThis.uploadToS3(`${s3UploadPath}${modelToPerform.localPath}/`,
-                        `${localDirFullFilePath}${modelToPerform.localPath}`);
+                let uploadToS3Promise = [];
 
-                    if (r.hasFiles) {
-                        let operationModel = new modelToPerform.model({config: {chainId: oThis.chainId}});
+                for (let modelToPerform of operationIterator) {
+                    uploadToS3Promise.push(
+                        await oThis.uploadToS3(`${s3UploadPath}${modelToPerform.localPath}/`,
+                            `${localDirFullFilePath}${modelToPerform.localPath}`)
+                    );
 
-                        operationModel.initRedshift();
-                        //todo: delete duplicate rows based on tx_hash
-                        await operationModel.copyFromS3(`${s3UploadPath}${modelToPerform.localPath}/`);
-                    }
                 }
-			          //todo:    update temp table block number
-                oThis.batchStartBlock = oThis.batchEndBlock + 1;
+                return Promise.all(uploadToS3Promise).then(async (res) => {
+
+                    for (let i in res) {
+                        if (res[i].success && res[i].data.hasFiles) {
+                            let operationModel = new operationIterator[i].model({config: {chainId: oThis.chainId}});
+                            operationModel.initRedshift();
+                            copyToRedshiftPromise.push(await operationModel.copyFromS3(
+                                `${s3UploadPath}${operationIterator[i].localPath}/`));
+                        }
+                    }
+                    return Promise.all(copyToRedshiftPromise).then((res) => {
+                        oThis.lastProccessedBlock = oThis.batchEndBlock;
+                        oThis.batchStartBlock = oThis.lastProccessedBlock + 1;
+                        return Promise.resolve(responseHelper.successWithData({lastProcessedBlock: oThis.lastProccessedBlock}));
+                    }).catch((err) => {
+                        return Promise.reject(responseHelper.error({
+                            internal_error_identifier: 's_bss_rbbs_1',
+                            api_error_identifier: 'redshift_download_breaking',
+                            debug_options: {}
+                        }));
+                    });
+                }).catch((err) => {
+                    return Promise.reject(responseHelper.error({
+                        internal_error_identifier: 's_bss_rbbs_2',
+                        api_error_identifier: 's3_upload_breaking',
+                        debug_options: {}
+                    }));
+
+                });
             }
         )
     }
@@ -82,7 +110,6 @@ class BlockScannerService {
                 dir_path: localDirFullFilePath
             });
 
-        //todo: reject handle
         return await s3Write.uploadFiles();
 
     }
@@ -95,8 +122,21 @@ class BlockScannerService {
             } else {
                 return oThis.blockScanner.asyncPerform(blockNumber)
                     .then(function (res) {
-                        oThis.blockScannerResponse.push(res);
-                        return resolve(oThis.processBlock(++oThis.nextBlockToProcess));
+                        if (res.success){
+                            oThis.blockScannerResponse.push(res);
+                            if(! res.data.hasTransactionsHashes){
+                                logger.log("no transactions for block no. " + res.data.blockNumber);
+                            } else{
+                                logger.log("data fetched from blockscanner for block " + res.data.blockNumber + " successfully");
+                            }
+
+
+                        } else {
+                            //todo send email
+
+                        }
+                        return resolve(oThis.processBlock(++oThis.nextBlockToProcess))
+
                     })
                     .catch(function (err) {
                         // todo: send mail
