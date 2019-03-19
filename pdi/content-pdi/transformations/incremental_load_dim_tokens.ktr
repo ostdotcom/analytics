@@ -106,7 +106,7 @@
         </field>
         <field>
           <id>LOG_FIELD</id>
-          <enabled>N</enabled>
+          <enabled>Y</enabled>
           <name>LOG_FIELD</name>
         </field>
         <field>
@@ -353,7 +353,7 @@
         <connection />
         <schema />
         <table />
-        <timeout_days />
+        <timeout_days>${METRICS_LOGS_RECORD_TIMEOUT}</timeout_days>
         <field>
           <id>ID_BATCH</id>
           <enabled>Y</enabled>

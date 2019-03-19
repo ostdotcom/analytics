@@ -577,12 +577,103 @@
       <to>Insert / update</to>
       <enabled>Y</enabled>
     </hop>
+    <hop>
+      <from>Time lookup</from>
+      <to>Abort</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>Date Lookup</from>
+      <to>Abort</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>Token Lookup</from>
+      <to>Abort</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>Meta Type Lookup</from>
+      <to>Abort</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>Meta Name Lookup</from>
+      <to>Abort</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>Load Transactions Cube</from>
+      <to>Block this step until steps finish</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>Block this step until steps finish</from>
+      <to>Get agg rows </to>
+      <enabled>Y</enabled>
+    </hop>
   </order>
+  <step>
+    <name>Abort</name>
+    <type>Abort</type>
+    <description />
+    <distribute>Y</distribute>
+    <custom_distribution />
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name />
+    </partitioning>
+    <row_threshold>0</row_threshold>
+    <message>Dimension Not found</message>
+    <always_log_rows>Y</always_log_rows>
+    <abort_option>ABORT_WITH_ERROR</abort_option>
+    <attributes />
+    <cluster_schema />
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>560</xloc>
+      <yloc>352</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>Block this step until steps finish</name>
+    <type>BlockUntilStepsFinish</type>
+    <description />
+    <distribute>Y</distribute>
+    <custom_distribution />
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name />
+    </partitioning>
+    <steps>
+      </steps>
+    <attributes />
+    <cluster_schema />
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>192</xloc>
+      <yloc>240</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
   <step>
     <name>Date Lookup</name>
     <type>DBLookup</type>
     <description />
-    <distribute>Y</distribute>
+    <distribute>N</distribute>
     <custom_distribution />
     <copies>1</copies>
     <partitioning>
@@ -596,7 +687,7 @@
     <lookup>
       <schema>${MYSQL_SCHEMA_NAME}${ENV_SUFFIX}</schema>
       <table>dim_dates</table>
-      <orderby>time_sk</orderby>
+      <orderby>date_sk</orderby>
       <fail_on_multiple>N</fail_on_multiple>
       <eat_row_on_failure>Y</eat_row_on_failure>
       <key>
@@ -655,7 +746,7 @@ ORDER BY rounded_date_timestamp, rounded_time_timestamp;</sql>
       </output>
     </remotesteps>
     <GUI>
-      <xloc>160</xloc>
+      <xloc>208</xloc>
       <yloc>64</yloc>
       <draw>Y</draw>
     </GUI>
@@ -693,10 +784,132 @@ ORDER BY rounded_date_timestamp, rounded_time_timestamp;</sql>
     </GUI>
   </step>
   <step>
+    <name>Load Transactions Cube</name>
+    <type>ExecSQL</type>
+    <description />
+    <distribute>N</distribute>
+    <custom_distribution />
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name />
+    </partitioning>
+    <connection>analytics_redshift_connection</connection>
+    <execute_each_row>N</execute_each_row>
+    <single_statement>Y</single_statement>
+    <replace_variables>Y</replace_variables>
+    <quoteString>N</quoteString>
+    <sql>SET search_path = ${TEMP_PENTAHO_REDSHIFT_SCHEMA_NAME}${ENV_SUFFIX};
+
+begin ;
+
+DROP TABLE if exists temp_incremental_transactions_${CHAIN_ID};
+
+CREATE TABLE temp_incremental_transactions_${CHAIN_ID} 
+AS
+SELECT *
+FROM ${PRESTAGING_REDSHIFT_SCHEMA_NAME}${ENV_SUFFIX}.transactions_${CHAIN_ID}
+WHERE id >(SELECT MAX(value)
+           FROM temp_pentaho_processing_info_${CHAIN_ID}
+           WHERE property = 'last_processed_transaction');
+
+DROP TABLE if exists temp_transfer_details_${CHAIN_ID};
+
+CREATE TABLE temp_transfer_details_${CHAIN_ID}
+AS
+SELECT a.tx_hash,
+       a.block_number,
+       a.status AS status,
+       a.status_internal AS internal_status,
+       CASE (a.status = 1 AND a.status_internal = 1)
+         WHEN TRUE THEN 'success'
+         ELSE 'fail'
+       END AS final_status,
+       a.rule_id,
+       LOWER(a.meta_type) as meta_type,
+       LOWER(a.meta_name) as meta_name,
+       a.token_id,
+       a.gas_used,
+       a.block_timestamp,
+       (a.block_timestamp / 3600)::INTEGER AS rounded_date_timestamp,
+       MOD(a.block_timestamp,3600)::INTEGER AS rounded_time_timestamp,
+       COUNT(1) AS total_transfers,
+       SUM(amount) AS total_transfer_amount
+FROM temp_incremental_transactions_${CHAIN_ID} as a
+  JOIN ${PRESTAGING_REDSHIFT_SCHEMA_NAME}${ENV_SUFFIX}.transfers_${CHAIN_ID} as b 
+  ON a.tx_hash = b.tx_hash
+WHERE a.kind = 1
+and (a.token_id is not null) 
+AND (a.token_id > 0)
+GROUP BY 1,
+         2,
+         3,
+         4,
+         5,
+         6,
+         7,
+         8,
+         9,
+         10,
+         11,
+         12,
+         13;
+
+DROP TABLE IF EXISTS temp_aggregated_transfers_details_${CHAIN_ID};
+
+CREATE TABLE temp_aggregated_transfers_details_${CHAIN_ID} 
+AS
+SELECT rounded_time_timestamp,
+       rounded_date_timestamp,
+       token_id,
+       meta_type,
+       meta_name,
+       status,
+       COUNT(1) AS total_transactions,
+       SUM(total_transfers) AS total_transfers,
+       SUM(total_transfer_amount) as total_volume,
+       SUM(gas_used) AS total_gas_used
+FROM temp_transfer_details_${CHAIN_ID}
+GROUP BY 1,
+         2,
+         3,
+         4,
+         5,
+         6
+         order by rounded_date_timestamp, rounded_time_timestamp;;
+
+Update temp_pentaho_processing_info_${CHAIN_ID} 
+set value = (select COALESCE(max(id), -1) from temp_incremental_transactions_${CHAIN_ID})
+where  property ='last_processed_transaction';
+
+
+commit;</sql>
+    <set_params>N</set_params>
+    <insert_field />
+    <update_field />
+    <delete_field />
+    <read_field />
+    <arguments>
+    </arguments>
+    <attributes />
+    <cluster_schema />
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>64</xloc>
+      <yloc>64</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
     <name>Meta Name Lookup</name>
     <type>DBLookup</type>
     <description />
-    <distribute>Y</distribute>
+    <distribute>N</distribute>
     <custom_distribution />
     <copies>1</copies>
     <partitioning>
@@ -712,7 +925,7 @@ ORDER BY rounded_date_timestamp, rounded_time_timestamp;</sql>
       <table>dim_meta_names_${CHAIN_ID}</table>
       <orderby />
       <fail_on_multiple>N</fail_on_multiple>
-      <eat_row_on_failure>N</eat_row_on_failure>
+      <eat_row_on_failure>Y</eat_row_on_failure>
       <key>
         <name>meta_name</name>
         <field>meta_name</field>
@@ -750,7 +963,7 @@ ORDER BY rounded_date_timestamp, rounded_time_timestamp;</sql>
     <name>Meta Type Lookup</name>
     <type>DBLookup</type>
     <description />
-    <distribute>Y</distribute>
+    <distribute>N</distribute>
     <custom_distribution />
     <copies>1</copies>
     <partitioning>
@@ -759,7 +972,7 @@ ORDER BY rounded_date_timestamp, rounded_time_timestamp;</sql>
     </partitioning>
     <connection>analytics_mysql_connection</connection>
     <cache>Y</cache>
-    <cache_load_all>N</cache_load_all>
+    <cache_load_all>Y</cache_load_all>
     <cache_size>0</cache_size>
     <lookup>
       <schema>${MYSQL_SCHEMA_NAME}${ENV_SUFFIX}</schema>
@@ -798,7 +1011,7 @@ ORDER BY rounded_date_timestamp, rounded_time_timestamp;</sql>
     <name>Time lookup</name>
     <type>DBLookup</type>
     <description />
-    <distribute>Y</distribute>
+    <distribute>N</distribute>
     <custom_distribution />
     <copies>1</copies>
     <partitioning>
@@ -807,12 +1020,12 @@ ORDER BY rounded_date_timestamp, rounded_time_timestamp;</sql>
     </partitioning>
     <connection>analytics_mysql_connection</connection>
     <cache>Y</cache>
-    <cache_load_all>N</cache_load_all>
+    <cache_load_all>Y</cache_load_all>
     <cache_size>0</cache_size>
     <lookup>
       <schema>${MYSQL_SCHEMA_NAME}${ENV_SUFFIX}</schema>
       <table>dim_times</table>
-      <orderby>time_sk</orderby>
+      <orderby />
       <fail_on_multiple>N</fail_on_multiple>
       <eat_row_on_failure>Y</eat_row_on_failure>
       <key>
@@ -846,7 +1059,7 @@ ORDER BY rounded_date_timestamp, rounded_time_timestamp;</sql>
     <name>Token Lookup</name>
     <type>DBLookup</type>
     <description />
-    <distribute>Y</distribute>
+    <distribute>N</distribute>
     <custom_distribution />
     <copies>1</copies>
     <partitioning>
@@ -855,7 +1068,7 @@ ORDER BY rounded_date_timestamp, rounded_time_timestamp;</sql>
     </partitioning>
     <connection>analytics_mysql_connection</connection>
     <cache>Y</cache>
-    <cache_load_all>N</cache_load_all>
+    <cache_load_all>Y</cache_load_all>
     <cache_size>0</cache_size>
     <lookup>
       <schema>${MYSQL_SCHEMA_NAME}${ENV_SUFFIX}</schema>
@@ -891,6 +1104,66 @@ ORDER BY rounded_date_timestamp, rounded_time_timestamp;</sql>
     </GUI>
   </step>
   <step_error_handling>
+    <error>
+      <source_step>Date Lookup</source_step>
+      <target_step>Abort</target_step>
+      <is_enabled>Y</is_enabled>
+      <nr_valuename />
+      <descriptions_valuename />
+      <fields_valuename />
+      <codes_valuename />
+      <max_errors />
+      <max_pct_errors />
+      <min_pct_rows />
+    </error>
+    <error>
+      <source_step>Meta Name Lookup</source_step>
+      <target_step>Abort</target_step>
+      <is_enabled>Y</is_enabled>
+      <nr_valuename />
+      <descriptions_valuename />
+      <fields_valuename />
+      <codes_valuename />
+      <max_errors />
+      <max_pct_errors />
+      <min_pct_rows />
+    </error>
+    <error>
+      <source_step>Meta Type Lookup</source_step>
+      <target_step>Abort</target_step>
+      <is_enabled>Y</is_enabled>
+      <nr_valuename />
+      <descriptions_valuename />
+      <fields_valuename />
+      <codes_valuename />
+      <max_errors />
+      <max_pct_errors />
+      <min_pct_rows />
+    </error>
+    <error>
+      <source_step>Time lookup</source_step>
+      <target_step>Abort</target_step>
+      <is_enabled>Y</is_enabled>
+      <nr_valuename />
+      <descriptions_valuename />
+      <fields_valuename />
+      <codes_valuename />
+      <max_errors />
+      <max_pct_errors />
+      <min_pct_rows />
+    </error>
+    <error>
+      <source_step>Token Lookup</source_step>
+      <target_step>Abort</target_step>
+      <is_enabled>Y</is_enabled>
+      <nr_valuename />
+      <descriptions_valuename />
+      <fields_valuename />
+      <codes_valuename />
+      <max_errors />
+      <max_pct_errors />
+      <min_pct_rows />
+    </error>
   </step_error_handling>
   <slave-step-copy-partition-distribution>
   </slave-step-copy-partition-distribution>
