@@ -68,7 +68,7 @@ CREATE TABLE temp_transfers_${CHAIN_ID}
   from_address     VARCHAR(255) NOT NULL,
   to_address       VARCHAR(255),
   contract_address VARCHAR(255),
-  amount           DECIMAL(30,0) NOT NULL,
+  amount           DECIMAL(30,0) NOT NULL
 )
   DISTKEY (tx_hash) SORTKEY(block_number);
 
@@ -85,7 +85,7 @@ CREATE TABLE transfers_${CHAIN_ID}
   from_address     VARCHAR(255) NOT NULL,
   to_address       VARCHAR(255) NOT NULL,
   contract_address VARCHAR(255) NOT NULL,
-  amount           DECIMAL(30,0) NOT NULL,
+  amount           DECIMAL(30,0) NOT NULL
 )
 DISTKEY (tx_hash) SORTKEY(block_number);
 
@@ -121,7 +121,7 @@ CREATE TABLE tokens_${CHAIN_ID}
 )SORTKEY(token_id);
 
 
-
+DROP TABLE IF EXISTS  data_processing_info_${CHAIN_ID};
 CREATE TABLE data_processing_info_${CHAIN_ID}
 (
   property  varchar(255)   NOT NULL,
@@ -131,4 +131,7 @@ COMMIT;
 
 INSERT INTO data_processing_info_${CHAIN_ID}
 (  property,  value)VALUES( 'last_processed_block', '-1');
+
+INSERT INTO data_processing_info_${CHAIN_ID}
+(  property,  value)VALUES( 'token_last_updated_at', '1970-01-01 00:00:00');
 COMMIT;
