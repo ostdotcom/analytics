@@ -8,8 +8,7 @@ const rootPrefix = "..",
     logger = require(rootPrefix + "/helpers/custom_console_logger");
 
 
-//
-
+// commander
 program
     .version('0.1.0')
     .option('--chainId <chainId>', 'Chain id, mandatory param')
@@ -19,6 +18,12 @@ program
     .option('--token <token>', 'Extract token data')
     .parse(process.argv);
 
+/**
+ *
+ * Class for data extraction
+ * @class
+ *
+ */
 class ExtractData {
 
     constructor() {
@@ -49,10 +54,19 @@ class ExtractData {
         }
     }
 
-    extractTokens() {
 
+    extractTokens() {
+        // todo:: call mysql token service from here
     }
 
+    /**
+     * Method to call block-scanner service by passing start block, end block and chainId
+     *
+     * @param {number} startBlock - start block
+     *
+     * * @param {number} endBlock - end block
+     *
+     */
     async extractBlockScannerData(startBlock, endBlock) {
         const oThis = this;
         let startTime = Date.now();
@@ -73,11 +87,23 @@ class ExtractData {
     }
 
 
+    /**
+     * get start block based on whether it is passed or not from command
+     *
+     * * @return {number} start block to process
+     *
+     */
     async getStartBlock() {
         const oThis = this;
         return program.startBlock ? parseInt(program.startBlock) : await oThis.getStartBlockFromRedShift();
     }
 
+    /**
+     * get start block from redshift
+     *
+     * * @return {number} start block from redshift
+     *
+     */
     getStartBlockFromRedShift() {
         const oThis = this;
         return oThis.redshiftClient.query("select * from " + dataProcessingInfoGC.getTableNameWithSchema + "_" + oThis.chainId + " where property = '" +
@@ -86,21 +112,31 @@ class ExtractData {
         });
     }
 
+
+    /**
+     * get last finalized block if end block is not given. else passed end block is returned
+     *
+     * * @return {number} end block
+     *
+     */
     async getEndBlock() {
         const oThis = this;
         let lastFinalizedBlock = await oThis.getEndBlockFromBlockScanner();
         return program.endBlock && program.endBlock <= lastFinalizedBlock ? parseInt(program.endBlock) : parseInt(lastFinalizedBlock);
     }
 
+    /**
+     * get last finalized block
+     *
+     * * @return {number} end block
+     *
+     */
     async getEndBlockFromBlockScanner() {
 
 
         const oThis = this,
             finalizedBlockResp = await oThis.blockScanner.getChainCronData();
 
-        console.log("======= =================");
-        console.log(finalizedBlockResp, oThis.chainId );
-        console.log("======= =================");
         return finalizedBlockResp[oThis.chainId]["lastFinalizedBlock"];
     }
 

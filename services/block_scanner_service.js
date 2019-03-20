@@ -13,6 +13,13 @@ const rootPrefix = "..",
 
 ;
 
+
+/**
+ *
+ * Block scanner service
+ * @class
+ *
+ */
 class BlockScannerService {
 
     constructor(chainId, startBlock, endBlock) {
@@ -25,6 +32,13 @@ class BlockScannerService {
         oThis.applicationMailer = new ApplicationMailer();
     }
 
+
+    /**
+     * process block scanning in batches
+     *
+     * * @return {number} last processed block
+     *
+     */
     async process() {
         const oThis = this;
         let r;
@@ -36,6 +50,13 @@ class BlockScannerService {
 
     }
 
+    /**
+     * block scanning for each batch
+     *
+     * * @param {number} currentBatchStartBlock - current batch start block
+     * * @return {Promise}
+     *
+     */
     async runBatchBlockScanning(currentBatchStartBlock) {
         const oThis = this;
         let promiseArray = [],
@@ -117,6 +138,14 @@ class BlockScannerService {
     }
 
 
+    /**
+     * upload to S3
+     *
+     * @param {string} s3UploadPath
+     * * @param {string} localDirFullFilePath
+     * * @return {Promise}
+     *
+     */
     async uploadToS3(s3UploadPath, localDirFullFilePath) {
 
         let s3Write = new S3Write({
@@ -134,6 +163,13 @@ class BlockScannerService {
 
     }
 
+    /**
+     * processes given block
+     *
+     * @param {number} blockNumber
+     * * @return {Promise}
+     *
+     */
     processBlock(blockNumber) {
         const oThis = this;
         return new Promise(function (resolve, reject) {
@@ -167,6 +203,12 @@ class BlockScannerService {
     }
 
 
+    /**
+     * return batch end block
+     *
+     * * @return {number}
+     *
+     */
     get batchEndBlock() {
         const oThis = this;
         let noOfBlocks = blockScannerGC.noOfBlocksToProcessTogether * blockScannerGC.S3WriteCount;
@@ -175,7 +217,12 @@ class BlockScannerService {
             (oThis.batchStartBlock + noOfBlocks - 1);
     }
 
-
+    /**
+     * update last processed block
+     *
+     * * @return {promise}
+     *
+     */
     async updateLastProcessedBlock() {
         const oThis = this;
         return oThis.redshiftClient.query("update " + dataProcessingInfoGC.getTableNameWithSchema + "_" + oThis.chainId +  " set value=" + oThis.lastProccessedBlock + " " +
