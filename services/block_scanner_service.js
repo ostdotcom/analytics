@@ -72,7 +72,6 @@ class BlockScannerService {
                         await oThis.uploadToS3(`${s3UploadPath}${modelToPerform.localPath}/`,
                             `${localDirFullFilePath}${modelToPerform.localPath}`)
                     );
-
                 }
                 return Promise.all(uploadToS3Promise).then(async (res) => {
 
@@ -101,7 +100,7 @@ class BlockScannerService {
                             internal_error_identifier: 's_bss_rbbs_1',
                             api_error_identifier: 'redshift_download_breaking',
                             debug_options: {err: err}
-                        }
+                        });
                         oThis.applicationMailer.perform(error);
                         return Promise.reject(error);
                     });
