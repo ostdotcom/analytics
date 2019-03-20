@@ -2,23 +2,15 @@
 /**
  * This is model for Token table.
  *
- * @module app/models/mysql/Token
+ * @module /models/mysql/token
  */
 const rootPrefix = '../..',
-    util = require(rootPrefix + '/lib/util'),
     ModelBase = require(rootPrefix + '/models/mysql/base'),
     Constants = require(rootPrefix + '/configs/constants'),
     tokensGC = require(rootPrefix + '/lib/globalConstants/redshift/token');
 
 // Declare variables.
-const dbName = 'kit_saas_' + Constants.SUB_ENVIRONMENT + '_' + Constants.ENVIRONMENT,
-    statuses = {
-        '1': tokensGC.notDeployed,
-        '2': tokensGC.deploymentStarted,
-        '3': tokensGC.deploymentCompleted,
-        '4': tokensGC.deploymentFailed
-    },
-    invertedStatuses = util.invert(statuses);
+const dbName = 'kit_saas_' + Constants.SUB_ENVIRONMENT + '_' + Constants.SAAS_MYSQL_DATABASE_ENVIRONMENT;
 
 /**
  * Class for token model
@@ -41,42 +33,26 @@ class Token extends ModelBase {
         oThis.tableName = 'tokens';
     }
 
-    get fullTableName(){
-        return `${tokensGC.getTableNameWithSchema}_${this.chainId}`;
-    }
-
-
+    /**
+     * Get mapping for the token table
+     *
+     * @return {Map}
+     */
     static get mapping(){
         return tokensGC.mapping;
     }
 
     /**
+     * Format data
      *
-     * @param dbRow
-     * @return {object}
+     * @returns {Array[objects]}
      */
-    formatDbData(dbRow) {
-        return {
-            id: dbRow.id,
-            clientId: dbRow.client_id,
-            name: dbRow.name,
-            symbol: dbRow.symbol,
-            conversionFactor: dbRow.conversion_factor,
-            decimal: dbRow.decimal,
-            status: dbRow.status,
-            delayedRecoveryInterval: dbRow.delayed_recovery_interval,
-            createdAt: dbRow.created_at,
-            updatedTimestamp: dbRow.updated_at
-        };
-    }
-
-
     formatData(arrayToFormat) {
         const oThis = this;
         let arrayOfObjects = [];
         for (let object of arrayToFormat) {
             // let model = new tokensModel({object: object, chainId: oThis.chainId});
-            let r = oThis.formatBlockScannerDataToArray(object);
+            let r = oThis.formatMysqlDataToArray(object);
             if (!r.success) {
                 continue;
             }
@@ -85,22 +61,51 @@ class Token extends ModelBase {
         return arrayOfObjects;
     }
 
+    /**
+     * Get table name with schema
+     *
+     * @returns {String}
+     */
     getTableNameWithSchema() {
         const oThis = this;
-        return Constants.STAG_SCHEMA_NAME + '.tokens_'+ oThis.chainId;
+        return Constants.PRESTAGING_SCHEMA_NAME + '.tokens_'+ oThis.chainId;
     };
 
+    /**
+     * Get table primary key
+     *
+     * @returns {String}
+     */
     getTablePrimaryKey() {
         return 'token_id'
     };
 
+    /**
+     * Get temp table name
+     *
+     * @returns {String}
+     */
     getTempTableName() {
         const oThis = this;
-        return Constants.STAG_SCHEMA_NAME + '.temp_tokens_'+ oThis.chainId;
+        return Constants.PRESTAGING_SCHEMA_NAME + '.temp_tokens_'+ oThis.chainId;
     };
 
+    /**
+     * Get s3 file path
+     *
+     * @returns {String}
+     */
     getS3FilePath() {
-        return `s3://${ Constants.S3_BUCKET_LINK}/`
+        return `s3://${ Constants.S3_BUCKET_NAME}/`
+    };
+
+    /**
+     * Get Iam role
+     *
+     * @returns {String}
+     */
+    getIamRole() {
+        return Constants.S3_IAM_ROLE
     };
 
 }

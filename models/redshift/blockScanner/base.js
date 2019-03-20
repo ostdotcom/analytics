@@ -1,4 +1,4 @@
-const rootPrefix = "../.."
+const rootPrefix = "../../.."
     , Redshift = require('node-redshift')
     , responseHelper = require(rootPrefix + '/lib/formatter/response')
     , constants = require(rootPrefix + '/configs/constants')
@@ -6,6 +6,9 @@ const rootPrefix = "../.."
     , logger = require(rootPrefix + '/helpers/custom_console_logger.js')
     , ApplicationMailer = require(rootPrefix + '/lib/applicationMailer');
 
+/**
+ * @file - Base class for all the BlockScanner Models
+ */
 class Base {
 
     constructor(params) {

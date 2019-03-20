@@ -115,16 +115,6 @@ CustomConsoleLoggerKlass.prototype = {
     CONSOLE_RESET: CONSOLE_RESET,
 
     /**
-     * Log step
-     */
-    step: function () {
-        var args = [appendRequest(this.STEP_PRE)];
-        args = args.concat(Array.prototype.slice.call(arguments));
-        args.push(this.CONSOLE_RESET);
-        console.log.apply(console, args);
-    },
-
-    /**
      * Log info
      */
     info: function () {
@@ -155,16 +145,6 @@ CustomConsoleLoggerKlass.prototype = {
     },
 
     /**
-     * Log win - on done
-     */
-    win: function () {
-        var args = [appendRequest(this.WIN_PRE)];
-        args = args.concat(Array.prototype.slice.call(arguments));
-        args.push(this.CONSOLE_RESET);
-        console.log.apply(console, args);
-    },
-
-    /**
      * Log normal level
      */
     log: function () {
@@ -179,18 +159,6 @@ CustomConsoleLoggerKlass.prototype = {
         if (DEBUG) {
             console.log.apply(console, arguments);
         }
-    },
-
-    //Method to Log Request Started.
-    requestStartLog: function (requestUrl, requestType) {
-        const oThis = this
-            , d = new Date()
-            , dateTime = d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate() + " " + d.getHours() + ":" +
-            d.getMinutes() + ":" + d.getSeconds() + "." + d.getMilliseconds()
-            , message = 'Started \'' + requestType + '\'  \'' + requestUrl + '\' at ' + dateTime
-        ;
-
-        oThis.info(message);
     },
 
 };

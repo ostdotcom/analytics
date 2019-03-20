@@ -90,18 +90,20 @@ CREATE TABLE transfers_${CHAIN_ID}
 DISTKEY (tx_hash) SORTKEY(block_number);
 
 
-
-
-DROP TABLE IF EXISTS data_processing_info;
-CREATE TABLE data_processing_info
+DROP TABLE IF EXISTS temp_tokens_${CHAIN_ID};
+CREATE TABLE temp_tokens_${CHAIN_ID}
 (
-  property VARCHAR(255) NOT NULL,
-  value    BIGINT       NOT NULL
-)
-  DISTKEY (property);
-COMMIT;
-
-
+  token_id                  INT NOT NULL,
+  client_id                 int NOT NULL,
+  name                      VARCHAR(255) NOT NULL,
+  symbol                    VARCHAR(255) NOT NULL,
+  conversion_factor         decimal(15,6) NOT NULL,
+  number_of_decimal         int NULL,
+  delayed_recovery_interval int NOT NULL,
+  status                    int NOT NULL,
+  created_at                timestamp NOT NULL,
+  updated_at                timestamp NOT NULL
+)SORTKEY(token_id);
 
 DROP TABLE IF EXISTS tokens_${CHAIN_ID};
 CREATE TABLE tokens_${CHAIN_ID}
@@ -111,7 +113,7 @@ CREATE TABLE tokens_${CHAIN_ID}
   name                      VARCHAR(255) NOT NULL,
   symbol                    VARCHAR(255) NOT NULL,
   conversion_factor         decimal(15,6) NOT NULL,
-  decimal                   int NULL,
+  number_of_decimal         int NULL,
   delayed_recovery_interval int NOT NULL,
   status                    int NOT NULL,
   created_at                timestamp NOT NULL,

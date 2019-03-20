@@ -12,9 +12,14 @@ const rootPrefix = '../..',
     responseHelper = require(rootPrefix + '/lib/formatter/response'),
     ApplicationMailer = require(rootPrefix + '/lib/applicationMailer');
 
+/**
+ * Class ModelBase
+ *
+ * @class
+ */
 class ModelBase extends MysqlQueryBuilders {
     /**
-     * Base Model Constructor
+     * Model Base Constructor
      *
      * @constructor
      * @param params
@@ -73,7 +78,12 @@ class ModelBase extends MysqlQueryBuilders {
         });
     }
 
-    validateAndFormatBlockScannerData(object) {
+    /**
+     * Validate and Format Mysql Data
+     *
+     * @return {object}
+     */
+    validateAndFormatMysqlData(object) {
         const oThis = this;
         let formattedMap = new Map();
         for (let column of oThis.constructor.mapping) {
@@ -105,9 +115,14 @@ class ModelBase extends MysqlQueryBuilders {
 
     }
 
-    formatBlockScannerDataToArray(object) {
+    /**
+     * Format mysql data to array
+     *
+     * @return {object}
+     */
+    formatMysqlDataToArray(object) {
         const oThis = this;
-        let r = oThis.validateAndFormatBlockScannerData(object);
+        let r = oThis.validateAndFormatMysqlData(object);
         if (!r.success) return r;
         let formattedMap = r.data;
         return responseHelper.successWithData({
@@ -115,15 +130,23 @@ class ModelBase extends MysqlQueryBuilders {
         });
     }
 
+    /**
+     * Initialize redshift
+     *
+     */
     initRedshift(){
         const oThis = this;
         oThis.redshiftClient = new Redshift(constants.PRESTAGING_REDSHIFT_CLIENT);
     }
 
+    /**
+     * Copy data from s3 and insert into temp table and modify updated records
+     *
+     */
     copyFromS3(fullFilePath) {
 
         const oThis = this
-            , s3BucketPath = 's3://' + constants.S3_BUCKET_LINK + '/'
+            , s3BucketPath = 's3://' + constants.S3_BUCKET_NAME + '/'
 
 
             , copyTable = Util.format('copy %s (%s) from \'%s\' iam_role \'%s\' delimiter \'|\';', oThis.getTempTableName(), oThis.getColumnList, s3BucketPath + fullFilePath, oThis.getIamRole())
@@ -164,7 +187,10 @@ class ModelBase extends MysqlQueryBuilders {
 
     };
 
-
+    /**
+     * Perform the redshift query
+     *
+     */
     async query(commandString) {
         const oThis = this
         ;
@@ -185,6 +211,11 @@ class ModelBase extends MysqlQueryBuilders {
 
     }
 
+    /**
+     * Get column list
+     *
+     * @return {string}
+     */
     get getColumnList(){
         const oThis = this;
         const mapping = oThis.constructor.mapping,
@@ -195,31 +226,50 @@ class ModelBase extends MysqlQueryBuilders {
         return columns.join(", ");
     }
 
-    getModelImportString() {
-        throw 'getModelImportString not implemented'
-    };
-
+    /**
+     * Get table name with schema
+     *
+     * @returns {String}
+     */
     getTableNameWithSchema() {
-        throw 'getModelImportString not implemented'
+        throw 'getTableNameWithSchema not implemented'
     };
 
+    /**
+     * Get table primary key
+     *
+     * @returns {String}
+     */
     getTablePrimaryKey() {
         throw 'getTablePrimaryKey not implemented'
     };
 
+    /**
+     * Get temp table name
+     *
+     * @returns {String}
+     */
     getTempTableName() {
         throw 'getTempTableName not implemented'
     };
 
+    /**
+     * Get s3 file path
+     *
+     * @returns {String}
+     */
     getS3FilePath() {
         throw 'getS3FilePath not implemented'
     };
 
+    /**
+     * Get Iam role
+     *
+     * @returns {String}
+     */
     getIamRole() {
-        return constants.OS_S3_IAM_ROLE
+        return constants.S3_IAM_ROLE
     };
-
-
 
 }
 

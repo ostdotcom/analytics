@@ -1,12 +1,13 @@
 
 export SUB_ENVIRONMENT='main'
 export ENVIRONMENT='development'
-export ENV_SUFFIX='_s6'
+export ENV_SUFFIX='_d6'
+export SAAS_MYSQL_DATABASE_ENVIRONMENT=staging
 
 export KIT_MYSQL_CONNECTION_POOL_SIZE='3'
 export KIT_SAAS_SUBENV_MYSQL_HOST='127.0.0.1'
-export KIT_SAAS_SUBENV_MYSQL_USER='root'
-export KIT_SAAS_SUBENV_MYSQL_PASSWORD='root'
+export KIT_SAAS_SUBENV_MYSQL_USER='analytics_read'
+export KIT_SAAS_SUBENV_MYSQL_PASSWORD='f234jhfruir12s*sdfyuqws'
 
 export PRESTAGING_REDSHIFT_USER='ost_pentaho_stag_user'
 export PRESTAGING_REDSHIFT_DATABASE='analytics_staging'

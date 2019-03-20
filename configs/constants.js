@@ -3,6 +3,10 @@
 const Constants = function () {
 };
 
+/**
+ * Define constants
+ *
+ */
 function define(key, value) {
     Object.defineProperty(Constants.prototype, key, {
         value: value,
@@ -13,6 +17,7 @@ function define(key, value) {
 define('SUB_ENVIRONMENT', process.env.SUB_ENVIRONMENT);
 define('ENVIRONMENT', process.env.ENVIRONMENT);
 define('ENV_SUFFIX', process.env.ENV_SUFFIX);
+define("SAAS_MYSQL_DATABASE_ENVIRONMENT", process.env.SAAS_MYSQL_DATABASE_ENVIRONMENT);
 
 
 define('KIT_SAAS_SUBENV_MYSQL_PASSWORD', process.env.KIT_SAAS_SUBENV_MYSQL_PASSWORD);

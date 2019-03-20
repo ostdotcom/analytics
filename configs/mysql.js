@@ -23,7 +23,8 @@ const mysqlConfig = {
             master: {
                 host: Constants.KIT_SAAS_SUBENV_MYSQL_HOST,
                 user: Constants.KIT_SAAS_SUBENV_MYSQL_USER,
-                password: Constants.KIT_SAAS_SUBENV_MYSQL_PASSWORD
+                password: Constants.KIT_SAAS_SUBENV_MYSQL_PASSWORD,
+                port: 3307
             }
         }
     },
@@ -31,6 +32,6 @@ const mysqlConfig = {
 };
 
 // kit_saas_subenv database
-mysqlConfig['databases']['kit_saas_' + Constants.SUB_ENVIRONMENT + '_' + Constants.ENVIRONMENT] = ['cluster1'];
+mysqlConfig['databases']['kit_saas_' + Constants.SUB_ENVIRONMENT + '_' + Constants.SAAS_MYSQL_DATABASE_ENVIRONMENT] = ['cluster1'];
 
 module.exports = mysqlConfig;

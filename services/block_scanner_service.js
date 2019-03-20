@@ -4,8 +4,8 @@ const rootPrefix = "..",
     ApplicationMailer = require(rootPrefix + '/lib/applicationMailer'),
     dataProcessingInfoGC = require(rootPrefix + "/lib/globalConstants/redShift/dataProcessingInfo"),
     blockScannerGC = require(rootPrefix + "/lib/globalConstants/blockScanner"),
-    TransactionsModel = require(rootPrefix + "/models/redshift/transactions"),
-    TransfersModel = require(rootPrefix + "/models/redshift/transfers"),
+    TransactionsModel = require(rootPrefix + "/models/redshift/blockScanner/transactions"),
+    TransfersModel = require(rootPrefix + "/models/redshift/blockScanner/transfers"),
     S3Write = require(rootPrefix + "/lib/S3_write"),
     BlockScanner = require(rootPrefix + "/lib/blockScanner"),
     logger = require(rootPrefix + "/helpers/custom_console_logger"),
@@ -21,7 +21,12 @@ const rootPrefix = "..",
  *
  */
 class BlockScannerService {
-
+    /**
+     *
+     * @param {Object} chainId, startBlock, endBlock
+     *
+     * @constructor
+     */
     constructor(chainId, startBlock, endBlock) {
         const oThis = this;
         oThis.chainId = chainId;

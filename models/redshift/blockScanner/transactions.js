@@ -1,23 +1,23 @@
 'use strict';
-const rootPrefix = '../..'
+const rootPrefix = '../../..'
     , constants = require(rootPrefix + '/configs/constants')
-    , transfersGC = require(rootPrefix + '/lib/globalConstants/redshift/transfers')
+    , transactionsGC = require(rootPrefix + '/lib/globalConstants/redshift/transactions')
     , Base = require("./base");
 ;
 
-class Transfers extends Base {
+class Transactions extends Base {
 
     constructor(params){
         super(params)
     }
 
     static get mapping(){
-        return transfersGC.mapping;
+        return transactionsGC.mapping;
     }
 
     getTableNameWithSchema() {
         const oThis = this;
-        return constants.PRESTAGING_SCHEMA_NAME + '.transfers_'+ oThis.chainId;
+        return constants.PRESTAGING_SCHEMA_NAME + '.transactions_'+ oThis.chainId;
     };
 
     getTablePrimaryKey() {
@@ -26,8 +26,8 @@ class Transfers extends Base {
 
     getTempTableNameWithSchema() {
         const oThis = this;
-        return constants.PRESTAGING_SCHEMA_NAME + '.temp_transfers_'+ oThis.chainId;
+        return constants.PRESTAGING_SCHEMA_NAME + '.temp_transactions_'+ oThis.chainId;
     };
 
 }
-module.exports = Transfers;
+module.exports = Transactions;
