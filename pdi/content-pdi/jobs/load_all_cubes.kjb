@@ -26,6 +26,14 @@
     <index_tablespace />
     <attributes>
       <attribute>
+        <code>EXTRA_OPTION_MYSQL.rewriteBatchedStatements</code>
+        <attribute>true</attribute>
+      </attribute>
+      <attribute>
+        <code>EXTRA_OPTION_MYSQL.useCompression</code>
+        <attribute>true</attribute>
+      </attribute>
+      <attribute>
         <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
         <attribute>N</attribute>
       </attribute>
@@ -34,8 +42,16 @@
         <attribute>N</attribute>
       </attribute>
       <attribute>
+        <code>INITIAL_POOL_SIZE</code>
+        <attribute>5</attribute>
+      </attribute>
+      <attribute>
         <code>IS_CLUSTERED</code>
         <attribute>N</attribute>
+      </attribute>
+      <attribute>
+        <code>MAXIMUM_POOL_SIZE</code>
+        <attribute>10</attribute>
       </attribute>
       <attribute>
         <code>PORT_NUMBER</code>
@@ -63,7 +79,7 @@
       </attribute>
       <attribute>
         <code>USE_POOLING</code>
-        <attribute>N</attribute>
+        <attribute>Y</attribute>
       </attribute>
     </attributes>
   </connection>
@@ -447,7 +463,7 @@
       <attributes />
       <specification_method>filename</specification_method>
       <trans_object_id />
-      <filename>${Internal.Job.Filename.Directory}/../transformations/incremental_load_transactions_fatc.ktr</filename>
+      <filename>${Internal.Job.Filename.Directory}/../transformations/incremental_load_transactions_fact.ktr</filename>
       <transname />
       <arg_from_previous>N</arg_from_previous>
       <params_from_previous>N</params_from_previous>
@@ -474,8 +490,46 @@
       <parallel>N</parallel>
       <draw>Y</draw>
       <nr>0</nr>
-      <xloc>800</xloc>
+      <xloc>960</xloc>
       <yloc>112</yloc>
+      <attributes_kjc />
+    </entry>
+    <entry>
+      <name>Update Incremental processing info</name>
+      <description />
+      <type>TRANS</type>
+      <attributes />
+      <specification_method>filename</specification_method>
+      <trans_object_id />
+      <filename>${Internal.Job.Filename.Directory}/../transformations/update_incremental_processing_info.ktr</filename>
+      <transname />
+      <arg_from_previous>N</arg_from_previous>
+      <params_from_previous>N</params_from_previous>
+      <exec_per_row>N</exec_per_row>
+      <clear_rows>N</clear_rows>
+      <clear_files>N</clear_files>
+      <set_logfile>N</set_logfile>
+      <logfile />
+      <logext />
+      <add_date>N</add_date>
+      <add_time>N</add_time>
+      <loglevel>Basic</loglevel>
+      <cluster>N</cluster>
+      <slave_server_name />
+      <set_append_logfile>N</set_append_logfile>
+      <wait_until_finished>Y</wait_until_finished>
+      <follow_abort_remote>N</follow_abort_remote>
+      <create_parent_folder>N</create_parent_folder>
+      <logging_remote_work>N</logging_remote_work>
+      <run_configuration>Pentaho local</run_configuration>
+      <parameters>
+        <pass_all_parameters>Y</pass_all_parameters>
+      </parameters>
+      <parallel>N</parallel>
+      <draw>Y</draw>
+      <nr>0</nr>
+      <xloc>768</xloc>
+      <yloc>128</yloc>
       <attributes_kjc />
     </entry>
   </entries>
@@ -500,6 +554,15 @@
     </hop>
     <hop>
       <from>Incremental load dim meta names</from>
+      <to>Update Incremental processing info</to>
+      <from_nr>0</from_nr>
+      <to_nr>0</to_nr>
+      <enabled>Y</enabled>
+      <evaluation>Y</evaluation>
+      <unconditional>N</unconditional>
+    </hop>
+    <hop>
+      <from>Update Incremental processing info</from>
       <to>load transaction fact table </to>
       <from_nr>0</from_nr>
       <to_nr>0</to_nr>
