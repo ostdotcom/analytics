@@ -3,6 +3,7 @@ const rootPrefix = "..",
     Constants = require(rootPrefix + "/configs/constants"),
     ApplicationMailer = require(rootPrefix + '/lib/applicationMailer'),
     dataProcessingInfoGC = require(rootPrefix + "/lib/globalConstants/redShift/dataProcessingInfo"),
+    shell = require("shelljs"),
     blockScannerGC = require(rootPrefix + "/lib/globalConstants/blockScanner"),
     TransactionsModel = require(rootPrefix + "/models/redshift/blockScanner/transactions"),
     TransfersModel = require(rootPrefix + "/models/redshift/blockScanner/transfers"),
@@ -27,12 +28,13 @@ class BlockScannerService {
      *
      * @constructor
      */
-    constructor(chainId, startBlock, endBlock) {
+    constructor(chainId, startBlock, endBlock, isStartBlockGiven) {
         const oThis = this;
         oThis.chainId = chainId;
         oThis.blockScannerResponse = [];
         oThis.batchStartBlock = oThis.nextBlockToProcess = startBlock;
         oThis.endBlock = endBlock;
+        oThis.isStartBlockGiven = isStartBlockGiven;
         oThis.redshiftClient = new RedshiftClient(Constants.PRESTAGING_REDSHIFT_CLIENT);
         oThis.applicationMailer = new ApplicationMailer();
     }
@@ -92,6 +94,7 @@ class BlockScannerService {
                     {localPath: "/transfers", model: TransfersModel}];
 
                 let uploadToS3Promise = [];
+                let hasFilesInTheDirectory = false;
 
                 for (let modelToPerform of operationIterator) {
                     uploadToS3Promise.push(
@@ -105,7 +108,7 @@ class BlockScannerService {
                         if (res[i].success && res[i].data.hasFiles) {
 
                             logger.log("files uploaded to s3 for current batch successfully ");
-
+                            hasFilesInTheDirectory = true;
 
                             let operationModel = new operationIterator[i].model({config: {chainId: oThis.chainId}});
                             operationModel.initRedshift();
@@ -118,8 +121,9 @@ class BlockScannerService {
                     return Promise.all(copyToRedshiftPromise).then((res) => {
                         oThis.lastProccessedBlock = oThis.batchEndBlock;
                         oThis.batchStartBlock = oThis.lastProccessedBlock + 1;
+                        oThis._deleteLocalDirectory(localDirFullFilePath,hasFilesInTheDirectory)
                         oThis.updateLastProcessedBlock();
-                        logger.log("download to redshift has been completed. last processed block" + oThis.lastProccessedBlock);
+                        logger.log("download to redshift has been completed. last processed block " + oThis.lastProccessedBlock);
                         return Promise.resolve(responseHelper.successWithData({lastProcessedBlock: oThis.lastProccessedBlock}));
                     }).catch((err) => {
                         let error = responseHelper.error({
@@ -230,10 +234,19 @@ class BlockScannerService {
      */
     async updateLastProcessedBlock() {
         const oThis = this;
-        return oThis.redshiftClient.query("update " + dataProcessingInfoGC.getTableNameWithSchema + "_" + oThis.chainId +  " set value=" + oThis.lastProccessedBlock + " " +
-            "where property='" + dataProcessingInfoGC.lastProcessedBlockProperty + "'").then((res) => {
-            logger.log("last processed block updated successfully");
-        });
+        if(oThis.isStartBlockGiven == false){
+            return oThis.redshiftClient.query("update " + dataProcessingInfoGC.getTableNameWithSchema + "_" + oThis.chainId +  " set value=" + oThis.lastProccessedBlock + " " +
+                "where property='" + dataProcessingInfoGC.lastProcessedBlockProperty + "'").then((res) => {
+                logger.log("last processed block updated successfully");
+            });
+        }
+    }
+
+    async _deleteLocalDirectory(localDirFullFilePath, hasFilesInTheDirectory) {
+        if(hasFilesInTheDirectory){
+            shell.rm("-rf", localDirFullFilePath);
+            console.log("The directory " + localDirFullFilePath + " is deleted successfully");
+        }
     }
 }
 

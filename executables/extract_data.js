@@ -4,6 +4,7 @@ const rootPrefix = "..",
     Constant = require(rootPrefix + "/configs/constants"),
     dataProcessingInfoGC = require(rootPrefix + "/lib/globalConstants/redShift/dataProcessingInfo"),
     BlockScannerService = require(rootPrefix + "/services/block_scanner_service.js"),
+    TokenService = require(rootPrefix + "/services/token"),
     BlockScanner = require(rootPrefix + "/lib/blockScanner"),
     logger = require(rootPrefix + "/helpers/custom_console_logger");
 
@@ -35,12 +36,17 @@ class ExtractData {
 
     }
 
+
+    handle() {
+        process.exit(1);
+    }
+
     async perform() {
         let oThis = this;
-        // it means no parameter is given, in this case we need to extract data from block-scanner as well as
+        // it means no parameter is given, in this case we need to extract data from block-scanner as well as mysql
         if (process.argv.length == 2) {
             await oThis.extractTokens();
-            await oThis.extractBlockScannerDataextractBlockScannerData(await oThis.getStartBlock(), await oThis.getEndBlock());
+            await oThis.extractBlockScannerData(await oThis.getStartBlock(), await oThis.getEndBlock());
 
         } else {
 
@@ -52,11 +58,29 @@ class ExtractData {
                 await oThis.extractBlockScannerData(await oThis.getStartBlock(), await oThis.getEndBlock());
             }
         }
+
+        process.on('SIGINT', oThis.handle);
+        setTimeout(function() {
+            logger.info('Ending the process. Sending SIGINT.');
+            process.emit('SIGINT');
+        }, 2*1000);
+
     }
 
 
-    extractTokens() {
-        // todo:: call mysql token service from here
+    async extractTokens() {
+        const oThis = this;
+        let startTime = Date.now();
+        logger.log("processing started at", startTime);
+
+
+        let tokenService = new TokenService({chainId: oThis.chainId});
+        await tokenService.processTokens();
+
+        let endTime = Date.now();
+        logger.log("processing finished at", endTime);
+
+        logger.log("Total time to process in milliseconds", (endTime - startTime));
     }
 
     /**
@@ -69,19 +93,20 @@ class ExtractData {
      */
     async extractBlockScannerData(startBlock, endBlock) {
         const oThis = this;
+        let isStartBlockGiven;
         let startTime = Date.now();
         logger.log("block processing started start block =>" + startBlock + ". end block => " + endBlock);
 
         logger.log("processing started at", startTime);
 
+        isStartBlockGiven = program.startBlock ? true : false;
 
-        let blockScannerService = new BlockScannerService(oThis.chainId, startBlock, endBlock);
-        // return blockScannerService.processTransactions(startBlock, endBlock);
+        let blockScannerService = new BlockScannerService(oThis.chainId, startBlock, endBlock, isStartBlockGiven);
 
         let lastProcessedBlock = await blockScannerService.process();
 
         let endTime = Date.now();
-        logger.log("processing finished at", startTime);
+        logger.log("processing finished at", endTime);
 
         logger.log("Total time to process in milliseconds", (endTime - startTime));
     }

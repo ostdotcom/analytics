@@ -31,6 +31,7 @@ class ModelBase extends MysqlQueryBuilders {
         oThis.object = params.object || {};
         oThis.chainId = params.chainId;
         oThis.dbName = params.dbName;
+        oThis.applicationMailer = new ApplicationMailer();
     }
 
     /**
@@ -90,15 +91,16 @@ class ModelBase extends MysqlQueryBuilders {
             //eg. column[0] => token_id, column[1] => {name: 'id', isSerialized: false, required: true}
             if (column[1]['required'] && !(column[1]['name'] in object)) {
 
-                emailNotifier.perform('m_m_b_vafbsd_1', 'Unknown column present in the record', {}, {});
                 console.log(column[1]['name']);
-                return responseHelper.error(
+                let rh = responseHelper.error(
                     {
-                        internal_error_identifier: 'm_m_b_vafbsd_1',
+                        internal_error_identifier: 'm_m_b_vafmd',
                         api_error_identifier: '',
-                        debug_options: {}
+                        debug_options: oThis.object
                     }
-                )
+                );
+                oThis.applicationMailer.perform(rh);
+                return rh;
             }
             let value = object[column[1]['name']];
             // value = value.split("|").join("I");

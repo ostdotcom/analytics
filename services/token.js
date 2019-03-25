@@ -69,6 +69,7 @@ class Token {
         const oThis = this;
         let offset = 0;
         let tokensRecords;
+        let totalRecordProcessed = 0;
 
         oThis.s3UploadPath = `${Constants.SUB_ENVIRONMENT}${Constants.ENV_SUFFIX}/${oThis.chainId}/${Date.now()}`;
         oThis.localDirFullFilePath = `${Constants.LOCAL_DIR_FILE_PATH}/${oThis.s3UploadPath}`;
@@ -78,10 +79,16 @@ class Token {
         tokensRecords = await new tokenModel({}).select("*").where("updated_at > '" + lastUpdatedAtValue + "'").order_by("id").limit(50).offset(offset).fire();
 
         let LocalWrite = new localWrite({separator: "|"});
-        shell.mkdir("-p", oThis.localDirFullFilePath + oThis.getFilePath);
+        if(tokensRecords.length > 0){
+            shell.mkdir("-p", oThis.localDirFullFilePath + oThis.getFilePath);
+        }
 
         while (tokensRecords.length > 0) {
-
+            totalRecordProcessed += tokensRecords.length;
+            if(totalRecordProcessed > 500){
+                totalRecordProcessed = 0;
+                oThis.fileName = oThis.localDirFullFilePath + oThis.getFilePath + "/" + Date.now() + '.csv';
+            }
             let arrayOfList = new tokenModel({}).formatData(tokensRecords);
             if (arrayOfList.length === 0) {
                 return Promise.resolve(responseHelper.successWithData({hasTokens: false}));
@@ -103,10 +110,9 @@ class Token {
     async _getTokenLastUpdatedAtValue() {
         const oThis = this;
 
-        return await oThis.redshiftClient.query("select * from " + dataProcessingInfoGC.getTableNameWithSchema + "_" + oThis.chainId).then((res) => {
+        return await oThis.redshiftClient.query("select * from " + dataProcessingInfoGC.getTableNameWithSchema + "_" + oThis.chainId + " "+"where property=" + "'"+dataProcessingInfoGC.tokenLastUpdatedAtProperty + "'").then((res) => {
             console.log(res.rows);
-            let tokenLastUpdatedAt = res.rows.filter((row) => (row.property == dataProcessingInfoGC.tokenLastUpdatedAtProperty));
-            return (tokenLastUpdatedAt[0].value);
+            return (res.rows[0].value);
         });
     }
 
@@ -118,6 +124,7 @@ class Token {
      */
     async _uploadLocalFilesToS3() {
         const oThis = this;
+        let hasFilesInTheDirectory = false;
 
         for (let modelToPerform of
             [{localPath: "/tokens", model: tokenModel}]) {
@@ -127,11 +134,13 @@ class Token {
 
             if (r.data.hasFiles) {
                 let operationModel = new modelToPerform.model({chainId: oThis.chainId});
+                hasFilesInTheDirectory = true;
 
                 operationModel.initRedshift();
                 await operationModel.copyFromS3(`${oThis.s3UploadPath}${modelToPerform.localPath}/`);
             }
         }
+        oThis._deleteLocalDirectory(oThis.localDirFullFilePath, hasFilesInTheDirectory);
     }
 
     /**
@@ -195,6 +204,13 @@ class Token {
      */
     get getFilePath() {
         return "/tokens";
+    }
+
+    async _deleteLocalDirectory(localDirFullFilePath, hasFilesInTheDirectory) {
+        if(hasFilesInTheDirectory){
+            shell.rm("-rf", localDirFullFilePath);
+            console.log("The directory " + localDirFullFilePath + " is deleted successfully");
+        }
     }
 
 }

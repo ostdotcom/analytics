@@ -39,12 +39,12 @@ define("S3_ACCESS_SECRET", process.env.S3_ACCESS_SECRET );
 define("S3_BUCKET_NAME", process.env.S3_BUCKET_NAME);
 define ("S3_IAM_ROLE", process.env.S3_IAM_ROLE);
 
-define('TRANSFERS_BATCH_SIZE', 80);
-define('TRANSACTION_BATCH_SIZE', 60);
+define('TRANSFERS_BATCH_SIZE', process.env.TRANSFERS_BATCH_SIZE);
+define('TRANSACTION_BATCH_SIZE', process.env.TRANSACTION_BATCH_SIZE);
 
-define('MAX_SPLIT_COUNT', 1);
-define('NO_OF_BLOCKS_TO_PROCESS_TOGETHER', 1);
-define('S3_WRITE_COUNT', 10);
+define('MAX_SPLIT_COUNT', process.env.MAX_SPLIT_COUNT);
+define('NO_OF_BLOCKS_TO_PROCESS_TOGETHER', process.env.NO_OF_BLOCKS_TO_PROCESS_TOGETHER);
+define('S3_WRITE_COUNT', process.env.S3_WRITE_COUNT);
 define("LOCAL_DIR_FILE_PATH", process.env.LOCAL_DIR_FILE_PATH);
 
 define("PRESTAGING_SCHEMA_NAME",process.env.PRESTAGING_SCHEMA_PREFIX + process.env.SUB_ENVIRONMENT + process.env.ENV_SUFFIX);
