@@ -14,10 +14,10 @@
       <trans-log-table>
         <connection />
         <schema />
-        <table />
+        <table>${KETTLE_TRANS_LOG_TABLE}_${CHAIN_ID}</table>
         <size_limit_lines />
         <interval />
-        <timeout_days>${TRANSFORMSTION_LOGS_RECORD_TIMEOUT}</timeout_days>
+        <timeout_days>${TRANSFORMATION_LOGS_RECORD_TIMEOUT}</timeout_days>
         <field>
           <id>ID_BATCH</id>
           <enabled>Y</enabled>
@@ -353,7 +353,7 @@
         <connection />
         <schema />
         <table />
-        <timeout_days>${METRICS_LOGS_RECORD_TIMEOUT}</timeout_days>
+        <timeout_days />
         <field>
           <id>ID_BATCH</id>
           <enabled>Y</enabled>
@@ -441,7 +441,7 @@
     <server />
     <type>MYSQL</type>
     <access>JNDI</access>
-    <database>analyticsMysqlConnection</database>
+    <database>analyticsMysqlConnection_${CHAIN_ID}_${SUB_ENV}${ENV_SUFFIX}</database>
     <port>1521</port>
     <username />
     <password>Encrypted </password>
@@ -512,7 +512,7 @@
     <server />
     <type>REDSHIFT</type>
     <access>JNDI</access>
-    <database>analyticsRedshiftConnection</database>
+    <database>analyticsRedshiftConnection_${CHAIN_ID}_${SUB_ENV}${ENV_SUFFIX}</database>
     <port>1521</port>
     <username />
     <password>Encrypted </password>

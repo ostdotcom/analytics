@@ -4,10 +4,21 @@ ost_pentaho_stag_user
 
 
 
-cd /Users/amanbarbaria/workspace/projects/analytics/analytics/pdi 
+export KETTLE_HOME=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/configs/development
 
-cp configs/development/simple-jndi/jdbc.properties /Users/amanbarbaria/Downloads/data-integration/simple-jndi/jdbc.properties
-cp configs/development/kettle.properties ~/.kettle/kettle.properties
+export KETTLE_JNDI_ROOT=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/configs/development/simple-jndi
+
+sh kitchen.sh -file=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/content-pdi/jobs/load_all_cubes.kjb -level=Detailed -param:CHAIN_ID=202 -param:SUB_ENV=main -param:ENV_SUFFIX=_d6 
+
+
+
+cp ${KETTLE_HOME}/simple-jndi/jdbc.properties /Users/amanbarbaria/Downloads/data-integration/simple-jndi/jdbc.properties
+cp ${KETTLE_HOME}/.kettle/kettle.properties ~/.kettle/kettle.properties
+
+
+cp ~/.kettle/shared.xml ${KETTLE_HOME}/.kettle/shared.xml
+
+
 
 
 
@@ -136,11 +147,24 @@ ssh -L 3307:ost-kit-saas-all.cr8jt6bpnicr.us-east-1.rds.amazonaws.com:3306 3.91.
 node executables/extract_data.js --blockScanner true  --chainId 202
 
 MySQL Connector/J 8.0 is highly recommended for use with MySQL Server 8.0, 5.7, 5.6, and 5.5. Please upgrade to MySQL Connector/J 8.0.
+https://dev.mysql.com/downloads/file/?id=484814
 
 setting. useServerPrepStmts=false
 rewriteBatchedStatements=true
 useCompression=true
 
 either remove fact constraint or create rows with 0 val
+
+
+how to create log migrations for different chains
+
+
+
+
+
+
+
+
+
 
 

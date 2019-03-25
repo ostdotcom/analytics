@@ -40,13 +40,13 @@ class ExtractData {
 
 
     handle() {
-        process.exit(1);
+        process.exit(0);
     }
 
     async perform() {
         let oThis = this;
 
-        oThis.ProcessLocker.canStartProcess({process_title: 'cron_extract_data_c_' + parseInt(program.chainId) + parseInt(program.startBlock) + parseInt(program.endBlock)});
+        oThis.ProcessLocker.canStartProcess({process_title: 'cron_extract_data_c_' + parseInt(program.chainId) + "_" + parseInt(program.startBlock) + "_" + parseInt(program.endBlock)});
 
         process.on('SIGINT', oThis.handle);
 
