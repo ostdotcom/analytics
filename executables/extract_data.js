@@ -6,6 +6,7 @@ const rootPrefix = "..",
     BlockScannerService = require(rootPrefix + "/services/block_scanner_service.js"),
     TokenService = require(rootPrefix + "/services/token"),
     BlockScanner = require(rootPrefix + "/lib/blockScanner"),
+    ProcessLockerKlass = require(rootPrefix + '/lib/processLocker'),
     logger = require(rootPrefix + "/helpers/custom_console_logger");
 
 
@@ -32,7 +33,8 @@ class ExtractData {
         oThis.chainId = program.chainId;
 
         oThis.blockScanner = new BlockScanner(oThis.chainId);
-        oThis.redshiftClient = new RedshiftClient(Constant.PRESTAGING_REDSHIFT_CLIENT)
+        oThis.redshiftClient = new RedshiftClient(Constant.PRESTAGING_REDSHIFT_CLIENT);
+        oThis.ProcessLocker = new ProcessLockerKlass();
 
     }
 
@@ -43,6 +45,9 @@ class ExtractData {
 
     async perform() {
         let oThis = this;
+
+        oThis.ProcessLocker.canStartProcess({process_title: 'cron_extract_data_c_' + parseInt(program.chainId) + parseInt(program.startBlock) + parseInt(program.endBlock)});
+
         // it means no parameter is given, in this case we need to extract data from block-scanner as well as mysql
         if (process.argv.length == 2) {
             await oThis.extractTokens();
