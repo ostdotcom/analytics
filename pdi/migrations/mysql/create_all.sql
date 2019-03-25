@@ -68,7 +68,6 @@ drop table if exists `dim_dates`;
   INSERT INTO `dim_meta_names_${CHAIN_ID}` (`meta_name_sk`,`meta_name`, `token_id`) VALUES(0,'NIL', 0);
 
 
-
   drop table if exists `token_transfer_facts_${CHAIN_ID}`;
   
   CREATE TABLE `token_transfer_facts_${CHAIN_ID}` (
