@@ -12,9 +12,9 @@
     </parameters>
     <log>
       <trans-log-table>
-        <connection>${KETTLE_TRANS_LOG_DB}</connection>
+        <connection />
         <schema />
-        <table>${KETTLE_TRANS_LOG_TABLE}</table>
+        <table />
         <size_limit_lines />
         <interval />
         <timeout_days>${TRANSFORMSTION_LOGS_RECORD_TIMEOUT}</timeout_days>
@@ -416,7 +416,7 @@
     <feedback_size>50000</feedback_size>
     <using_thread_priorities>Y</using_thread_priorities>
     <shared_objects_file />
-    <capture_step_performance>N</capture_step_performance>
+    <capture_step_performance>Y</capture_step_performance>
     <step_performance_capturing_delay>1000</step_performance_capturing_delay>
     <step_performance_capturing_size_limit>100</step_performance_capturing_size_limit>
     <dependencies>
@@ -450,6 +450,14 @@
     <index_tablespace />
     <attributes>
       <attribute>
+        <code>EXTRA_OPTION_MYSQL.rewriteBatchedStatements</code>
+        <attribute>true</attribute>
+      </attribute>
+      <attribute>
+        <code>EXTRA_OPTION_MYSQL.useCompression</code>
+        <attribute>true</attribute>
+      </attribute>
+      <attribute>
         <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
         <attribute>N</attribute>
       </attribute>
@@ -458,8 +466,16 @@
         <attribute>N</attribute>
       </attribute>
       <attribute>
+        <code>INITIAL_POOL_SIZE</code>
+        <attribute>5</attribute>
+      </attribute>
+      <attribute>
         <code>IS_CLUSTERED</code>
         <attribute>N</attribute>
+      </attribute>
+      <attribute>
+        <code>MAXIMUM_POOL_SIZE</code>
+        <attribute>10</attribute>
       </attribute>
       <attribute>
         <code>PORT_NUMBER</code>
@@ -487,7 +503,7 @@
       </attribute>
       <attribute>
         <code>USE_POOLING</code>
-        <attribute>N</attribute>
+        <attribute>Y</attribute>
       </attribute>
     </attributes>
   </connection>
@@ -548,58 +564,43 @@
   </connection>
   <order>
     <hop>
-      <from>Get agg rows </from>
-      <to>Time lookup</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>Time lookup</from>
-      <to>Date Lookup</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
       <from>Date Lookup</from>
       <to>Token Lookup</to>
       <enabled>Y</enabled>
     </hop>
     <hop>
-      <from>Token Lookup</from>
+      <from>Get agg rows </from>
       <to>Meta Type Lookup</to>
       <enabled>Y</enabled>
     </hop>
     <hop>
       <from>Meta Type Lookup</from>
+      <to>Date Lookup</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>Token Lookup</from>
+      <to>Time lookup</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>Time lookup</from>
       <to>Meta Name Lookup</to>
       <enabled>Y</enabled>
     </hop>
     <hop>
       <from>Meta Name Lookup</from>
-      <to>Insert / update</to>
+      <to>Sort rows</to>
       <enabled>Y</enabled>
     </hop>
     <hop>
-      <from>Time lookup</from>
-      <to>Abort</to>
+      <from>Merge rows (diff)</from>
+      <to>Synchronize after merge</to>
       <enabled>Y</enabled>
     </hop>
     <hop>
-      <from>Date Lookup</from>
-      <to>Abort</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>Token Lookup</from>
-      <to>Abort</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>Meta Type Lookup</from>
-      <to>Abort</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>Meta Name Lookup</from>
-      <to>Abort</to>
+      <from>Sort rows</from>
+      <to>Database lookup</to>
       <enabled>Y</enabled>
     </hop>
     <hop>
@@ -607,10 +608,40 @@
       <to>Get agg rows </to>
       <enabled>Y</enabled>
     </hop>
+    <hop>
+      <from>Calculator 2</from>
+      <to>Select table values</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>Sort rows</from>
+      <to>Select sort values</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>Select sort values</from>
+      <to>Merge rows (diff)</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>Select table values</from>
+      <to>Merge rows (diff)</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>Database lookup</from>
+      <to>Set field value to a constant</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>Set field value to a constant</from>
+      <to>Calculator 2</to>
+      <enabled>Y</enabled>
+    </hop>
   </order>
   <step>
-    <name>Abort</name>
-    <type>Abort</type>
+    <name>Calculator 2</name>
+    <type>Calculator</type>
     <description />
     <distribute>Y</distribute>
     <custom_distribution />
@@ -619,10 +650,67 @@
       <method>none</method>
       <schema_name />
     </partitioning>
-    <row_threshold>0</row_threshold>
-    <message>Dimension Not found</message>
-    <always_log_rows>Y</always_log_rows>
-    <abort_option>ABORT_WITH_ERROR</abort_option>
+    <failIfNoFile>Y</failIfNoFile>
+    <calculation>
+      <field_name>total_transactions_updated</field_name>
+      <calc_type>ADD</calc_type>
+      <field_a>total_transactions</field_a>
+      <field_b>total_transactions_old</field_b>
+      <field_c />
+      <value_type>BigNumber</value_type>
+      <value_length>-1</value_length>
+      <value_precision>-1</value_precision>
+      <remove>N</remove>
+      <conversion_mask />
+      <decimal_symbol />
+      <grouping_symbol />
+      <currency_symbol />
+    </calculation>
+    <calculation>
+      <field_name>total_transfers_updated</field_name>
+      <calc_type>ADD</calc_type>
+      <field_a>total_transfers</field_a>
+      <field_b>total_transfers_old</field_b>
+      <field_c />
+      <value_type>BigNumber</value_type>
+      <value_length>-1</value_length>
+      <value_precision>-1</value_precision>
+      <remove>N</remove>
+      <conversion_mask />
+      <decimal_symbol />
+      <grouping_symbol />
+      <currency_symbol />
+    </calculation>
+    <calculation>
+      <field_name>total_volume_updated</field_name>
+      <calc_type>ADD</calc_type>
+      <field_a>total_volume</field_a>
+      <field_b>total_volume_old</field_b>
+      <field_c />
+      <value_type>BigNumber</value_type>
+      <value_length>-1</value_length>
+      <value_precision>-1</value_precision>
+      <remove>N</remove>
+      <conversion_mask />
+      <decimal_symbol />
+      <grouping_symbol />
+      <currency_symbol />
+    </calculation>
+    <calculation>
+      <field_name>total_gas_used_updated</field_name>
+      <calc_type>ADD</calc_type>
+      <field_a>total_gas_used</field_a>
+      <field_b>total_gas_used_old</field_b>
+      <field_c />
+      <value_type>BigNumber</value_type>
+      <value_length>-1</value_length>
+      <value_precision>-1</value_precision>
+      <remove>N</remove>
+      <conversion_mask />
+      <decimal_symbol />
+      <grouping_symbol />
+      <currency_symbol />
+    </calculation>
     <attributes />
     <cluster_schema />
     <remotesteps>
@@ -632,8 +720,105 @@
       </output>
     </remotesteps>
     <GUI>
-      <xloc>560</xloc>
-      <yloc>352</yloc>
+      <xloc>928</xloc>
+      <yloc>416</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>Database lookup</name>
+    <type>DBLookup</type>
+    <description />
+    <distribute>Y</distribute>
+    <custom_distribution />
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name />
+    </partitioning>
+    <connection>analytics_mysql_connection</connection>
+    <cache>N</cache>
+    <cache_load_all>N</cache_load_all>
+    <cache_size>0</cache_size>
+    <lookup>
+      <schema />
+      <table>token_transfer_facts_${CHAIN_ID}</table>
+      <orderby>date_sk, time_sk, token_sk, meta_type_sk, meta_name_sk, status
+</orderby>
+      <fail_on_multiple>Y</fail_on_multiple>
+      <eat_row_on_failure>Y</eat_row_on_failure>
+      <key>
+        <name>date_sk</name>
+        <field>date_sk</field>
+        <condition>=</condition>
+        <name2 />
+      </key>
+      <key>
+        <name>token_sk</name>
+        <field>token_sk</field>
+        <condition>=</condition>
+        <name2 />
+      </key>
+      <key>
+        <name>time_sk</name>
+        <field>time_sk</field>
+        <condition>=</condition>
+        <name2 />
+      </key>
+      <key>
+        <name>final_status</name>
+        <field>status</field>
+        <condition>=</condition>
+        <name2 />
+      </key>
+      <key>
+        <name>meta_type_sk</name>
+        <field>meta_type_sk</field>
+        <condition>=</condition>
+        <name2 />
+      </key>
+      <key>
+        <name>meta_name_sk</name>
+        <field>meta_name_sk</field>
+        <condition>=</condition>
+        <name2 />
+      </key>
+      <value>
+        <name>total_transactions</name>
+        <rename>total_transactions_old</rename>
+        <default />
+        <type>BigNumber</type>
+      </value>
+      <value>
+        <name>total_transfers</name>
+        <rename>total_transfers_old</rename>
+        <default />
+        <type>BigNumber</type>
+      </value>
+      <value>
+        <name>total_volume</name>
+        <rename>total_volume_old</rename>
+        <default />
+        <type>BigNumber</type>
+      </value>
+      <value>
+        <name>total_gas_used</name>
+        <rename>total_gas_used_old</rename>
+        <default />
+        <type>BigNumber</type>
+      </value>
+    </lookup>
+    <attributes />
+    <cluster_schema />
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>1136</xloc>
+      <yloc>320</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
@@ -649,14 +834,14 @@
       <schema_name />
     </partitioning>
     <connection>analytics_mysql_connection</connection>
-    <cache>Y</cache>
+    <cache>N</cache>
     <cache_load_all>N</cache_load_all>
     <cache_size>0</cache_size>
     <lookup>
-      <schema>${MYSQL_SCHEMA_NAME}${ENV_SUFFIX}</schema>
+      <schema />
       <table>dim_dates</table>
-      <orderby>date_sk</orderby>
-      <fail_on_multiple>N</fail_on_multiple>
+      <orderby />
+      <fail_on_multiple>Y</fail_on_multiple>
       <eat_row_on_failure>Y</eat_row_on_failure>
       <key>
         <name>rounded_date_timestamp</name>
@@ -668,7 +853,7 @@
         <name>date_sk</name>
         <rename>date_sk</rename>
         <default />
-        <type>Timestamp</type>
+        <type>BigNumber</type>
       </value>
     </lookup>
     <attributes />
@@ -680,8 +865,8 @@
       </output>
     </remotesteps>
     <GUI>
-      <xloc>432</xloc>
-      <yloc>64</yloc>
+      <xloc>512</xloc>
+      <yloc>208</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
@@ -697,9 +882,22 @@
       <schema_name />
     </partitioning>
     <connection>analytics_redshift_connection</connection>
-    <sql>SELECT *
-FROM ${TEMP_PENTAHO_REDSHIFT_SCHEMA_NAME}${ENV_SUFFIX}.temp_aggregated_transfers_details_${CHAIN_ID}
-ORDER BY rounded_date_timestamp, rounded_time_timestamp;</sql>
+    <sql>SELECT rounded_time_timestamp,
+       rounded_date_timestamp,
+       token_id,
+       meta_type,
+       meta_name,
+       final_status AS final_status,
+       total_transactions::DECIMAL(30,0) AS total_transactions,
+       total_transfers::DECIMAL(30,0) AS total_transfers,
+       total_volume::DECIMAL(30,0) AS total_volume,
+       total_gas_used::DECIMAL(30,0) AS total_gas_used,
+	   1 as is_incremental		
+FROM ${TEMP_PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.temp_aggregated_transfers_details_${CHAIN_ID}
+ORDER BY rounded_date_timestamp,
+         token_id,
+         final_status,
+         rounded_time_timestamp;</sql>
     <limit>0</limit>
     <lookup />
     <execute_each_row>N</execute_each_row>
@@ -714,40 +912,8 @@ ORDER BY rounded_date_timestamp, rounded_time_timestamp;</sql>
       </output>
     </remotesteps>
     <GUI>
-      <xloc>208</xloc>
-      <yloc>64</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>Insert / update</name>
-    <type>InsertUpdate</type>
-    <description />
-    <distribute>Y</distribute>
-    <custom_distribution />
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name />
-    </partitioning>
-    <connection>analytics_mysql_connection</connection>
-    <commit>100</commit>
-    <update_bypassed>N</update_bypassed>
-    <lookup>
-      <schema>${MYSQL_SCHEMA_NAME}${ENV_SUFFIX}</schema>
-      <table>token_transfer_facts_$_{CHAIN_ID}</table>
-    </lookup>
-    <attributes />
-    <cluster_schema />
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>816</xloc>
-      <yloc>192</yloc>
+      <xloc>224</xloc>
+      <yloc>272</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
@@ -764,20 +930,19 @@ ORDER BY rounded_date_timestamp, rounded_time_timestamp;</sql>
     </partitioning>
     <connection>analytics_redshift_connection</connection>
     <execute_each_row>N</execute_each_row>
-    <single_statement>Y</single_statement>
+    <single_statement>N</single_statement>
     <replace_variables>Y</replace_variables>
     <quoteString>N</quoteString>
-    <sql>SET search_path = ${TEMP_PENTAHO_REDSHIFT_SCHEMA_NAME}${ENV_SUFFIX};
+    <sql>SET search_path = ${TEMP_PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX};
 
-begin ;
-
+begin;
 DROP TABLE if exists temp_incremental_transactions_${CHAIN_ID};
 
 CREATE TABLE temp_incremental_transactions_${CHAIN_ID} 
 AS
 SELECT *
-FROM ${PRESTAGING_REDSHIFT_SCHEMA_NAME}${ENV_SUFFIX}.transactions_${CHAIN_ID}
-WHERE id >(SELECT MAX(value)
+FROM ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.transactions_${CHAIN_ID}
+WHERE id > (SELECT MAX(value)
            FROM temp_pentaho_processing_info_${CHAIN_ID}
            WHERE property = 'last_processed_transaction');
 
@@ -789,24 +954,24 @@ SELECT a.tx_hash,
        a.block_number,
        a.status AS status,
        a.status_internal AS internal_status,
-       CASE (a.status = 1 AND a.status_internal = 1)
+       (CASE (a.status = true AND a.status_internal = true)
          WHEN TRUE THEN 'success'
          ELSE 'fail'
-       END AS final_status,
+       END) AS final_status,
        a.rule_id,
        LOWER(a.meta_type) as meta_type,
        LOWER(a.meta_name) as meta_name,
-       a.token_id,
+       a.token_id::INTEGER as token_id,
        a.gas_used,
        a.block_timestamp,
-       (a.block_timestamp / 3600)::INTEGER AS rounded_date_timestamp,
-       MOD(a.block_timestamp,3600)::INTEGER AS rounded_time_timestamp,
-       COUNT(1) AS total_transfers,
-       SUM(amount) AS total_transfer_amount
+       (a.block_timestamp - MOD(a.block_timestamp,86400)::INTEGER) AS rounded_date_timestamp,
+       3600 *((MOD(a.block_timestamp,86400) / 3600)::INTEGER) AS rounded_time_timestamp,
+       COALESCE(COUNT(1), 0) AS total_transfers,
+       COALESCE(SUM(b.amount), 0) AS total_transfer_amount
 FROM temp_incremental_transactions_${CHAIN_ID} as a
-  JOIN ${PRESTAGING_REDSHIFT_SCHEMA_NAME}${ENV_SUFFIX}.transfers_${CHAIN_ID} as b 
+  left outer JOIN ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.transfers_${CHAIN_ID} as b 
   ON a.tx_hash = b.tx_hash
-WHERE a.kind = 1
+WHERE a.kind = 54
 and (a.token_id is not null) 
 AND (a.token_id > 0)
 GROUP BY 1,
@@ -832,11 +997,11 @@ SELECT rounded_time_timestamp,
        token_id,
        meta_type,
        meta_name,
-       status,
-       COUNT(1) AS total_transactions,
-       SUM(total_transfers) AS total_transfers,
-       SUM(total_transfer_amount) as total_volume,
-       SUM(gas_used) AS total_gas_used
+       final_status as final_status,
+       COUNT(1)::bigint AS total_transactions,
+       SUM(total_transfers)::bigint AS total_transfers,
+       SUM(total_transfer_amount)::decimal(30,0) as total_volume,
+       SUM(gas_used)::bigint AS total_gas_used
 FROM temp_transfer_details_${CHAIN_ID}
 GROUP BY 1,
          2,
@@ -844,14 +1009,14 @@ GROUP BY 1,
          4,
          5,
          6
-         order by rounded_date_timestamp, rounded_time_timestamp;;
+         order by rounded_date_timestamp, rounded_time_timestamp;
 
 Update temp_pentaho_processing_info_${CHAIN_ID} 
-set value = (select COALESCE(max(id), -1) from temp_incremental_transactions_${CHAIN_ID})
+set value = GREATEST(value, (select COALESCE(max(id), -1) from temp_incremental_transactions_${CHAIN_ID}))
 where  property ='last_processed_transaction';
 
-
-commit;</sql>
+commit;
+</sql>
     <set_params>N</set_params>
     <insert_field />
     <update_field />
@@ -869,7 +1034,48 @@ commit;</sql>
     </remotesteps>
     <GUI>
       <xloc>64</xloc>
-      <yloc>64</yloc>
+      <yloc>272</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>Merge rows (diff)</name>
+    <type>MergeRows</type>
+    <description />
+    <distribute>Y</distribute>
+    <custom_distribution />
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name />
+    </partitioning>
+    <keys>
+      <key>date_sk</key>
+      <key>token_sk</key>
+      <key>meta_name_sk</key>
+      <key>meta_type_sk</key>
+      <key>final_status</key>
+      <key>time_sk</key>
+    </keys>
+    <values>
+      <value>is_incremental</value>
+    </values>
+    <flag_field>flagfield</flag_field>
+    <reference>Select sort values</reference>
+    <compare>Select table values</compare>
+    <compare>
+    </compare>
+    <attributes />
+    <cluster_schema />
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>560</xloc>
+      <yloc>416</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
@@ -885,15 +1091,15 @@ commit;</sql>
       <schema_name />
     </partitioning>
     <connection>analytics_mysql_connection</connection>
-    <cache>Y</cache>
+    <cache>N</cache>
     <cache_load_all>N</cache_load_all>
     <cache_size>0</cache_size>
     <lookup>
-      <schema>${MYSQL_SCHEMA_NAME}${ENV_SUFFIX}</schema>
+      <schema />
       <table>dim_meta_names_${CHAIN_ID}</table>
       <orderby />
       <fail_on_multiple>N</fail_on_multiple>
-      <eat_row_on_failure>Y</eat_row_on_failure>
+      <eat_row_on_failure>N</eat_row_on_failure>
       <key>
         <name>meta_name</name>
         <field>meta_name</field>
@@ -903,6 +1109,54 @@ commit;</sql>
       <key>
         <name>token_id</name>
         <field>token_id</field>
+        <condition>=</condition>
+        <name2 />
+      </key>
+      <value>
+        <name>meta_name_sk</name>
+        <rename>meta_name_sk</rename>
+        <default>0</default>
+        <type>BigNumber</type>
+      </value>
+    </lookup>
+    <attributes />
+    <cluster_schema />
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>896</xloc>
+      <yloc>208</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>Meta Type Lookup</name>
+    <type>DBLookup</type>
+    <description />
+    <distribute>N</distribute>
+    <custom_distribution />
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name />
+    </partitioning>
+    <connection>analytics_mysql_connection</connection>
+    <cache>N</cache>
+    <cache_load_all>N</cache_load_all>
+    <cache_size>0</cache_size>
+    <lookup>
+      <schema />
+      <table>dim_meta_types</table>
+      <orderby />
+      <fail_on_multiple>Y</fail_on_multiple>
+      <eat_row_on_failure>N</eat_row_on_failure>
+      <key>
+        <name>meta_type</name>
+        <field>meta_type</field>
         <condition>=</condition>
         <name2 />
       </key>
@@ -922,14 +1176,238 @@ commit;</sql>
       </output>
     </remotesteps>
     <GUI>
-      <xloc>816</xloc>
-      <yloc>64</yloc>
+      <xloc>384</xloc>
+      <yloc>272</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
   <step>
-    <name>Meta Type Lookup</name>
-    <type>DBLookup</type>
+    <name>Select sort values</name>
+    <type>SelectValues</type>
+    <description />
+    <distribute>Y</distribute>
+    <custom_distribution />
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name />
+    </partitioning>
+    <fields>
+      <field>
+        <name>date_sk</name>
+      </field>
+      <field>
+        <name>final_status</name>
+      </field>
+      <field>
+        <name>meta_name_sk</name>
+      </field>
+      <field>
+        <name>meta_type_sk</name>
+      </field>
+      <field>
+        <name>time_sk</name>
+      </field>
+      <field>
+        <name>token_sk</name>
+      </field>
+      <field>
+        <name>total_gas_used</name>
+      </field>
+      <field>
+        <name>total_transactions</name>
+      </field>
+      <field>
+        <name>total_transfers</name>
+      </field>
+      <field>
+        <name>total_volume</name>
+      </field>
+      <field>
+        <name>is_incremental</name>
+      </field>
+      <select_unspecified>N</select_unspecified>
+      <meta>
+        <name>total_gas_used</name>
+        <rename>total_gas_used_updated</rename>
+        <type>BigNumber</type>
+        <length>-2</length>
+        <precision>0</precision>
+        <conversion_mask />
+        <date_format_lenient>false</date_format_lenient>
+        <date_format_locale />
+        <date_format_timezone />
+        <lenient_string_to_number>false</lenient_string_to_number>
+        <encoding />
+        <decimal_symbol />
+        <grouping_symbol />
+        <currency_symbol />
+        <storage_type />
+      </meta>
+      <meta>
+        <name>total_transactions</name>
+        <rename>total_transactions_updated</rename>
+        <type>BigNumber</type>
+        <length>-2</length>
+        <precision>0</precision>
+        <conversion_mask />
+        <date_format_lenient>false</date_format_lenient>
+        <date_format_locale />
+        <date_format_timezone />
+        <lenient_string_to_number>false</lenient_string_to_number>
+        <encoding />
+        <decimal_symbol />
+        <grouping_symbol />
+        <currency_symbol />
+        <storage_type />
+      </meta>
+      <meta>
+        <name>total_transfers</name>
+        <rename>total_transfers_updated</rename>
+        <type>BigNumber</type>
+        <length>-2</length>
+        <precision>0</precision>
+        <conversion_mask />
+        <date_format_lenient>false</date_format_lenient>
+        <date_format_locale />
+        <date_format_timezone />
+        <lenient_string_to_number>false</lenient_string_to_number>
+        <encoding />
+        <decimal_symbol />
+        <grouping_symbol />
+        <currency_symbol />
+        <storage_type />
+      </meta>
+      <meta>
+        <name>total_volume</name>
+        <rename>total_volume_updated</rename>
+        <type>BigNumber</type>
+        <length>-2</length>
+        <precision>-2</precision>
+        <conversion_mask />
+        <date_format_lenient>false</date_format_lenient>
+        <date_format_locale />
+        <date_format_timezone />
+        <lenient_string_to_number>false</lenient_string_to_number>
+        <encoding />
+        <decimal_symbol />
+        <grouping_symbol />
+        <currency_symbol />
+        <storage_type />
+      </meta>
+    </fields>
+    <attributes />
+    <cluster_schema />
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>880</xloc>
+      <yloc>320</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>Select table values</name>
+    <type>SelectValues</type>
+    <description />
+    <distribute>Y</distribute>
+    <custom_distribution />
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name />
+    </partitioning>
+    <fields>
+      <field>
+        <name>date_sk</name>
+      </field>
+      <field>
+        <name>final_status</name>
+      </field>
+      <field>
+        <name>meta_name_sk</name>
+      </field>
+      <field>
+        <name>meta_type_sk</name>
+      </field>
+      <field>
+        <name>time_sk</name>
+      </field>
+      <field>
+        <name>token_sk</name>
+      </field>
+      <field>
+        <name>total_gas_used_updated</name>
+      </field>
+      <field>
+        <name>total_transactions_updated</name>
+      </field>
+      <field>
+        <name>total_transfers_updated</name>
+      </field>
+      <field>
+        <name>total_volume_updated</name>
+      </field>
+      <field>
+        <name>is_incremental</name>
+      </field>
+      <select_unspecified>N</select_unspecified>
+    </fields>
+    <attributes />
+    <cluster_schema />
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>816</xloc>
+      <yloc>416</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>Set field value to a constant</name>
+    <type>SetValueConstant</type>
+    <description />
+    <distribute>Y</distribute>
+    <custom_distribution />
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name />
+    </partitioning>
+    <usevar>N</usevar>
+    <fields>
+      <field>
+        <name>is_incremental</name>
+        <value>0</value>
+        <mask />
+        <set_empty_string>N</set_empty_string>
+      </field>
+    </fields>
+    <attributes />
+    <cluster_schema />
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>1072</xloc>
+      <yloc>416</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>Sort rows</name>
+    <type>SortRows</type>
     <description />
     <distribute>N</distribute>
     <custom_distribution />
@@ -938,27 +1416,186 @@ commit;</sql>
       <method>none</method>
       <schema_name />
     </partitioning>
+    <directory>%%java.io.tmpdir%%</directory>
+    <prefix>out</prefix>
+    <sort_size>200</sort_size>
+    <free_memory />
+    <compress>N</compress>
+    <compress_variable />
+    <unique_rows>N</unique_rows>
+    <fields>
+      <field>
+        <name>date_sk</name>
+        <ascending>Y</ascending>
+        <case_sensitive>N</case_sensitive>
+        <collator_enabled>N</collator_enabled>
+        <collator_strength>0</collator_strength>
+        <presorted>N</presorted>
+      </field>
+      <field>
+        <name>token_sk</name>
+        <ascending>Y</ascending>
+        <case_sensitive>N</case_sensitive>
+        <collator_enabled>N</collator_enabled>
+        <collator_strength>0</collator_strength>
+        <presorted>N</presorted>
+      </field>
+      <field>
+        <name>meta_name_sk</name>
+        <ascending>Y</ascending>
+        <case_sensitive>N</case_sensitive>
+        <collator_enabled>N</collator_enabled>
+        <collator_strength>0</collator_strength>
+        <presorted>N</presorted>
+      </field>
+      <field>
+        <name>meta_type_sk</name>
+        <ascending>Y</ascending>
+        <case_sensitive>N</case_sensitive>
+        <collator_enabled>N</collator_enabled>
+        <collator_strength>0</collator_strength>
+        <presorted>N</presorted>
+      </field>
+      <field>
+        <name>time_sk</name>
+        <ascending>Y</ascending>
+        <case_sensitive>N</case_sensitive>
+        <collator_enabled>N</collator_enabled>
+        <collator_strength>0</collator_strength>
+        <presorted>N</presorted>
+      </field>
+      <field>
+        <name>final_status</name>
+        <ascending>Y</ascending>
+        <case_sensitive>N</case_sensitive>
+        <collator_enabled>N</collator_enabled>
+        <collator_strength>0</collator_strength>
+        <presorted>N</presorted>
+      </field>
+    </fields>
+    <attributes />
+    <cluster_schema />
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>1072</xloc>
+      <yloc>208</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>Synchronize after merge</name>
+    <type>SynchronizeAfterMerge</type>
+    <description />
+    <distribute>Y</distribute>
+    <custom_distribution />
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name />
+    </partitioning>
     <connection>analytics_mysql_connection</connection>
-    <cache>Y</cache>
-    <cache_load_all>Y</cache_load_all>
-    <cache_size>0</cache_size>
+    <commit>100</commit>
+    <tablename_in_field>N</tablename_in_field>
+    <tablename_field />
+    <use_batch>Y</use_batch>
+    <perform_lookup>N</perform_lookup>
+    <operation_order_field>flagfield</operation_order_field>
+    <order_insert>deleted</order_insert>
+    <order_update>changed</order_update>
+    <order_delete />
     <lookup>
-      <schema>${MYSQL_SCHEMA_NAME}${ENV_SUFFIX}</schema>
-      <table>dim_meta_types</table>
-      <orderby />
-      <fail_on_multiple>N</fail_on_multiple>
-      <eat_row_on_failure>N</eat_row_on_failure>
+      <schema />
+      <table>token_transfer_facts_${CHAIN_ID}</table>
       <key>
-        <name>meta_type</name>
-        <field>meta_type</field>
+        <name>date_sk</name>
+        <field>date_sk</field>
+        <condition>=</condition>
+        <name2 />
+      </key>
+      <key>
+        <name>token_sk</name>
+        <field>token_sk</field>
+        <condition>=</condition>
+        <name2 />
+      </key>
+      <key>
+        <name>meta_name_sk</name>
+        <field>meta_name_sk</field>
+        <condition>=</condition>
+        <name2 />
+      </key>
+      <key>
+        <name>meta_type_sk</name>
+        <field>meta_type_sk</field>
+        <condition>=</condition>
+        <name2 />
+      </key>
+      <key>
+        <name>final_status</name>
+        <field>status</field>
+        <condition>=</condition>
+        <name2 />
+      </key>
+      <key>
+        <name>time_sk</name>
+        <field>time_sk</field>
         <condition>=</condition>
         <name2 />
       </key>
       <value>
+        <name>total_transactions</name>
+        <rename>total_transactions_updated</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>total_transfers</name>
+        <rename>total_transfers_updated</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>total_volume</name>
+        <rename>total_volume_updated</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>total_gas_used</name>
+        <rename>total_gas_used_updated</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>date_sk</name>
+        <rename>date_sk</rename>
+        <update>N</update>
+      </value>
+      <value>
+        <name>token_sk</name>
+        <rename>token_sk</rename>
+        <update>N</update>
+      </value>
+      <value>
+        <name>meta_name_sk</name>
+        <rename>meta_name_sk</rename>
+        <update>N</update>
+      </value>
+      <value>
         <name>meta_type_sk</name>
         <rename>meta_type_sk</rename>
-        <default />
-        <type>BigNumber</type>
+        <update>N</update>
+      </value>
+      <value>
+        <name>status</name>
+        <rename>final_status</rename>
+        <update>N</update>
+      </value>
+      <value>
+        <name>time_sk</name>
+        <rename>time_sk</rename>
+        <update>N</update>
       </value>
     </lookup>
     <attributes />
@@ -970,8 +1607,8 @@ commit;</sql>
       </output>
     </remotesteps>
     <GUI>
-      <xloc>672</xloc>
-      <yloc>64</yloc>
+      <xloc>240</xloc>
+      <yloc>416</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
@@ -987,11 +1624,11 @@ commit;</sql>
       <schema_name />
     </partitioning>
     <connection>analytics_mysql_connection</connection>
-    <cache>Y</cache>
-    <cache_load_all>Y</cache_load_all>
+    <cache>N</cache>
+    <cache_load_all>N</cache_load_all>
     <cache_size>0</cache_size>
     <lookup>
-      <schema>${MYSQL_SCHEMA_NAME}${ENV_SUFFIX}</schema>
+      <schema />
       <table>dim_times</table>
       <orderby />
       <fail_on_multiple>N</fail_on_multiple>
@@ -1006,7 +1643,7 @@ commit;</sql>
         <name>time_sk</name>
         <rename>time_sk</rename>
         <default />
-        <type>Integer</type>
+        <type>BigNumber</type>
       </value>
     </lookup>
     <attributes />
@@ -1018,8 +1655,8 @@ commit;</sql>
       </output>
     </remotesteps>
     <GUI>
-      <xloc>304</xloc>
-      <yloc>64</yloc>
+      <xloc>752</xloc>
+      <yloc>208</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
@@ -1035,14 +1672,14 @@ commit;</sql>
       <schema_name />
     </partitioning>
     <connection>analytics_mysql_connection</connection>
-    <cache>Y</cache>
+    <cache>N</cache>
     <cache_load_all>Y</cache_load_all>
     <cache_size>0</cache_size>
     <lookup>
-      <schema>${MYSQL_SCHEMA_NAME}${ENV_SUFFIX}</schema>
+      <schema />
       <table>dim_tokens_${CHAIN_ID}</table>
       <orderby />
-      <fail_on_multiple>N</fail_on_multiple>
+      <fail_on_multiple>Y</fail_on_multiple>
       <eat_row_on_failure>Y</eat_row_on_failure>
       <key>
         <name>token_id</name>
@@ -1066,15 +1703,15 @@ commit;</sql>
       </output>
     </remotesteps>
     <GUI>
-      <xloc>544</xloc>
-      <yloc>64</yloc>
+      <xloc>624</xloc>
+      <yloc>208</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
   <step_error_handling>
     <error>
       <source_step>Date Lookup</source_step>
-      <target_step>Abort</target_step>
+      <target_step />
       <is_enabled>Y</is_enabled>
       <nr_valuename />
       <descriptions_valuename />
@@ -1086,7 +1723,7 @@ commit;</sql>
     </error>
     <error>
       <source_step>Meta Name Lookup</source_step>
-      <target_step>Abort</target_step>
+      <target_step />
       <is_enabled>Y</is_enabled>
       <nr_valuename />
       <descriptions_valuename />
@@ -1098,7 +1735,7 @@ commit;</sql>
     </error>
     <error>
       <source_step>Meta Type Lookup</source_step>
-      <target_step>Abort</target_step>
+      <target_step />
       <is_enabled>Y</is_enabled>
       <nr_valuename />
       <descriptions_valuename />
@@ -1110,7 +1747,7 @@ commit;</sql>
     </error>
     <error>
       <source_step>Time lookup</source_step>
-      <target_step>Abort</target_step>
+      <target_step />
       <is_enabled>Y</is_enabled>
       <nr_valuename />
       <descriptions_valuename />
@@ -1122,7 +1759,7 @@ commit;</sql>
     </error>
     <error>
       <source_step>Token Lookup</source_step>
-      <target_step>Abort</target_step>
+      <target_step />
       <is_enabled>Y</is_enabled>
       <nr_valuename />
       <descriptions_valuename />

@@ -12,9 +12,9 @@
     </parameters>
     <log>
       <trans-log-table>
-        <connection>${KETTLE_TRANS_LOG_DB}</connection>
+        <connection />
         <schema />
-        <table>${KETTLE_TRANS_LOG_TABLE}</table>
+        <table />
         <size_limit_lines />
         <interval />
         <timeout_days>${TRANSFORMSTION_LOGS_RECORD_TIMEOUT}</timeout_days>
@@ -450,6 +450,14 @@
     <index_tablespace />
     <attributes>
       <attribute>
+        <code>EXTRA_OPTION_MYSQL.rewriteBatchedStatements</code>
+        <attribute>true</attribute>
+      </attribute>
+      <attribute>
+        <code>EXTRA_OPTION_MYSQL.useCompression</code>
+        <attribute>true</attribute>
+      </attribute>
+      <attribute>
         <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
         <attribute>N</attribute>
       </attribute>
@@ -458,8 +466,16 @@
         <attribute>N</attribute>
       </attribute>
       <attribute>
+        <code>INITIAL_POOL_SIZE</code>
+        <attribute>5</attribute>
+      </attribute>
+      <attribute>
         <code>IS_CLUSTERED</code>
         <attribute>N</attribute>
+      </attribute>
+      <attribute>
+        <code>MAXIMUM_POOL_SIZE</code>
+        <attribute>10</attribute>
       </attribute>
       <attribute>
         <code>PORT_NUMBER</code>
@@ -487,7 +503,7 @@
       </attribute>
       <attribute>
         <code>USE_POOLING</code>
-        <attribute>N</attribute>
+        <attribute>Y</attribute>
       </attribute>
     </attributes>
   </connection>
@@ -557,11 +573,6 @@
       <to>Insert / update</to>
       <enabled>Y</enabled>
     </hop>
-    <hop>
-      <from>Insert / update</from>
-      <to>Update Last token time</to>
-      <enabled>Y</enabled>
-    </hop>
   </order>
   <step>
     <name>Get Last Timestamp</name>
@@ -575,9 +586,8 @@
       <schema_name />
     </partitioning>
     <connection>analytics_redshift_connection</connection>
-    <sql>select timestamp 'epoch' + (value * interval '1 second') 
-from ${TEMP_PENTAHO_REDSHIFT_SCHEMA_NAME}${ENV_SUFFIX}.temp_pentaho_processing_info_${CHAIN_ID}
-where property ='last_updated_token_timestamp';</sql>
+    <sql>select timestamp 'epoch' + (value * interval '1 second')  from  ${TEMP_PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.temp_pentaho_processing_info_${CHAIN_ID}
+where property='last_updated_token_timestamp'</sql>
     <limit>0</limit>
     <lookup />
     <execute_each_row>N</execute_each_row>
@@ -592,8 +602,8 @@ where property ='last_updated_token_timestamp';</sql>
       </output>
     </remotesteps>
     <GUI>
-      <xloc>64</xloc>
-      <yloc>112</yloc>
+      <xloc>48</xloc>
+      <yloc>176</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
@@ -601,7 +611,7 @@ where property ='last_updated_token_timestamp';</sql>
     <name>Get Updated Tokens</name>
     <type>TableInput</type>
     <description />
-    <distribute>Y</distribute>
+    <distribute>N</distribute>
     <custom_distribution />
     <copies>1</copies>
     <partitioning>
@@ -609,9 +619,13 @@ where property ='last_updated_token_timestamp';</sql>
       <schema_name />
     </partitioning>
     <connection>analytics_redshift_connection</connection>
-    <sql>select token_id, name, symbol, conversion_factor, number_of_decimal from ${PRESTAGING_REDSHIFT_SCHEMA_NAME}${ENV_SUFFIX}.tokens_${CHAIN_ID} 
-where updated_at >= ?;</sql>
-    <limit>0</limit>
+    <sql>select token_id, name, symbol, conversion_factor, number_of_decimal from ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.tokens_${CHAIN_ID}
+where updated_at > ?;
+
+
+
+</sql>
+    <limit />
     <lookup>Get Last Timestamp</lookup>
     <execute_each_row>N</execute_each_row>
     <variables_active>Y</variables_active>
@@ -625,8 +639,8 @@ where updated_at >= ?;</sql>
       </output>
     </remotesteps>
     <GUI>
-      <xloc>208</xloc>
-      <yloc>112</yloc>
+      <xloc>176</xloc>
+      <yloc>176</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
@@ -689,47 +703,7 @@ where updated_at >= ?;</sql>
     </remotesteps>
     <GUI>
       <xloc>368</xloc>
-      <yloc>112</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>Update Last token time</name>
-    <type>ExecSQL</type>
-    <description />
-    <distribute>Y</distribute>
-    <custom_distribution />
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name />
-    </partitioning>
-    <connection>analytics_redshift_connection</connection>
-    <execute_each_row>N</execute_each_row>
-    <single_statement>N</single_statement>
-    <replace_variables>Y</replace_variables>
-    <quoteString>N</quoteString>
-    <sql>update ${TEMP_PENTAHO_REDSHIFT_SCHEMA_NAME}${ENV_SUFFIX}.temp_pentaho_processing_info_${CHAIN_ID}
-set value = (Select coalesce(extract(epoch from max(updated_at)), 0) from ${PRESTAGING_REDSHIFT_SCHEMA_NAME}${ENV_SUFFIX}.tokens_${CHAIN_ID})
-where property ='last_updated_token_timestamp';</sql>
-    <set_params>N</set_params>
-    <insert_field />
-    <update_field />
-    <delete_field />
-    <read_field />
-    <arguments>
-    </arguments>
-    <attributes />
-    <cluster_schema />
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>592</xloc>
-      <yloc>112</yloc>
+      <yloc>192</yloc>
       <draw>Y</draw>
     </GUI>
   </step>

@@ -1,1 +1,0 @@
-select count(*) from ${REDSHIFT_SCHEMA_NAME}.transactions;

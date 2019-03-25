@@ -1,5 +1,5 @@
-CREATE SCHEMA IF NOT EXISTS  temp_ost_pentaho_sandbox_s6 AUTHORIZATION ost_pentaho_stag_user;
-set search_path=temp_ost_pentaho_sandbox_s6;
+CREATE SCHEMA IF NOT EXISTS  temp_ost_pentaho_main_d6 AUTHORIZATION ost_pentaho_stag_user;
+set search_path=temp_ost_pentaho_main_d6;
 
 
 DROP TABLE IF EXISTS temp_pentaho_processing_info_${CHAIN_ID};
@@ -27,7 +27,7 @@ INSERT INTO temp_pentaho_processing_info_${CHAIN_ID}
 )
 VALUES
 (
-  ' last_processed_meta_name_tx_id',
+  'last_processed_meta_name_tx_id',
   -1
 );
 

@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <transformation>
   <info>
-    <name>test transformation</name>
+    <name>Update Processing Info data for incremental loads</name>
     <description />
     <extended_description />
-    <trans_version />
+    <trans_version>1</trans_version>
     <trans_type>Normal</trans_type>
     <trans_status>0</trans_status>
     <directory>/</directory>
@@ -12,9 +12,9 @@
     </parameters>
     <log>
       <trans-log-table>
-        <connection>${KETTLE_TRANS_LOG_DB}</connection>
+        <connection />
         <schema />
-        <table>${KETTLE_TRANS_LOG_TABLE}</table>
+        <table />
         <size_limit_lines />
         <interval />
         <timeout_days>${TRANSFORMSTION_LOGS_RECORD_TIMEOUT}</timeout_days>
@@ -106,7 +106,7 @@
         </field>
         <field>
           <id>LOG_FIELD</id>
-          <enabled>N</enabled>
+          <enabled>Y</enabled>
           <name>LOG_FIELD</name>
         </field>
         <field>
@@ -353,7 +353,7 @@
         <connection />
         <schema />
         <table />
-        <timeout_days />
+        <timeout_days>${METRICS_LOGS_RECORD_TIMEOUT}</timeout_days>
         <field>
           <id>ID_BATCH</id>
           <enabled>Y</enabled>
@@ -450,6 +450,14 @@
     <index_tablespace />
     <attributes>
       <attribute>
+        <code>EXTRA_OPTION_MYSQL.rewriteBatchedStatements</code>
+        <attribute>true</attribute>
+      </attribute>
+      <attribute>
+        <code>EXTRA_OPTION_MYSQL.useCompression</code>
+        <attribute>true</attribute>
+      </attribute>
+      <attribute>
         <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
         <attribute>N</attribute>
       </attribute>
@@ -458,8 +466,16 @@
         <attribute>N</attribute>
       </attribute>
       <attribute>
+        <code>INITIAL_POOL_SIZE</code>
+        <attribute>5</attribute>
+      </attribute>
+      <attribute>
         <code>IS_CLUSTERED</code>
         <attribute>N</attribute>
+      </attribute>
+      <attribute>
+        <code>MAXIMUM_POOL_SIZE</code>
+        <attribute>10</attribute>
       </attribute>
       <attribute>
         <code>PORT_NUMBER</code>
@@ -487,16 +503,16 @@
       </attribute>
       <attribute>
         <code>USE_POOLING</code>
-        <attribute>N</attribute>
+        <attribute>Y</attribute>
       </attribute>
     </attributes>
   </connection>
   <connection>
-    <name>prestaging_redshift_connection</name>
+    <name>analytics_redshift_connection</name>
     <server />
     <type>REDSHIFT</type>
     <access>JNDI</access>
-    <database>prestagingRedshiftConnection</database>
+    <database>analyticsRedshiftConnection</database>
     <port>1521</port>
     <username />
     <password>Encrypted </password>
@@ -547,20 +563,10 @@
     </attributes>
   </connection>
   <order>
-    <hop>
-      <from>Get Last Id</from>
-      <to>get new rows</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>get new rows</from>
-      <to>Load In Dim Token</to>
-      <enabled>Y</enabled>
-    </hop>
   </order>
   <step>
-    <name>Get Last Id</name>
-    <type>TableInput</type>
+    <name>Update Last token time</name>
+    <type>ExecSQL</type>
     <description />
     <distribute>Y</distribute>
     <custom_distribution />
@@ -569,13 +575,27 @@
       <method>none</method>
       <schema_name />
     </partitioning>
-    <connection>analytics_mysql_connection</connection>
-    <sql>select max(token_id)as last_token_id from ${MYSQL_SCHEMA_NAME}.dim_tokens;</sql>
-    <limit>0</limit>
-    <lookup />
+    <connection>analytics_redshift_connection</connection>
     <execute_each_row>N</execute_each_row>
-    <variables_active>Y</variables_active>
-    <lazy_conversion_active>N</lazy_conversion_active>
+    <single_statement>N</single_statement>
+    <replace_variables>Y</replace_variables>
+    <quoteString>N</quoteString>
+    <sql>begin;
+update ${TEMP_PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.temp_pentaho_processing_info_${CHAIN_ID}
+set value = (Select coalesce(extract(epoch from max(updated_at)), 0) from ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.tokens_${CHAIN_ID})
+where property ='last_updated_token_timestamp';
+
+update ${TEMP_PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.temp_pentaho_processing_info_${CHAIN_ID}
+set value = (Select coalesce(max(id), -1) from ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.transactions_${CHAIN_ID})
+where property ='last_processed_meta_name_tx_id';
+commit;</sql>
+    <set_params>N</set_params>
+    <insert_field />
+    <update_field />
+    <delete_field />
+    <read_field />
+    <arguments>
+    </arguments>
     <attributes />
     <cluster_schema />
     <remotesteps>
@@ -586,105 +606,7 @@
     </remotesteps>
     <GUI>
       <xloc>224</xloc>
-      <yloc>112</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>Load In Dim Token</name>
-    <type>TableOutput</type>
-    <description />
-    <distribute>Y</distribute>
-    <custom_distribution />
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name />
-    </partitioning>
-    <connection>analytics_mysql_connection</connection>
-    <schema>${MYSQL_SCHEMA_NAME}</schema>
-    <table>dim_tokens</table>
-    <commit>100</commit>
-    <truncate>N</truncate>
-    <ignore_errors>N</ignore_errors>
-    <use_batch>Y</use_batch>
-    <specify_fields>Y</specify_fields>
-    <partitioning_enabled>N</partitioning_enabled>
-    <partitioning_field />
-    <partitioning_daily>N</partitioning_daily>
-    <partitioning_monthly>Y</partitioning_monthly>
-    <tablename_in_field>N</tablename_in_field>
-    <tablename_field />
-    <tablename_in_table>Y</tablename_in_table>
-    <return_keys>N</return_keys>
-    <return_field />
-    <fields>
-      <field>
-        <column_name>token_id</column_name>
-        <stream_name>token_id</stream_name>
-      </field>
-      <field>
-        <column_name>name</column_name>
-        <stream_name>symbol</stream_name>
-      </field>
-      <field>
-        <column_name>symbol</column_name>
-        <stream_name>symbol</stream_name>
-      </field>
-      <field>
-        <column_name>conversion_factor</column_name>
-        <stream_name>conversion_factor</stream_name>
-      </field>
-      <field>
-        <column_name>decimal</column_name>
-        <stream_name>decimal</stream_name>
-      </field>
-    </fields>
-    <attributes />
-    <cluster_schema />
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>496</xloc>
-      <yloc>112</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>get new rows</name>
-    <type>TableInput</type>
-    <description />
-    <distribute>Y</distribute>
-    <custom_distribution />
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name />
-    </partitioning>
-    <connection>prestaging_redshift_connection</connection>
-    <sql>select token_id, symbol, conversion_factor, decimal from ${REDSHIFT_SCHEMA_NAME}.tokens where token_id > ?;
-
-</sql>
-    <limit>0</limit>
-    <lookup>Get Last Id</lookup>
-    <execute_each_row>N</execute_each_row>
-    <variables_active>Y</variables_active>
-    <lazy_conversion_active>N</lazy_conversion_active>
-    <attributes />
-    <cluster_schema />
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>336</xloc>
-      <yloc>112</yloc>
+      <yloc>80</yloc>
       <draw>Y</draw>
     </GUI>
   </step>

@@ -18,6 +18,14 @@ PRESTAGING_REDSHIFT_SCHEMA_NAME=ost_warehouse_sandbox
 PENTAHO_REDSHIFT_SCHEMA_NAME=ost_pentaho_sandbox
 TEMP_PENTAHO_REDSHIFT_SCHEMA_NAME=temp_ost_pentaho_sandbox
 
+${TEMP_PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}
+
+${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}
+
+${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}
+
+${CHAIN_ID}
+
 
 KETTLE_TRANS_LOG_TABLE=transformation_logs
 KETTLE_JOB_LOG_TABLE=job_logs
@@ -40,7 +48,7 @@ Click Execute to execute the SQL code to create your log table, then click OK to
 
 
 
-sh kitchen.sh -file=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/content-pdi/jobs/test_job.kjb -level=Detailed -param:CHAIN_ID=199
+sh kitchen.sh -file=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/content-pdi/jobs/test_job.kjb -level=Detailed -param:CHAIN_ID=199 -param:MYSQL_SCHEMA_NAME=ost_analytics_s6_sandbox
 
 
 SQL WorkBench:
@@ -125,9 +133,14 @@ _${CHAIN_ID}
 
 ssh -L 3307:ost-kit-saas-all.cr8jt6bpnicr.us-east-1.rds.amazonaws.com:3306 3.91.174.58 -N -f
 
+node executables/extract_data.js --blockScanner true  --chainId 202
 
+MySQL Connector/J 8.0 is highly recommended for use with MySQL Server 8.0, 5.7, 5.6, and 5.5. Please upgrade to MySQL Connector/J 8.0.
 
+setting. useServerPrepStmts=false
+rewriteBatchedStatements=true
+useCompression=true
 
-
+either remove fact constraint or create rows with 0 val
 
 
