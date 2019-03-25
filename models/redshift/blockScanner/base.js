@@ -25,7 +25,6 @@ class Base {
             //eg. column[0] => tx_uuid, column[1] => {name: 'transactionUuid', isSerialized: false, required: true,
             // copyIfNotPresent: 'transactionStatus'}
             if (column[1]['required'] && !(column[1]['name'] in oThis.object)) {
-                console.log(column[1]['name']);
                 let rh = responseHelper.error(
                     {
                         internal_error_identifier: 'm_r_b_b_vafbsd',
@@ -81,7 +80,7 @@ class Base {
     }
 
 
-    initRedshift(){
+    initRedshift() {
         const oThis = this;
         oThis.redshiftClient = new Redshift(constants.PRESTAGING_REDSHIFT_CLIENT);
     }
@@ -93,14 +92,15 @@ class Base {
             , s3BucketPath = 's3://' + constants.S3_BUCKET_NAME + '/'
 
 
-            , copyTable = Util.format('copy %s (%s) from \'%s\' iam_role \'%s\' delimiter \'|\';', oThis.getTempTableNameWithSchema(), oThis.getColumnList, s3BucketPath + fullFilePath, oThis.getIamRole())
+            ,
+            copyTable = Util.format('copy %s (%s) from \'%s\' iam_role \'%s\' delimiter \'|\';', oThis.getTempTableNameWithSchema(), oThis.getColumnList, s3BucketPath + fullFilePath, oThis.getIamRole())
             , commit = 'COMMIT;'
-            ;
+        ;
 
-            const deleteDuplicateIds = Util.format('DELETE from %s WHERE %s IN (SELECT %s from %s);', oThis.getTableNameWithSchema(), oThis.getTablePrimaryKey(), oThis.getTablePrimaryKey(), oThis.getTempTableNameWithSchema());
+        const deleteDuplicateIds = Util.format('DELETE from %s WHERE %s IN (SELECT %s from %s);', oThis.getTableNameWithSchema(), oThis.getTablePrimaryKey(), oThis.getTablePrimaryKey(), oThis.getTempTableNameWithSchema());
 
 
-            const insertRemainingEntries = Util.format('INSERT into %s (%s) (select %s from %s);', oThis.getTableNameWithSchema(), oThis.getColumnList,oThis.getColumnList, oThis.getTempTableNameWithSchema())
+        const insertRemainingEntries = Util.format('INSERT into %s (%s) (select %s from %s);', oThis.getTableNameWithSchema(), oThis.getColumnList, oThis.getColumnList, oThis.getTempTableNameWithSchema())
             , truncateTempTable = Util.format('TRUNCATE TABLE %s;', oThis.getTempTableNameWithSchema())
         ;
         logger.log(s3BucketPath + fullFilePath);
@@ -111,23 +111,25 @@ class Base {
                 logger.log("Copying of table started", copyTable);
                 return oThis.query(copyTable);
             }).then(function () {
-                logger.log("Commit started", commit);
-                return oThis.query(commit);
-            }).then(function () {
-                logger.log("Deletion of duplicate Ids started", deleteDuplicateIds);
-                return oThis.query(deleteDuplicateIds);
-            }).then(function () {
-                logger.log("Insertion of remaining entries started", insertRemainingEntries);
-                return oThis.query(insertRemainingEntries);
-            }).then(function () {
-                logger.log("Dropping temp table", truncateTempTable);
-                return oThis.query(truncateTempTable);
-            }).then(function () {
-                logger.log('Copy from S3 complete')
-            }).catch(function (err) {
-                logger.error("S3 copy hampered", err);
-                throw new Error("S3 copy hampered" + err);
+                logger.log("copy to Temp table done");
+                return responseHelper.successWithData({});
+
             });
+        // .then(function () {
+        //     logger.log("Deletion of duplicate Ids started", deleteDuplicateIds);
+        //     return oThis.query(deleteDuplicateIds);
+        // }).then(function () {
+        //     logger.log("Insertion of remaining entries started", insertRemainingEntries);
+        //     return oThis.query(insertRemainingEntries);
+        // }).then(function () {
+        //     logger.log("Dropping temp table", truncateTempTable);
+        //     return oThis.query(truncateTempTable);
+        // }).then(function () {
+        //     logger.log('Copy from S3 complete');
+        // }).catch(function (err) {
+        //     logger.error("S3 copy hampered", err);
+        //     throw new Error("S3 copy hampered" + err);
+        // });
 
     };
 
@@ -135,12 +137,15 @@ class Base {
     async query(commandString) {
         const oThis = this
         ;
+
+        logger.info("___--------______-------______--------____-----", commandString);
+        oThis.redshiftClient = new Redshift(constants.PRESTAGING_REDSHIFT_CLIENT);
         logger.debug('Redshift query String', commandString);
         return new Promise(function (resolve, reject) {
             try {
                 oThis.redshiftClient.query(commandString, function (err, result) {
                     if (err) {
-                        reject("Error in query " + err);
+                        reject("Error in query " + err + commandString);
                     } else {
                         resolve(result);
                     }
@@ -152,11 +157,52 @@ class Base {
 
     }
 
-    get getColumnList(){
+    async validateAndMoveFromTempToMain(minBlockNumberForTempTable) {
+
+        const oThis = this;
+        let r = await oThis.validateTempTableData(minBlockNumberForTempTable);
+        if (r.success) {
+            return oThis.insertToMainTable();
+        } else {
+            return oThis.handleBlockError({minBlock: minBlockNumberForTempTable});
+        }
+    }
+
+    insertToMainTable() {
+        logger.log("insert to main table");
+        const oThis = this;
+        const insertRemainingEntries = Util.format('INSERT into %s (%s) (select %s from %s);', oThis.getTableNameWithSchema(), oThis.getColumnList, oThis.getColumnList, oThis.getTempTableNameWithSchema())
+        return oThis.query(insertRemainingEntries).then((res) => {
+            logger.log("data moved from temp to main table successfully");
+            return Promise.resolve(res);
+        }).catch((err)=>{
+            return Promise.reject(err);
+        });
+
+    }
+
+    async validateTempTableData(minBlockNumberForTempTable) {
+
+        const oThis = this,
+            maxBlockNumberFromMainQuery = await oThis.query(Util.format('select coalesce(max(block_number), -1) as max_block_number  from %s ', oThis.getTableNameWithSchema()));
+
+        let maxBlockNumberFromMain = parseInt(maxBlockNumberFromMainQuery.rows[0].max_block_number);
+        if (minBlockNumberForTempTable > maxBlockNumberFromMain) {
+            return responseHelper.successWithData({});
+        } else {
+            return responseHelper.error({
+                internal_error_identifier: 'm_r_b_vttd',
+                api_error_identifier: 'validateTempTableData failed',
+                debug_options: {}
+            });
+        }
+    }
+
+    get getColumnList() {
         const oThis = this;
         const mapping = oThis.constructor.mapping,
-        columns = [];
-        for (let col of mapping){
+            columns = [];
+        for (let col of mapping) {
             columns.push(col[0]);
         }
         return columns.join(", ");
@@ -181,6 +227,10 @@ class Base {
     getIamRole() {
         return constants.S3_IAM_ROLE
     };
+
+    handleBlockError(){
+        throw 'handleBlockError not implemented'
+    }
 
 
 }

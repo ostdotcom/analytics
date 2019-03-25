@@ -48,27 +48,35 @@ class ExtractData {
 
         oThis.ProcessLocker.canStartProcess({process_title: 'cron_extract_data_c_' + parseInt(program.chainId) + parseInt(program.startBlock) + parseInt(program.endBlock)});
 
-        // it means no parameter is given, in this case we need to extract data from block-scanner as well as mysql
-        if (process.argv.length == 2) {
-            await oThis.extractTokens();
-            await oThis.extractBlockScannerData(await oThis.getStartBlock(), await oThis.getEndBlock());
-
-        } else {
-
-            if (program.token === 'true') {
-                await oThis.extractTokens();
-            }
-
-            if (program.blockScanner === 'true') {
-                await oThis.extractBlockScannerData(await oThis.getStartBlock(), await oThis.getEndBlock());
-            }
-        }
-
         process.on('SIGINT', oThis.handle);
+
+        try {
+
+            // it means no parameter is given, in this case we need to extract data from block-scanner as well as mysql
+            if (process.argv.length == 2) {
+                await oThis.extractTokens();
+                await oThis.extractBlockScannerData(await oThis.getStartBlock(), await oThis.getEndBlock());
+
+            } else {
+
+                if (program.token === 'true') {
+                    await oThis.extractTokens();
+                }
+
+                if (program.blockScanner === 'true') {
+                    await oThis.extractBlockScannerData(await oThis.getStartBlock(), await oThis.getEndBlock());
+                }
+            }
+        } catch (e) {
+            logger.error("ending the process with error: ", e);
+            process.emit('SIGINT');
+        }
+        logger.log("ending the process with success");
+
         setTimeout(function() {
             logger.info('Ending the process. Sending SIGINT.');
             process.emit('SIGINT');
-        }, 2*1000);
+        }, 1*1000);
 
     }
 

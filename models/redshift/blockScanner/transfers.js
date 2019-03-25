@@ -2,32 +2,48 @@
 const rootPrefix = '../../..'
     , constants = require(rootPrefix + '/configs/constants')
     , transfersGC = require(rootPrefix + '/lib/globalConstants/redshift/transfers')
-    , Base = require("./base");
+    , Base = require("./base")
+    , logger = require(rootPrefix + '/helpers/custom_console_logger.js')
+    , Util = require('util')
 ;
 
 class Transfers extends Base {
 
-    constructor(params){
+    constructor(params) {
         super(params)
     }
 
-    static get mapping(){
+    static get mapping() {
         return transfersGC.mapping;
     }
 
     getTableNameWithSchema() {
         const oThis = this;
-        return constants.PRESTAGING_SCHEMA_NAME + '.transfers_'+ oThis.chainId;
+        return constants.PRESTAGING_SCHEMA_NAME + '.transfers_' + oThis.chainId;
     };
 
     getTablePrimaryKey() {
-        return 'tx_hash';
+        return ['tx_hash', 'event_index'];
     };
 
     getTempTableNameWithSchema() {
         const oThis = this;
-        return constants.PRESTAGING_SCHEMA_NAME + '.temp_transfers_'+ oThis.chainId;
+        return constants.PRESTAGING_SCHEMA_NAME + '.temp_transfers_' + oThis.chainId;
     };
 
+    handleBlockError(params) {
+
+        logger.error("handle error for transfers");
+
+        const oThis = this,
+            deleteDuplicateIds = Util.format("DELETE from %s WHERE concat(tx_hash, concat(\'-\', event_index)) IN(SELECT concat(tx_hash, concat(\'-\', event_index)) from %s where block_number >= %s);",
+                oThis.getTempTableNameWithSchema(), oThis.getTableNameWithSchema(), params.minBlock);
+
+        return oThis.query(deleteDuplicateIds).then((res) => {
+            oThis.applicationMailer.perform({object: oThis.object, reason: "duplicate transfers are deleted"});
+            return Promise.resolve();
+        });
+    }
 }
+
 module.exports = Transfers;

@@ -31,12 +31,18 @@ class BlockScannerService {
     constructor(chainId, startBlock, endBlock, isStartBlockGiven) {
         const oThis = this;
         oThis.chainId = chainId;
-        oThis.blockScannerResponse = [];
         oThis.batchStartBlock = oThis.nextBlockToProcess = startBlock;
         oThis.endBlock = endBlock;
         oThis.isStartBlockGiven = isStartBlockGiven;
         oThis.redshiftClient = new RedshiftClient(Constants.PRESTAGING_REDSHIFT_CLIENT);
         oThis.applicationMailer = new ApplicationMailer();
+
+        oThis.operationIterator = {
+            transactions: {localPath: "/transactions", model: TransactionsModel},
+            transfers: {localPath: "/transfers", model: TransfersModel}
+        };
+
+        oThis.modelNamesInOrder = ['transfers', 'transactions']
     }
 
 
@@ -48,104 +54,168 @@ class BlockScannerService {
      */
     async process() {
         const oThis = this;
-        let r;
+        let res;
+
+        logger.info("BlockScanner Service Started");
 
         while (oThis.batchStartBlock <= oThis.endBlock) {
-            r = await oThis.runBatchBlockScanning(oThis.batchStartBlock);
+            try {
+                res = await oThis.runBatchBlockScanning(oThis.batchStartBlock);
+                if(! res.success){
+                    return Promise.reject(res);
+                }
+                oThis.batchStartBlock = res.data.lastProcessedBlock + 1;
+            } catch (e) {
+                return Promise.reject(responseHelper.error({
+                    internal_error_identifier: 's_bss_p_1',
+                    api_error_identifier: 'api_error_identifier',
+                    debug_options: {error: e}
+                }));
+            }
         }
-        return oThis.lastProccessedBlock;
-
+        logger.info("BlockScanner Service Ended");
+        return Promise.resolve(responseHelper.successWithData({}));
     }
 
     /**
      * block scanning for each batch
      *
-     * * @param {number} currentBatchStartBlock - current batch start block
      * * @return {Promise}
      *
      */
-    async runBatchBlockScanning(currentBatchStartBlock) {
+    async runBatchBlockScanning() {
         const oThis = this;
         let promiseArray = [],
+            batchNo = 1,
             s3UploadPath = `${Constants.SUB_ENVIRONMENT}${Constants.ENV_SUFFIX}/${oThis.chainId}/${Date.now()}`,
-            copyToRedshiftPromise = [],
             localDirFullFilePath = `${Constants.LOCAL_DIR_FILE_PATH}/${s3UploadPath}`;
 
-        logger.log("batch processing started with batch start block => " + currentBatchStartBlock +
-            ", last processed block => " + oThis.batchEndBlock);
+        logger.info("BlockScanner::runBatchBlockScanning Batch started-", batchNo++, "startBlock- " + oThis.batchStartBlock +
+            "lastProcessBlock- " + oThis.batchEndBlock);
+        oThis.currentBatchEndBlock = oThis.batchEndBlock;
+
 
         oThis.blockScanner = new BlockScanner(oThis.chainId, localDirFullFilePath);
+
+        //run block parsers in parallel
         for (let i = 0; i < blockScannerGC.noOfBlocksToProcessTogether; i++) {
             promiseArray.push(new Promise(function (resolve, reject) {
-                oThis.nextBlockToProcess = currentBatchStartBlock + i;
-                oThis.processBlock(oThis.nextBlockToProcess).then(function (res) {
+                oThis.nextBlockToProcess = oThis.batchStartBlock + i;
+                oThis.processBlock(oThis.nextBlockToProcess, i).then((res)=>{
                     resolve(res);
-                }).catch(function (err) {
-                    reject(err);
-                });
+                })
+                    .catch(function (err) {
+                        logger.error("err in runBatchBlockScanning", err);
+                        reject(err);
+                    });
             }));
         }
+
         return Promise.all(promiseArray).then(
             async function (res) {
 
-                logger.log("block data fetched for current batch => start block " + currentBatchStartBlock);
+                res = await oThis.loadIntoTempTable(batchNo, s3UploadPath, localDirFullFilePath);
 
-                const operationIterator = [{localPath: "/transactions", model: TransactionsModel},
-                    {localPath: "/transfers", model: TransfersModel}];
-
-                let uploadToS3Promise = [];
-                let hasFilesInTheDirectory = false;
-
-                for (let modelToPerform of operationIterator) {
-                    uploadToS3Promise.push(
-                        await oThis.uploadToS3(`${s3UploadPath}${modelToPerform.localPath}/`,
-                            `${localDirFullFilePath}${modelToPerform.localPath}`)
-                    );
+                if (!res.success) {
+                    return Promise.resolve(res);
                 }
-                return Promise.all(uploadToS3Promise).then(async (res) => {
 
-                    for (let i in res) {
-                        if (res[i].success && res[i].data.hasFiles) {
+                logger.log("Starting validateAndMoveFromTempToMain");
 
-                            logger.log("files uploaded to s3 for current batch successfully ");
-                            hasFilesInTheDirectory = true;
-
-                            let operationModel = new operationIterator[i].model({config: {chainId: oThis.chainId}});
-                            operationModel.initRedshift();
-                            copyToRedshiftPromise.push(await operationModel.copyFromS3(
-                                `${s3UploadPath}${operationIterator[i].localPath}/`));
-                        } else {
-                            logger.log("This batch did not have blocks with transactions");
-                        }
+                for (let operationModelName of oThis.modelNamesInOrder) {
+                    if (!res.data.modelsWithData[operationModelName]) {
+                        continue;
                     }
-                    return Promise.all(copyToRedshiftPromise).then((res) => {
-                        oThis.lastProccessedBlock = oThis.batchEndBlock;
-                        oThis.batchStartBlock = oThis.lastProccessedBlock + 1;
-                        oThis._deleteLocalDirectory(localDirFullFilePath,hasFilesInTheDirectory)
-                        oThis.updateLastProcessedBlock();
-                        logger.log("download to redshift has been completed. last processed block " + oThis.lastProccessedBlock);
-                        return Promise.resolve(responseHelper.successWithData({lastProcessedBlock: oThis.lastProccessedBlock}));
-                    }).catch((err) => {
-                        let error = responseHelper.error({
+
+                    try {
+                        let operationModel = new oThis.operationIterator[operationModelName].model({config: {chainId: oThis.chainId}});
+                        await operationModel.validateAndMoveFromTempToMain(oThis.batchStartBlock);
+                    } catch (e) {
+                        oThis.applicationMailer.perform({err: e});
+                        return Promise.reject(responseHelper.error({
                             internal_error_identifier: 's_bss_rbbs_1',
-                            api_error_identifier: 'redshift_download_breaking',
-                            debug_options: {err: err}
-                        });
-                        oThis.applicationMailer.perform(error);
-                        return Promise.reject(error);
-                    });
-                }).catch((err) => {
-                    return Promise.reject(responseHelper.error({
-                        internal_error_identifier: 's_bss_rbbs_2',
-                        api_error_identifier: 's3_upload_breaking',
+                            api_error_identifier: 'api_error_identifier',
+                            debug_options: {}
+                        }));
+                    }
+                }
+
+                logger.log("Starting updateLastProcessedBlock");
+
+                await oThis.updateLastProcessedBlock();
+
+                return Promise.resolve(responseHelper.successWithData({lastProcessedBlock: oThis.currentBatchEndBlock}));
+
+            }).catch((err) => {
+            return Promise.reject(responseHelper.error({
+                internal_error_identifier: 's_bss_rbbs_2',
+                api_error_identifier: 's3_upload_breaking',
+                debug_options: {}
+            }));
+
+        });
+    }
+
+    /**
+     * upload to S3
+     *
+     * @param {string} s3UploadPath
+     * * @param {string} localDirFullFilePath
+     * * @return {Promise}
+     *
+     */
+    async loadIntoTempTable(batchNo, s3UploadPath, localDirFullFilePath) {
+        const oThis = this;
+        logger.log("BlockScanner::runBatchBlockScanning Batch-", batchNo, " all blocks parsed");
+
+        let promiseArray = [],
+            modelsWithData = {};
+
+        for (let modelName in oThis.operationIterator) {
+            let modelToPerform = oThis.operationIterator[modelName];
+
+            logger.log("Starting s3 folder upload for Batch- ", batchNo, "for model- ", modelName);
+
+                promiseArray.push( oThis.uploadToS3(`${s3UploadPath}${modelToPerform.localPath}/`,
+                `${localDirFullFilePath}${modelToPerform.localPath}`)
+                .then(async function (res) {
+                    logger.log("files uploaded to s3 for Batch- ", batchNo, "for model- ", modelName);
+
+                    if (!res.data.hasFiles) {
+                        return Promise.resolve(res);
+                    }
+
+                    let operationModel = new modelToPerform.model({config: {chainId: oThis.chainId}});
+                    modelsWithData[modelName] = true;
+                    let resp =  await operationModel.copyFromS3(
+                        `${s3UploadPath}${modelToPerform.localPath}/`);
+                    return Promise.resolve(resp);
+                })
+                .catch(function (err) {
+                    logger.error(err);
+                    oThis.applicationMailer.perform(err);
+
+                    return Promise.resolve(responseHelper.error({
+                        internal_error_identifier: 's_bss_litt_2',
+                        api_error_identifier: 'block scanner failed',
                         debug_options: {}
                     }));
 
-                });
-            }
-        )
-    }
+                })
+            )
+        }
 
+
+        return Promise.all(promiseArray).then(function (resArray) {
+
+            for (let res of resArray) {
+                if (!res.success) {
+                    return res;
+                }
+            }
+            return responseHelper.successWithData({modelsWithData: modelsWithData});
+        });
+    }
 
     /**
      * upload to S3
@@ -156,6 +226,8 @@ class BlockScannerService {
      *
      */
     async uploadToS3(s3UploadPath, localDirFullFilePath) {
+
+        const oThis = this;
 
         let s3Write = new S3Write({
                 "region": Constants.S3_REGION,
@@ -168,44 +240,46 @@ class BlockScannerService {
                 dir_path: localDirFullFilePath
             });
 
-        return await s3Write.uploadFiles();
-
+        let res = await s3Write.uploadFiles();
+        oThis._deleteLocalDirectory(localDirFullFilePath);
+        return res;
     }
 
     /**
      * processes given block
      *
      * @param {number} blockNumber
+     * @param {number} i
      * * @return {Promise}
      *
      */
-    processBlock(blockNumber) {
+    processBlock(blockNumber, i) {
         const oThis = this;
         return new Promise(function (resolve, reject) {
-            if (oThis.batchEndBlock < blockNumber) {
+            if (oThis.currentBatchEndBlock < blockNumber) {
                 return resolve({success: true});
             } else {
                 return oThis.blockScanner.asyncPerform(blockNumber)
                     .then(function (res) {
-                        if (res.success){
-                            oThis.blockScannerResponse.push(res);
-                            if(! res.data.hasTransactionsHashes){
-                                logger.log("no transactions for block no. " + res.data.blockNumber);
-                            } else{
-                                logger.log("data fetched from blockscanner for block " + res.data.blockNumber + " successfully");
-                            }
-
-
+                        if (res.success) {
+                            logger.info("successfully parsed for blockNumber ", blockNumber, " thread=> ", i);
+                            return resolve(oThis.processBlock(++oThis.nextBlockToProcess, i))
                         } else {
                             oThis.applicationMailer.perform(res);
+                            return Promise.reject(res);
                         }
-                        return resolve(oThis.processBlock(++oThis.nextBlockToProcess))
-
                     })
                     .catch(function (err) {
+                        logger.error(err);
                         oThis.applicationMailer.perform(err);
+                        return Promise.reject(responseHelper.error({
+                            internal_error_identifier: 's_bss_pb_2',
+                            api_error_identifier: 'block scanner failed',
+                            debug_options: {}
+                        }));
+
                         //tomorrow we can exit from here i.e. reject({success: false})
-                        return resolve(oThis.processBlock(++oThis.nextBlockToProcess));
+                        // return resolve(oThis.processBlock(++oThis.nextBlockToProcess, i));
                     });
             }
         });
@@ -234,19 +308,17 @@ class BlockScannerService {
      */
     async updateLastProcessedBlock() {
         const oThis = this;
-        if(oThis.isStartBlockGiven == false){
-            return oThis.redshiftClient.query("update " + dataProcessingInfoGC.getTableNameWithSchema + "_" + oThis.chainId +  " set value=" + oThis.lastProccessedBlock + " " +
+        if (oThis.isStartBlockGiven == false) {
+            return oThis.redshiftClient.query("update " + dataProcessingInfoGC.getTableNameWithSchema + "_" + oThis.chainId + " set value=" + oThis.currentBatchEndBlock + " " +
                 "where property='" + dataProcessingInfoGC.lastProcessedBlockProperty + "'").then((res) => {
                 logger.log("last processed block updated successfully");
             });
         }
     }
 
-    async _deleteLocalDirectory(localDirFullFilePath, hasFilesInTheDirectory) {
-        if(hasFilesInTheDirectory){
-            shell.rm("-rf", localDirFullFilePath);
-            console.log("The directory " + localDirFullFilePath + " is deleted successfully");
-        }
+    async _deleteLocalDirectory(localDirFullFilePath) {
+        shell.rm("-rf", localDirFullFilePath);
+        logger.log("The directory " + localDirFullFilePath + " is deleted successfully");
     }
 }
 
