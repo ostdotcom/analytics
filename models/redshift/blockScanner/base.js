@@ -133,10 +133,10 @@ class Base {
 
     }
 
-    async validateAndMoveFromTempToMain(minBlockNumberForTempTable) {
+    async validateAndMoveFromTempToMain(minBlockNumberForTempTable, maxAllowedEndblockInMain) {
 
         const oThis = this;
-        let r = await oThis.validateTempTableData(minBlockNumberForTempTable);
+        let r = await oThis.validateTempTableData(minBlockNumberForTempTable, maxAllowedEndblockInMain);
         if (r.success) {
             return oThis.insertToMainTable();
         } else {
@@ -161,12 +161,16 @@ class Base {
         return parseInt(Date.now()/1000);
     }
 
-    async validateTempTableData(minBlockNumberForTempTable) {
+    async validateTempTableData(minBlockNumberForTempTable, maxAllowedEndblockInMain) {
 
         const oThis = this,
-            maxBlockNumberFromMainQuery = await oThis.query(Util.format('select coalesce(max(block_number), -1) as max_block_number  from %s ', oThis.getTableNameWithSchema()));
+            maxBlockNumberFromMainQuery = await oThis.query(Util.format('select coalesce(max(block_number), -1) as max_block_number  from %s where block_number <= %s ', oThis.getTableNameWithSchema(), maxAllowedEndblockInMain));
 
         let maxBlockNumberFromMain = parseInt(maxBlockNumberFromMainQuery.rows[0].max_block_number);
+
+        console.log("minBlockNumberForTempTable",minBlockNumberForTempTable);
+        console.log("maxBlockNumberFromMain",maxBlockNumberFromMain);
+
         if (minBlockNumberForTempTable > maxBlockNumberFromMain) {
             return responseHelper.successWithData({});
         } else {
