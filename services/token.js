@@ -44,8 +44,7 @@ class Token {
         const oThis = this;
         oThis.OperationModel = tokenModel;
         oThis.s3DirPathSuffix = "/tokens";
-        let response = await oThis.process();
-        return response;
+        await oThis.process();
     }
 
     /**
