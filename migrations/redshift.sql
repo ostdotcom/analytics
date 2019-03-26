@@ -1,4 +1,4 @@
-WbVarDef ENV_SUFFIX=_d6;
+WbVarDef ENV_SUFFIX=_d4;
 WbVarDef SUB_ENV=main;
 WbVarDef PRESTAGING_REDSHIFT_SCHEMA_PREFIX=ost_warehouse;
 WbVarDef CHAIN_ID=202;
@@ -15,7 +15,6 @@ set search_path= $[PRESTAGING_REDSHIFT_SCHEMA_PREFIX]_$[SUB_ENV]$[ENV_SUFFIX];
 DROP TABLE IF EXISTS temp_transactions_$[CHAIN_ID];
 CREATE TABLE temp_transactions_$[CHAIN_ID]
 (
-  id                    BIGINT NOT NULL IDENTITY(1,1), 
   tx_uuid               VARCHAR(36), 
   tx_hash               VARCHAR(66) NOT NULL, 
   gas_used              INT NOT NULL,
@@ -62,7 +61,8 @@ CREATE TABLE transactions_$[CHAIN_ID]
   meta_name             VARCHAR(255), 
   token_id              INT, 
   kind                  INT, 
-  rule_id               INT
+  rule_id               INT,
+  insertion_timestamp   INT
 )
   DISTKEY (tx_hash) SORTKEY (block_number, kind);
 commit;
@@ -71,7 +71,6 @@ commit;
 DROP TABLE IF EXISTS temp_transfers_$[CHAIN_ID];
 CREATE TABLE temp_transfers_$[CHAIN_ID]
 (
-  id                    BIGINT NOT NULL IDENTITY(1,1),
   tx_hash          VARCHAR(255) NOT NULL,
   event_index      INT          NOT NULL,
   block_number     BIGINT       NOT NULL,
@@ -95,7 +94,8 @@ CREATE TABLE transfers_$[CHAIN_ID]
   from_address     VARCHAR(255) NOT NULL,
   to_address       VARCHAR(255) NOT NULL,
   contract_address VARCHAR(255) NOT NULL,
-  amount           DECIMAL(30,0) NOT NULL
+  amount           DECIMAL(30,0) NOT NULL,
+  insertion_timestamp             INT
 )
 DISTKEY (tx_hash) SORTKEY(block_number);
 

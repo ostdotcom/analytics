@@ -94,13 +94,7 @@ class Base {
 
             ,
             copyTable = Util.format('copy %s (%s) from \'%s\' iam_role \'%s\' delimiter \'|\';', oThis.getTempTableNameWithSchema(), oThis.getColumnList, s3BucketPath + fullFilePath, oThis.getIamRole())
-            , commit = 'COMMIT;'
-        ;
 
-        const deleteDuplicateIds = Util.format('DELETE from %s WHERE %s IN (SELECT %s from %s);', oThis.getTableNameWithSchema(), oThis.getTablePrimaryKey(), oThis.getTablePrimaryKey(), oThis.getTempTableNameWithSchema());
-
-
-        const insertRemainingEntries = Util.format('INSERT into %s (%s) (select %s from %s);', oThis.getTableNameWithSchema(), oThis.getColumnList, oThis.getColumnList, oThis.getTempTableNameWithSchema())
             , truncateTempTable = Util.format('TRUNCATE TABLE %s;', oThis.getTempTableNameWithSchema())
         ;
         logger.log(s3BucketPath + fullFilePath);
@@ -113,24 +107,13 @@ class Base {
             }).then(function () {
                 logger.log("copy to Temp table done");
                 return responseHelper.successWithData({});
-
+            }).catch(()=>{
+                return responseHelper.error({
+                    internal_error_identifier: 'm_r_b_b_cfs',
+                    api_error_identifier: 'copy to temp table failed',
+                    debug_options: {}
+                });
             });
-        // .then(function () {
-        //     logger.log("Deletion of duplicate Ids started", deleteDuplicateIds);
-        //     return oThis.query(deleteDuplicateIds);
-        // }).then(function () {
-        //     logger.log("Insertion of remaining entries started", insertRemainingEntries);
-        //     return oThis.query(insertRemainingEntries);
-        // }).then(function () {
-        //     logger.log("Dropping temp table", truncateTempTable);
-        //     return oThis.query(truncateTempTable);
-        // }).then(function () {
-        //     logger.log('Copy from S3 complete');
-        // }).catch(function (err) {
-        //     logger.error("S3 copy hampered", err);
-        //     throw new Error("S3 copy hampered" + err);
-        // });
-
     };
 
 
@@ -168,7 +151,7 @@ class Base {
     insertToMainTable() {
         logger.log("insert to main table");
         const oThis = this;
-        const insertRemainingEntries = Util.format('INSERT into %s (%s) (select %s from %s);', oThis.getTableNameWithSchema(), oThis.getColumnList, oThis.getColumnList, oThis.getTempTableNameWithSchema())
+        const insertRemainingEntries = Util.format('INSERT into %s (%s, insertion_timestamp) (select %s, %s from %s);', oThis.getTableNameWithSchema(), oThis.getColumnList, oThis.getColumnList, oThis.getTimeStampInSecs, oThis.getTempTableNameWithSchema())
         return oThis.query(insertRemainingEntries).then((res) => {
             logger.log("data moved from temp to main table successfully");
             return Promise.resolve(res);
@@ -176,6 +159,10 @@ class Base {
             return Promise.reject(err);
         });
 
+    }
+
+    get getTimeStampInSecs(){
+        return parseInt(Date.now()/1000);
     }
 
     async validateTempTableData(minBlockNumberForTempTable) {
