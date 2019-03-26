@@ -137,7 +137,7 @@ class BlockScannerService {
                         oThis.applicationMailer.perform({err: e});
                         return Promise.reject(responseHelper.error({
                             internal_error_identifier: 's_bss_rbbs_1',
-                            api_error_identifier: 'api_error_identifier',
+                            api_error_identifier: 'validateAndMoveFromTempToMain failed',
                             debug_options: {}
                         }));
                     }
@@ -154,7 +154,7 @@ class BlockScannerService {
             oThis._deleteLocalDirectory(localDirFullFilePath);
             return Promise.reject(responseHelper.error({
                 internal_error_identifier: 's_bss_rbbs_2',
-                api_error_identifier: 's3_upload_breaking',
+                api_error_identifier: 'runBatchBlockScanning error',
                 debug_options: {error: err}
             }));
 

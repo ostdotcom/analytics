@@ -41,7 +41,7 @@ class Transactions extends Base {
         oThis.applicationMailer.perform(errObj);
         return Promise.reject(responseHelper.error({
             internal_error_identifier: 'm_r_b_b_t_hbe_1',
-            api_error_identifier: '',
+            api_error_identifier: 'handleBlockError',
             debug_options: errObj
         }));
     }
