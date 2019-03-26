@@ -15,6 +15,7 @@ const rootPrefix = '..',
     responseHelper = require(rootPrefix + '/lib/formatter/response'),
     S3Write = require(rootPrefix + "/lib/S3_write"),
     dateUtil = require(rootPrefix + "/lib/dateUtil"),
+    logger = require(rootPrefix + "/helpers/custom_console_logger"),
     tokenModel = require(rootPrefix + "/models/mysql/token");
 
 /**
@@ -46,8 +47,7 @@ class Token {
         const oThis = this;
         oThis.OperationModel = tokenModel;
         oThis.s3DirPathSuffix = "/tokens";
-        let response = await oThis.process();
-        return response;
+        await oThis.process();
     }
 
     /**

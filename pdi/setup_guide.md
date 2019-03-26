@@ -70,7 +70,7 @@
 	export KETTLE_JNDI_ROOT=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/configs/development/simple-jndi
 
 	sh kitchen.sh -file=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/content-pdi/jobs/load_all_cubes.kjb -level=Detailed -param:CHAIN_ID=202 -param:SUB_ENV=main -param:ENV_SUFFIX=_d6 
-	sh kitchen.sh -file=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/content-pdi/jobs/incremental_consistency.kjb -level=Detailed -param:CHAIN_ID=202 -param:SUB_ENV=main -param:ENV_SUFFIX=_d7 
+	sh kitchen.sh -file=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/content-pdi/jobs/incremental_consistency.kjb -level=Detailed -param:CHAIN_ID=202 -param:SUB_ENV=main -param:ENV_SUFFIX=_d6 
 
 ## Update Shared.xml in development:
 	cp ~/.kettle/shared.xml ${KETTLE_HOME}/.kettle/shared.xml
