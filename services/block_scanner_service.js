@@ -55,13 +55,15 @@ class BlockScannerService {
      */
     async process() {
         const oThis = this;
-        let res;
+        let res,
+            batchNo = 1;
 
         logger.info("BlockScanner Service Started");
 
         while (oThis.batchStartBlock <= oThis.endBlock && (! cronConstants.getSigIntSignal )) {
             try {
-                res = await oThis.runBatchBlockScanning(oThis.batchStartBlock);
+                res = await oThis.runBatchBlockScanning(batchNo);
+                batchNo++;
                 if(! res.success){
                     return Promise.reject(res);
                 }
@@ -85,14 +87,13 @@ class BlockScannerService {
      * * @return {Promise}
      *
      */
-    async runBatchBlockScanning() {
+    async runBatchBlockScanning(batchNo) {
         const oThis = this;
         let promiseArray = [],
-            batchNo = 1,
             s3UploadPath = `${Constants.SUB_ENVIRONMENT}${Constants.ENV_SUFFIX}/${oThis.chainId}/${Date.now()}`,
             localDirFullFilePath = `${Constants.LOCAL_DIR_FILE_PATH}/${s3UploadPath}`;
 
-        logger.info("BlockScanner::runBatchBlockScanning Batch started-", batchNo++, "startBlock- " + oThis.batchStartBlock +
+        logger.info("BlockScanner::runBatchBlockScanning Batch started- ", batchNo, " startBlock- " + oThis.batchStartBlock +
             "lastProcessBlock- " + oThis.batchEndBlock);
         oThis.currentBatchEndBlock = oThis.batchEndBlock;
 
