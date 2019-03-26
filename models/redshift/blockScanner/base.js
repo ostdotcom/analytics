@@ -90,11 +90,7 @@ class Base {
 
         const oThis = this
             , s3BucketPath = 's3://' + constants.S3_BUCKET_NAME + '/'
-
-
-            ,
-            copyTable = Util.format('copy %s (%s) from \'%s\' iam_role \'%s\' delimiter \'|\';', oThis.getTempTableNameWithSchema(), oThis.getColumnList, s3BucketPath + fullFilePath, oThis.getIamRole())
-
+            , copyTable = Util.format('copy %s (%s) from \'%s\' iam_role \'%s\' delimiter \'|\';', oThis.getTempTableNameWithSchema(), oThis.getColumnList, s3BucketPath + fullFilePath, oThis.getIamRole())
             , truncateTempTable = Util.format('TRUNCATE TABLE %s;', oThis.getTempTableNameWithSchema())
         ;
         logger.log(s3BucketPath + fullFilePath);

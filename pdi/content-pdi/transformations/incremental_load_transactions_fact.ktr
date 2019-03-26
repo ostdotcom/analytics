@@ -504,7 +504,7 @@
     <server />
     <type>MYSQL</type>
     <access>JNDI</access>
-    <database>analyticsMysqlConnection_${CHAIN_ID}_${SUB_ENV}${ENV_SUFFIX}</database>
+    <database>analyticsMysqlConnection_${SUB_ENV}${ENV_SUFFIX}</database>
     <port>1521</port>
     <username />
     <password>Encrypted </password>
@@ -575,7 +575,7 @@
     <server />
     <type>REDSHIFT</type>
     <access>JNDI</access>
-    <database>analyticsRedshiftConnection_${CHAIN_ID}_${SUB_ENV}${ENV_SUFFIX}</database>
+    <database>analyticsRedshiftConnection_${ENV_SUFFIX}</database>
     <port>1521</port>
     <username />
     <password>Encrypted </password>
@@ -1013,9 +1013,9 @@ CREATE TABLE temp_incremental_transactions_${CHAIN_ID}
 AS
 SELECT *
 FROM ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.transactions_${CHAIN_ID}
-WHERE id > (SELECT MAX(value)
+WHERE insertion_timestamp > (SELECT MAX(value)
            FROM temp_pentaho_processing_info_${CHAIN_ID}
-           WHERE property = 'last_processed_transaction');
+           WHERE property = 'last_processed_transaction_insert_timestamp');
 
 DROP TABLE if exists temp_transfer_details_${CHAIN_ID};
 
@@ -1083,8 +1083,8 @@ GROUP BY 1,
          order by rounded_date_timestamp, rounded_time_timestamp;
 
 Update temp_pentaho_processing_info_${CHAIN_ID} 
-set value = GREATEST(value, (select COALESCE(max(id), -1) from temp_incremental_transactions_${CHAIN_ID}))
-where  property ='last_processed_transaction';
+set value = GREATEST(value, (select COALESCE(max(insertion_timestamp), 0) from temp_incremental_transactions_${CHAIN_ID}))
+where  property ='last_processed_transaction_insert_timestamp';
 
 commit;
 </sql>

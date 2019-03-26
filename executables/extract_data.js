@@ -142,8 +142,7 @@ class ExtractData {
      */
     getStartBlockFromRedShift() {
         const oThis = this;
-        return oThis.redshiftClient.query("select * from " + dataProcessingInfoGC.getTableNameWithSchema + "_" + oThis.chainId + " where property = '" +
-            dataProcessingInfoGC.lastProcessedBlockProperty + "'").then((res) => {
+        return oThis.redshiftClient.parameterizedQuery("select * from " + dataProcessingInfoGC.getTableNameWithSchema + "_" + oThis.chainId + " where property =$1", [dataProcessingInfoGC.lastProcessedBlockProperty]).then((res) => {
             return parseInt(res.rows[0].value) + 1;
         });
     }

@@ -5,7 +5,7 @@
     <server/>
     <type>REDSHIFT</type>
     <access>JNDI</access>
-    <database>analyticsRedshiftConnection_${ENV_SUFFIX}</database>
+    <database>analyticsRedshiftConnection${ENV_SUFFIX}</database>
     <port>1521</port>
     <username/>
     <password>Encrypted </password>

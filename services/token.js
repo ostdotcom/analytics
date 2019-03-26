@@ -76,7 +76,7 @@ class Token {
         oThis.fileName = oThis.localDirFullFilePath + oThis.getFilePath + "/" + Date.now() + '.csv';
 
         let lastUpdatedAtValue = await oThis._getTokenLastUpdatedAtValue();
-        tokensRecords = await new tokenModel({}).select("*").where("updated_at > '" + lastUpdatedAtValue + "'").order_by("id").limit(50).offset(offset).fire();
+        tokensRecords = await new tokenModel({}).select("*").where(['updated_at > ?', lastUpdatedAtValue]).order_by("id").limit(50).offset(offset).fire();
 
         let LocalWrite = new localWrite({separator: "|"});
         if(tokensRecords.length > 0){
@@ -96,7 +96,7 @@ class Token {
 
             await LocalWrite.writeArray(arrayOfList, oThis.fileName);
             offset += 50;
-            tokensRecords = await new tokenModel({}).select("*").where("updated_at > '" + lastUpdatedAtValue + "'").order_by("id").limit(50).offset(offset).fire();
+            tokensRecords = await new tokenModel({}).select("*").where(['updated_at > ?', lastUpdatedAtValue]).order_by("id").limit(50).offset(offset).fire();
         }
 
     }
@@ -110,7 +110,7 @@ class Token {
     async _getTokenLastUpdatedAtValue() {
         const oThis = this;
 
-        return await oThis.redshiftClient.query("select * from " + dataProcessingInfoGC.getTableNameWithSchema + "_" + oThis.chainId + " "+"where property=" + "'"+dataProcessingInfoGC.tokenLastUpdatedAtProperty + "'").then((res) => {
+        return await oThis.redshiftClient.parameterizedQuery("select * from " + dataProcessingInfoGC.getTableNameWithSchema + "_" + oThis.chainId + " "+"where property= $1", [dataProcessingInfoGC.tokenLastUpdatedAtProperty]).then((res) => {
             console.log(res.rows);
             return (res.rows[0].value);
         });
@@ -192,8 +192,9 @@ class Token {
     async _updateTokenLastUpdatedAtValue() {
         const oThis = this;
         let LastUpdatedAtValue = await oThis._getLastUpdatedAtValueFromTokenTable();
-        return await oThis.redshiftClient.query("update " + dataProcessingInfoGC.getTableNameWithSchema + "_" + oThis.chainId +  " set value='" + LastUpdatedAtValue + "' " +
-            "where property='" + dataProcessingInfoGC.tokenLastUpdatedAtProperty + "'").then((res) => {
+
+        return await oThis.redshiftClient.parameterizedQuery("update " + dataProcessingInfoGC.getTableNameWithSchema + "_" + oThis.chainId +  " set value=$1 " +
+            "where property=$2", [LastUpdatedAtValue, dataProcessingInfoGC.tokenLastUpdatedAtProperty]).then((res) => {
             console.log("token_last_updated_at value of the data_processing_info table updated successfully");
         });
     }

@@ -36,10 +36,10 @@ class Transfers extends Base {
         logger.error("handle error for transfers");
 
         const oThis = this,
-            deleteDuplicateIds = Util.format("DELETE from %s WHERE concat(tx_hash, concat(\'-\', event_index)) IN(SELECT concat(tx_hash, concat(\'-\', event_index)) from %s where block_number >= %s);",
-                oThis.getTempTableNameWithSchema(), oThis.getTableNameWithSchema(), params.minBlock);
+            deleteDuplicateQuery = Util.format("DELETE from %s WHERE concat(tx_hash, concat(\'-\', event_index)) IN(SELECT concat(tx_hash, concat(\'-\', event_index)) from %s where block_number >= $1);",
+                oThis.getTempTableNameWithSchema(), oThis.getTableNameWithSchema());
 
-        return oThis.query(deleteDuplicateIds).then((res) => {
+        return oThis.parameterizedQuery(deleteDuplicateQuery, [params.minBlock]).then((res) => {
             oThis.applicationMailer.perform({object: oThis.object, reason: "duplicate transfers are deleted"});
             return Promise.resolve();
         });
