@@ -70,6 +70,7 @@ class ExtractData {
                 }
             }
         } catch (e) {
+            logger.error("Terminating error due to exception");
             process.exit(1);
         }
         logger.log("ending the process with success");
