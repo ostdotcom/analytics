@@ -1,8 +1,9 @@
 WbVarDef ENV_SUFFIX=_d6;
 WbVarDef SUB_ENV=main;
-WbVarDef PRESTAGING_REDSHIFT_SCHEMA_PREFIX=$[PRESTAGING_REDSHIFT_SCHEMA_PREFIX];
+WbVarDef PRESTAGING_REDSHIFT_SCHEMA_PREFIX=ost_warehouse;
 WbVarDef CHAIN_ID=202;
 
+create schema if not exists $[PRESTAGING_REDSHIFT_SCHEMA_PREFIX]_$[SUB_ENV]$[ENV_SUFFIX];
 set search_path= $[PRESTAGING_REDSHIFT_SCHEMA_PREFIX]_$[SUB_ENV]$[ENV_SUFFIX];
 
 -- copy favoritemovies from 'dynamodb://s6_m_a_202_1_transactions'
@@ -61,7 +62,7 @@ CREATE TABLE transactions_$[CHAIN_ID]
   meta_name             VARCHAR(255), 
   token_id              INT, 
   kind                  INT, 
-  rule_id               INT 
+  rule_id               INT
 )
   DISTKEY (tx_hash) SORTKEY (block_number, kind);
 commit;
