@@ -1,7 +1,8 @@
--- Job log table
---
+-- define CHAIN_ID
 
-CREATE TABLE job_logs_202
+-- Job log table
+
+CREATE TABLE job_logs_${CHAIN_ID}
 (
   ID_JOB INT
 , CHANNEL_ID VARCHAR(255)
@@ -22,9 +23,9 @@ CREATE TABLE job_logs_202
 , LOG_FIELD LONGTEXT
 )
 ;
-CREATE INDEX IDX_job_logs_202_1 ON job_logs_202(ID_JOB)
+CREATE INDEX IDX_job_logs_${CHAIN_ID}_1 ON job_logs_${CHAIN_ID}(ID_JOB)
 ;
-CREATE INDEX IDX_job_logs_202_2 ON job_logs_202(ERRORS, STATUS, JOBNAME)
+CREATE INDEX IDX_job_logs_${CHAIN_ID}_2 ON job_logs_${CHAIN_ID}(ERRORS, STATUS, JOBNAME)
 ;
 
 
@@ -33,7 +34,7 @@ CREATE INDEX IDX_job_logs_202_2 ON job_logs_202(ERRORS, STATUS, JOBNAME)
 -- Transformation log table
 --
 
-CREATE TABLE transformation_logs_202
+CREATE TABLE transformation_logs_${CHAIN_ID}
 (
   ID_BATCH INT
 , CHANNEL_ID VARCHAR(255)
@@ -54,7 +55,7 @@ CREATE TABLE transformation_logs_202
 , LOG_FIELD LONGTEXT
 )
 ;
-CREATE INDEX IDX_transformation_logs_202_1 ON transformation_logs_202(ID_BATCH)
+CREATE INDEX IDX_transformation_logs_${CHAIN_ID}_1 ON transformation_logs_${CHAIN_ID}(ID_BATCH)
 ;
-CREATE INDEX IDX_transformation_logs_202_2 ON transformation_logs_202(ERRORS, STATUS, TRANSNAME)
+CREATE INDEX IDX_transformation_logs_${CHAIN_ID}_2 ON transformation_logs_${CHAIN_ID}(ERRORS, STATUS, TRANSNAME)
 ;
