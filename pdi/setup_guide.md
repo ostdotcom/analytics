@@ -5,10 +5,15 @@ ost_pentaho_stag_user
 
 
 export KETTLE_HOME=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/configs/development
-
 export KETTLE_JNDI_ROOT=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/configs/development/simple-jndi
 
 sh kitchen.sh -file=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/content-pdi/jobs/load_all_cubes.kjb -level=Detailed -param:CHAIN_ID=202 -param:SUB_ENV=main -param:ENV_SUFFIX=_d6 
+
+
+sh kitchen.sh -file=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/content-pdi/jobs/incremental_consistency.kjb -level=Detailed -param:CHAIN_ID=202 -param:SUB_ENV=main -param:ENV_SUFFIX=_d7 
+
+
+
 
 
 
@@ -100,6 +105,7 @@ Setup a new env:
 		populate_dim_dates
 		populate_dim_times
 
+		Create log migrations
 	DEFINE NEW LOG TABLE NAME AND MYSQL Connection	
 
 
@@ -143,6 +149,8 @@ ${TEMP_PENTAHO_REDSHIFT_SCHEMA_NAME}${ENV_SUFFIX}
 _${CHAIN_ID}
 
 ssh -L 3307:ost-kit-saas-all.cr8jt6bpnicr.us-east-1.rds.amazonaws.com:3306 3.91.174.58 -N -f
+
+ssh -L 3307:s6-kit-all.cr8jt6bpnicr.us-east-1.rds.amazonaws.com:3306 3.91.174.58 -N -f
 
 node executables/extract_data.js --blockScanner true  --chainId 202
 
