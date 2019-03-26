@@ -150,6 +150,7 @@ class BlockScannerService {
 
             }).catch((err) => {
             logger.log("exception =>", err);
+            oThis._deleteLocalDirectory(localDirFullFilePath);
             return Promise.reject(responseHelper.error({
                 internal_error_identifier: 's_bss_rbbs_2',
                 api_error_identifier: 's3_upload_breaking',
