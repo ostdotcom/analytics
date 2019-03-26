@@ -11,6 +11,7 @@ const rootPrefix = '..',
     shell = require("shelljs"),
     dataProcessingInfoGC = require(rootPrefix + "/lib/globalConstants/redShift/dataProcessingInfo"),
     localWrite = require(rootPrefix + "/lib/localWrite"),
+    ApplicationMailer = require(rootPrefix + '/lib/applicationMailer'),
     responseHelper = require(rootPrefix + '/lib/formatter/response'),
     S3Write = require(rootPrefix + "/lib/S3_write"),
     dateUtil = require(rootPrefix + "/lib/dateUtil"),
@@ -32,6 +33,7 @@ class Token {
         const oThis = this;
         oThis.redshiftClient = new RedshiftClient(Constants.PRESTAGING_REDSHIFT_CLIENT);
         oThis.chainId = params.chainId;
+        oThis.applicationMailer = new ApplicationMailer();
     }
 
     /**
@@ -55,9 +57,22 @@ class Token {
      */
     async process() {
         const oThis = this;
-        await oThis._fetchTokenDetailsAndWriteIntoLocalFile();
-        await oThis._uploadLocalFilesToS3();
-        await oThis._updateTokenLastUpdatedAtValue();
+        try {
+
+            await oThis._fetchTokenDetailsAndWriteIntoLocalFile();
+            await oThis._uploadLocalFilesToS3();
+            await oThis._updateTokenLastUpdatedAtValue();
+        } catch(e){
+            logger.log("token service terminated due to exception-" , e);
+            let rH = responseHelper.error({
+
+                internal_error_identifier: 's_t_p_1',
+                api_error_identifier: 'api_error_identifier',
+                debug_options: {error: e}
+            });
+            oThis.applicationMailer.perform(rH);
+            return Promise.reject(rH);
+        }
     }
 
     /**
