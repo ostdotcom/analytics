@@ -135,12 +135,9 @@ class Base {
 
 
     async query(commandString) {
-        const oThis = this
-        ;
-
-        logger.info("___--------______-------______--------____-----", commandString);
+        const oThis = this;
+        logger.info("redshift query ::", commandString);
         oThis.redshiftClient = new Redshift(constants.PRESTAGING_REDSHIFT_CLIENT);
-        logger.debug('Redshift query String', commandString);
         return new Promise(function (resolve, reject) {
             try {
                 oThis.redshiftClient.query(commandString, function (err, result) {
