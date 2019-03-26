@@ -41,7 +41,7 @@ class ExtractData {
 
 
     handle() {
-        cronConstants.setSigIntSignal(true);
+        cronConstants.setSigIntSignal();
     }
 
     async perform() {
