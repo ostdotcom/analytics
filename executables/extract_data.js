@@ -3,6 +3,7 @@ const rootPrefix = "..",
     program = require("commander"),
     Constant = require(rootPrefix + "/configs/constants"),
     dataProcessingInfoGC = require(rootPrefix + "/lib/globalConstants/redShift/dataProcessingInfo"),
+    cronConstants = require(rootPrefix + "/lib/globalConstants/cronConstants"),
     BlockScannerService = require(rootPrefix + "/services/block_scanner_service.js"),
     TokenService = require(rootPrefix + "/services/token"),
     BlockScanner = require(rootPrefix + "/lib/blockScanner"),
@@ -40,15 +41,15 @@ class ExtractData {
 
 
     handle() {
-        process.exit(0);
+        cronConstants.setSigIntSignal(true);
     }
 
     async perform() {
         let oThis = this;
-
+        process.on('SIGINT', oThis.handle);
         oThis.ProcessLocker.canStartProcess({process_title: 'cron_extract_data_c_' + parseInt(program.chainId) + "_" + parseInt(program.startBlock) + "_" + parseInt(program.endBlock)});
 
-        process.on('SIGINT', oThis.handle);
+
 
         try {
 
@@ -68,15 +69,11 @@ class ExtractData {
                 }
             }
         } catch (e) {
-            logger.error("ending the process with error: ", e);
-            process.emit('SIGINT');
+            process.exit(1);
         }
         logger.log("ending the process with success");
+        process.exit(0);
 
-        setTimeout(function() {
-            logger.info('Ending the process. Sending SIGINT.');
-            process.emit('SIGINT');
-        }, 1*1000);
 
     }
 
@@ -105,6 +102,7 @@ class ExtractData {
      *
      */
     async extractBlockScannerData(startBlock, endBlock) {
+
         const oThis = this;
         let isStartBlockGiven;
         let startTime = Date.now();
@@ -112,7 +110,7 @@ class ExtractData {
 
         logger.log("processing started at", startTime);
 
-        isStartBlockGiven = program.startBlock ? true : false;
+        isStartBlockGiven = !!program.startBlock;
 
         let blockScannerService = new BlockScannerService(oThis.chainId, startBlock, endBlock, isStartBlockGiven);
 

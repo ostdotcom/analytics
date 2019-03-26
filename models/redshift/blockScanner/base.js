@@ -92,8 +92,7 @@ class Base {
             , s3BucketPath = 's3://' + constants.S3_BUCKET_NAME + '/'
             , copyTable = Util.format('copy %s (%s) from \'%s\' iam_role \'%s\' delimiter \'|\';', oThis.getTempTableNameWithSchema(), oThis.getColumnList, s3BucketPath + fullFilePath, oThis.getIamRole())
             , truncateTempTable = Util.format('TRUNCATE TABLE %s;', oThis.getTempTableNameWithSchema())
-            ;
-
+        ;
         logger.log(s3BucketPath + fullFilePath);
 
         logger.log("Temp table delete if exists", truncateTempTable);
@@ -104,34 +103,20 @@ class Base {
             }).then(function () {
                 logger.log("copy to Temp table done");
                 return responseHelper.successWithData({});
-
+            }).catch(()=>{
+                return responseHelper.error({
+                    internal_error_identifier: 'm_r_b_b_cfs',
+                    api_error_identifier: 'copy to temp table failed',
+                    debug_options: {}
+                });
             });
-        // .then(function () {
-        //     logger.log("Deletion of duplicate Ids started", deleteDuplicateIds);
-        //     return oThis.query(deleteDuplicateIds);
-        // }).then(function () {
-        //     logger.log("Insertion of remaining entries started", insertRemainingEntries);
-        //     return oThis.query(insertRemainingEntries);
-        // }).then(function () {
-        //     logger.log("Dropping temp table", truncateTempTable);
-        //     return oThis.query(truncateTempTable);
-        // }).then(function () {
-        //     logger.log('Copy from S3 complete');
-        // }).catch(function (err) {
-        //     logger.error("S3 copy hampered", err);
-        //     throw new Error("S3 copy hampered" + err);
-        // });
-
     };
 
 
     async query(commandString) {
-        const oThis = this
-        ;
-
-        logger.info("___--------______-------______--------____-----", commandString);
+        const oThis = this;
+        logger.info("redshift query ::", commandString);
         oThis.redshiftClient = new Redshift(constants.PRESTAGING_REDSHIFT_CLIENT);
-        logger.debug('Redshift query String', commandString);
         return new Promise(function (resolve, reject) {
             try {
                 oThis.redshiftClient.query(commandString, function (err, result) {
@@ -162,7 +147,7 @@ class Base {
     insertToMainTable() {
         logger.log("insert to main table");
         const oThis = this;
-        const insertRemainingEntries = Util.format('INSERT into %s (%s) (select %s from %s);', oThis.getTableNameWithSchema(), oThis.getColumnList, oThis.getColumnList, oThis.getTempTableNameWithSchema())
+        const insertRemainingEntries = Util.format('INSERT into %s (%s, insertion_timestamp) (select %s, %s from %s);', oThis.getTableNameWithSchema(), oThis.getColumnList, oThis.getColumnList, oThis.getTimeStampInSecs, oThis.getTempTableNameWithSchema())
         return oThis.query(insertRemainingEntries).then((res) => {
             logger.log("data moved from temp to main table successfully");
             return Promise.resolve(res);
@@ -170,6 +155,10 @@ class Base {
             return Promise.reject(err);
         });
 
+    }
+
+    get getTimeStampInSecs(){
+        return parseInt(Date.now()/1000);
     }
 
     async validateTempTableData(minBlockNumberForTempTable) {

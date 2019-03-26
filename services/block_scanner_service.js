@@ -5,6 +5,7 @@ const rootPrefix = "..",
     dataProcessingInfoGC = require(rootPrefix + "/lib/globalConstants/redShift/dataProcessingInfo"),
     shell = require("shelljs"),
     blockScannerGC = require(rootPrefix + "/lib/globalConstants/blockScanner"),
+    cronConstants = require(rootPrefix + "/lib/globalConstants/cronConstants"),
     TransactionsModel = require(rootPrefix + "/models/redshift/blockScanner/transactions"),
     TransfersModel = require(rootPrefix + "/models/redshift/blockScanner/transfers"),
     S3Write = require(rootPrefix + "/lib/S3_write"),
@@ -58,7 +59,7 @@ class BlockScannerService {
 
         logger.info("BlockScanner Service Started");
 
-        while (oThis.batchStartBlock <= oThis.endBlock) {
+        while (oThis.batchStartBlock <= oThis.endBlock && (! cronConstants.getSigIntSignal )) {
             try {
                 res = await oThis.runBatchBlockScanning(oThis.batchStartBlock);
                 if(! res.success){
@@ -66,6 +67,7 @@ class BlockScannerService {
                 }
                 oThis.batchStartBlock = res.data.lastProcessedBlock + 1;
             } catch (e) {
+                logger.log("exception =>", e);
                 return Promise.reject(responseHelper.error({
                     internal_error_identifier: 's_bss_p_1',
                     api_error_identifier: 'api_error_identifier',
@@ -147,10 +149,11 @@ class BlockScannerService {
                 return Promise.resolve(responseHelper.successWithData({lastProcessedBlock: oThis.currentBatchEndBlock}));
 
             }).catch((err) => {
+            logger.log("exception =>", err);
             return Promise.reject(responseHelper.error({
                 internal_error_identifier: 's_bss_rbbs_2',
                 api_error_identifier: 's3_upload_breaking',
-                debug_options: {}
+                debug_options: {error: err}
             }));
 
         });
