@@ -49,6 +49,3 @@ VALUES
 );  
 
 commit;
-
-
-
