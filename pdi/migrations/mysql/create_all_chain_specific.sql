@@ -1,5 +1,22 @@
 -- define CHAIN_ID
 
+  drop table if exists `incremental_aggregated_transfers_details_{CHAIN_ID}` ;
+
+  CREATE TABLE `incremental_aggregated_transfers_details_{CHAIN_ID}` (
+    `id` bigint  NOT NULL auto_increment,
+    `rounded_time_timestamp` integer  NOT NULL,
+    `rounded_date_timestamp` integer  NOT NULL,
+    `token_id` bigint  NOT NULL,
+    `meta_type` varchar(255)   NULL,
+    `meta_name` varchar(255)   NULL,
+    `final_status` varchar(20)  NOT NULL,
+    `total_transactions` bigint NOT NULL,
+    `total_transfers` bigint NOT NULL,
+    `total_volume` bigint NOT NULL,
+    `total_gas_used` bigint NOT NULL,
+    PRIMARY KEY (`id`)
+  );
+
   drop table if exists `dim_tokens_${CHAIN_ID}` ;
   
   CREATE TABLE `dim_tokens_${CHAIN_ID}` (
@@ -36,8 +53,8 @@
     `time_sk` bigint  NOT NULL ,
     `date_sk` bigint  NOT NULL ,
     `token_sk` bigint  NOT NULL ,
-    `meta_type_sk` bigint   NULL ,
-    `meta_name_sk` bigint   NULL ,
+    `meta_type_sk` bigint  NOT NULL ,
+    `meta_name_sk` bigint  NOT NULL ,
     `status` varchar(20) NOT NULL,
     `total_transactions` bigint NOT NULL,
     `total_transfers` bigint NOT NULL,

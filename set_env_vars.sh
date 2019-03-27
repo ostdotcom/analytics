@@ -1,7 +1,7 @@
 
 export SUB_ENVIRONMENT='main'
 export ENVIRONMENT='development'
-export ENV_SUFFIX='_d4'
+export ENV_SUFFIX='_d6'
 export SAAS_MYSQL_DATABASE_ENVIRONMENT=staging
 
 export KIT_MYSQL_CONNECTION_POOL_SIZE='3'
@@ -19,8 +19,8 @@ export PRESTAGING_SCHEMA_PREFIX='ost_warehouse_'
 export TRANSFERS_BATCH_SIZE=80
 export TRANSACTION_BATCH_SIZE=60
 export MAX_SPLIT_COUNT=5
-export NO_OF_BLOCKS_TO_PROCESS_TOGETHER=4
-export S3_WRITE_COUNT=5
+export NO_OF_BLOCKS_TO_PROCESS_TOGETHER=10
+export S3_WRITE_COUNT=100
 
 export S3_IAM_ROLE='arn:aws:iam::274208178423:role/ost_redshift_copy'
 export S3_REGION='us-east-1'

@@ -19,6 +19,7 @@
 		click Contents->MAcOS->JavaApplicationStub
 
 ## To Open Spoon:
+	export KETTLE_HOME=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/configs/development
 	cp ${KETTLE_HOME}/simple-jndi/jdbc.properties /Users/amanbarbaria/Downloads/data-integration/simple-jndi/jdbc.properties
 	cp ${KETTLE_HOME}/.kettle/kettle.properties ~/.kettle/kettle.properties	
 
@@ -69,8 +70,9 @@
 	export KETTLE_HOME=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/configs/development
 	export KETTLE_JNDI_ROOT=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/configs/development/simple-jndi
 
-	sh kitchen.sh -file=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/content-pdi/jobs/load_all_cubes.kjb -level=Detailed -param:CHAIN_ID=202 -param:SUB_ENV=main -param:ENV_SUFFIX=_d6 
-	sh kitchen.sh -file=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/content-pdi/jobs/incremental_consistency.kjb -level=Detailed -param:CHAIN_ID=202 -param:SUB_ENV=main -param:ENV_SUFFIX=_d6 
+	sh kitchen.sh -file=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/content-pdi/jobs/load_all_cubes.kjb -level=Debug -param:CHAIN_ID=202 -param:SUB_ENV=main -param:ENV_SUFFIX=_d6 
+	sh kitchen.sh -file=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/content-pdi/jobs/incremental_consistency.kjb -level=Debug -param:CHAIN_ID=202 -param:SUB_ENV=main -param:ENV_SUFFIX=_d6 
 
 ## Update Shared.xml in development:
+	export KETTLE_HOME=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/configs/development
 	cp ~/.kettle/shared.xml ${KETTLE_HOME}/.kettle/shared.xml

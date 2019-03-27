@@ -1,14 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <transformation>
   <info>
-    <name>Update Processing Info data for incremental loads</name>
+    <name>Incremental Load Transactions data to mysql</name>
     <description />
     <extended_description />
-    <trans_version>1</trans_version>
+    <trans_version />
     <trans_type>Normal</trans_type>
     <trans_status>0</trans_status>
     <directory>/</directory>
     <parameters>
+      <parameter>
+        <name>CHAIN_ID</name>
+        <default_value>202</default_value>
+        <description />
+      </parameter>
+      <parameter>
+        <name>ENV_SUFFIX</name>
+        <default_value>_d6</default_value>
+        <description />
+      </parameter>
+      <parameter>
+        <name>SUB_ENV</name>
+        <default_value>main</default_value>
+        <description />
+      </parameter>
     </parameters>
     <log>
       <trans-log-table>
@@ -106,7 +121,7 @@
         </field>
         <field>
           <id>LOG_FIELD</id>
-          <enabled>Y</enabled>
+          <enabled>N</enabled>
           <name>LOG_FIELD</name>
         </field>
         <field>
@@ -416,7 +431,7 @@
     <feedback_size>50000</feedback_size>
     <using_thread_priorities>Y</using_thread_priorities>
     <shared_objects_file />
-    <capture_step_performance>N</capture_step_performance>
+    <capture_step_performance>Y</capture_step_performance>
     <step_performance_capturing_delay>1000</step_performance_capturing_delay>
     <step_performance_capturing_size_limit>100</step_performance_capturing_size_limit>
     <dependencies>
@@ -468,6 +483,69 @@
       <attribute>
         <code>MAXIMUM_POOL_SIZE</code>
         <attribute>10</attribute>
+      </attribute>
+      <attribute>
+        <code>PORT_NUMBER</code>
+        <attribute>1521</attribute>
+      </attribute>
+      <attribute>
+        <code>PRESERVE_RESERVED_WORD_CASE</code>
+        <attribute>Y</attribute>
+      </attribute>
+      <attribute>
+        <code>QUOTE_ALL_FIELDS</code>
+        <attribute>N</attribute>
+      </attribute>
+      <attribute>
+        <code>STREAM_RESULTS</code>
+        <attribute>Y</attribute>
+      </attribute>
+      <attribute>
+        <code>SUPPORTS_BOOLEAN_DATA_TYPE</code>
+        <attribute>Y</attribute>
+      </attribute>
+      <attribute>
+        <code>SUPPORTS_TIMESTAMP_DATA_TYPE</code>
+        <attribute>Y</attribute>
+      </attribute>
+      <attribute>
+        <code>USE_POOLING</code>
+        <attribute>Y</attribute>
+      </attribute>
+    </attributes>
+  </connection>
+  <connection>
+    <name>analytics_mysql_connection</name>
+    <server />
+    <type>MYSQL</type>
+    <access>JNDI</access>
+    <database>analyticsMysqlConnection_${SUB_ENV}${ENV_SUFFIX}</database>
+    <port>1521</port>
+    <username />
+    <password>Encrypted </password>
+    <servername />
+    <data_tablespace />
+    <index_tablespace />
+    <attributes>
+      <attribute>
+        <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
+        <attribute>N</attribute>
+      </attribute>
+      <attribute>
+        <code>FORCE_IDENTIFIERS_TO_UPPERCASE</code>
+        <attribute>N</attribute>
+      </attribute>
+      <attribute>
+        <code>INITIAL_POOL_SIZE</code>
+        <attribute>10</attribute>
+      </attribute>
+      <attribute>
+        <code>IS_CLUSTERED</code>
+        <attribute>N</attribute>
+      </attribute>
+      <attribute>
+        <code>MAXIMUM_POOL_SIZE</code>
+        <attribute>20</attribute>
       </attribute>
       <attribute>
         <code>PORT_NUMBER</code>
@@ -563,12 +641,68 @@
     </attributes>
   </connection>
   <order>
+    <hop>
+      <from>Load Transactions Cube</from>
+      <to>Get agg rows </to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>Get agg rows </from>
+      <to>Table output</to>
+      <enabled>Y</enabled>
+    </hop>
   </order>
   <step>
-    <name>Update Last token time</name>
-    <type>ExecSQL</type>
+    <name>Get agg rows </name>
+    <type>TableInput</type>
     <description />
     <distribute>Y</distribute>
+    <custom_distribution />
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name />
+    </partitioning>
+    <connection>analytics_redshift_connection</connection>
+    <sql>SELECT rounded_time_timestamp,
+       rounded_date_timestamp,
+       token_id,
+       meta_type,
+       meta_name,
+       final_status AS final_status,
+       total_transactions::DECIMAL(30,0) AS total_transactions,
+       total_transfers::DECIMAL(30,0) AS total_transfers,
+       total_volume::DECIMAL(30,0) AS total_volume,
+       total_gas_used::DECIMAL(30,0) AS total_gas_used	
+FROM ${TEMP_PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.temp_aggregated_transfers_details_${CHAIN_ID}
+ORDER BY rounded_date_timestamp,
+         token_id,
+         final_status,
+         rounded_time_timestamp;</sql>
+    <limit>0</limit>
+    <lookup />
+    <execute_each_row>N</execute_each_row>
+    <variables_active>Y</variables_active>
+    <lazy_conversion_active>N</lazy_conversion_active>
+    <attributes />
+    <cluster_schema />
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>288</xloc>
+      <yloc>192</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>Load Transactions Cube</name>
+    <type>ExecSQL</type>
+    <description />
+    <distribute>N</distribute>
     <custom_distribution />
     <copies>1</copies>
     <partitioning>
@@ -580,21 +714,88 @@
     <single_statement>N</single_statement>
     <replace_variables>Y</replace_variables>
     <quoteString>N</quoteString>
-    <sql>begin;
+    <sql>SET search_path = ${TEMP_PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX};
 
-set search_path= ${TEMP_PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX};
+BEGIN;
 
-update temp_pentaho_processing_info_${CHAIN_ID}
-set value = (Select coalesce(extract(epoch from max(updated_at)), 0) from ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.tokens_${CHAIN_ID})
-where property ='last_updated_token_timestamp';
+DROP TABLE if exists temp_incremental_transactions_${CHAIN_ID};
 
-update temp_pentaho_processing_info_${CHAIN_ID}
-set value = (Select coalesce(max(insertion_timestamp), 0) from ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.transactions_${CHAIN_ID})
-where property ='last_processed_meta_name_tx_insert_timestamp';
+CREATE TABLE temp_incremental_transactions_${CHAIN_ID} 
+AS
+(SELECT *
+FROM ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.transactions_${CHAIN_ID}
+WHERE block_timestamp >= (SELECT 3600 *((min_block_timestamp / 3600)::INTEGER) AS rounded_min_block_timestamp
+                          FROM (SELECT COALESCE(MIN(block_timestamp), 2000000000) AS min_block_timestamp
+                                FROM ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.transactions_${CHAIN_ID}
+                                WHERE insertion_timestamp >(SELECT MAX(value)
+                                                            FROM temp_pentaho_processing_info_${CHAIN_ID}
+                                                            WHERE property = 'last_processed_transaction_insert_timestamp'))));
 
-Update temp_pentaho_processing_info_${CHAIN_ID} 
-set value = GREATEST(value, (select COALESCE(max(insertion_timestamp), 0) from temp_incremental_transactions_${CHAIN_ID}))
-where  property ='last_processed_transaction_insert_timestamp';
+
+DROP TABLE if exists temp_transfer_details_${CHAIN_ID};
+
+CREATE TABLE temp_transfer_details_${CHAIN_ID}
+AS
+SELECT a.tx_hash,
+       a.block_number,
+       a.status AS status,
+       a.status_internal AS internal_status,
+       (CASE (a.status = true AND a.status_internal = true)
+         WHEN TRUE THEN 'success'
+         ELSE 'fail'
+       END) AS final_status,
+       a.rule_id,
+       LOWER(a.meta_type) as meta_type,
+       LOWER(a.meta_name) as meta_name,
+       a.token_id::INTEGER as token_id,
+       a.gas_used,
+       a.block_timestamp,
+       (a.block_timestamp - MOD(a.block_timestamp,86400)::INTEGER) AS rounded_date_timestamp,
+       3600 *((MOD(a.block_timestamp,86400) / 3600)::INTEGER) AS rounded_time_timestamp,
+       COALESCE(COUNT(b.tx_hash), 0) AS total_transfers,
+       COALESCE(SUM(b.amount), 0) AS total_transfer_amount
+FROM temp_incremental_transactions_${CHAIN_ID} as a
+  left outer JOIN ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.transfers_${CHAIN_ID} as b 
+  ON a.tx_hash = b.tx_hash
+WHERE a.kind = 54
+and (a.token_id is not null) 
+AND (a.token_id > 0)
+GROUP BY 1,
+         2,
+         3,
+         4,
+         5,
+         6,
+         7,
+         8,
+         9,
+         10,
+         11,
+         12,
+         13;
+
+DROP TABLE IF EXISTS temp_aggregated_transfers_details_${CHAIN_ID};
+
+CREATE TABLE temp_aggregated_transfers_details_${CHAIN_ID} 
+AS
+SELECT rounded_time_timestamp,
+       rounded_date_timestamp,
+       token_id,
+       NULLIF(meta_type, '') as meta_type,
+       NULLIF(meta_name, '') as meta_name,
+       final_status as final_status,
+       COUNT(1)::bigint AS total_transactions,
+       SUM(total_transfers)::bigint AS total_transfers,
+       SUM(total_transfer_amount)::decimal(30,0) as total_volume,
+       SUM(gas_used)::bigint AS total_gas_used
+FROM temp_transfer_details_${CHAIN_ID}
+GROUP BY 1,
+         2,
+         3,
+         4,
+         5,
+         6
+         order by rounded_date_timestamp, rounded_time_timestamp;
 
 commit;</sql>
     <set_params>N</set_params>
@@ -613,8 +814,52 @@ commit;</sql>
       </output>
     </remotesteps>
     <GUI>
-      <xloc>224</xloc>
-      <yloc>80</yloc>
+      <xloc>112</xloc>
+      <yloc>192</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>Table output</name>
+    <type>TableOutput</type>
+    <description />
+    <distribute>Y</distribute>
+    <custom_distribution />
+    <copies>2</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name />
+    </partitioning>
+    <connection>analytics_mysql_connection</connection>
+    <schema />
+    <table>incremental_aggregated_transfers_details_${CHAIN_ID}</table>
+    <commit>1000</commit>
+    <truncate>Y</truncate>
+    <ignore_errors>N</ignore_errors>
+    <use_batch>Y</use_batch>
+    <specify_fields>N</specify_fields>
+    <partitioning_enabled>N</partitioning_enabled>
+    <partitioning_field />
+    <partitioning_daily>N</partitioning_daily>
+    <partitioning_monthly>Y</partitioning_monthly>
+    <tablename_in_field>N</tablename_in_field>
+    <tablename_field />
+    <tablename_in_table>Y</tablename_in_table>
+    <return_keys>N</return_keys>
+    <return_field />
+    <fields>
+    </fields>
+    <attributes />
+    <cluster_schema />
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>512</xloc>
+      <yloc>240</yloc>
       <draw>Y</draw>
     </GUI>
   </step>

@@ -6,9 +6,7 @@ WbVarDef CHAIN_ID=202;
 create schema if not exists $[PRESTAGING_REDSHIFT_SCHEMA_PREFIX]_$[SUB_ENV]$[ENV_SUFFIX];
 set search_path= $[PRESTAGING_REDSHIFT_SCHEMA_PREFIX]_$[SUB_ENV]$[ENV_SUFFIX];
 
--- copy favoritemovies from 'dynamodb://s6_m_a_202_1_transactions'
--- credentials 'aws_access_key_id=<Your-Access-Key-ID>;aws_secret_access_key=<Your-Secret-Access-Key>'
--- readratio 50;
+
 
 
 
