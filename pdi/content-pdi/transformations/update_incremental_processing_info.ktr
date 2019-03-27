@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <transformation>
   <info>
-    <name>Update Processing Info data for incremental loads</name>
+    <name>update_incremental_processing_info</name>
     <description />
     <extended_description />
     <trans_version>1</trans_version>
@@ -565,7 +565,7 @@
   <order>
   </order>
   <step>
-    <name>Update Last token time</name>
+    <name>Set temp_pentaho_processing_info</name>
     <type>ExecSQL</type>
     <description />
     <distribute>Y</distribute>
@@ -587,10 +587,6 @@ set search_path= ${TEMP_PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX};
 update temp_pentaho_processing_info_${CHAIN_ID}
 set value = (Select coalesce(extract(epoch from max(updated_at)), 0) from ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.tokens_${CHAIN_ID})
 where property ='last_updated_token_timestamp';
-
-update temp_pentaho_processing_info_${CHAIN_ID}
-set value = (Select coalesce(max(insertion_timestamp), 0) from ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.transactions_${CHAIN_ID})
-where property ='last_processed_meta_name_tx_insert_timestamp';
 
 Update temp_pentaho_processing_info_${CHAIN_ID} 
 set value = GREATEST(value, (select COALESCE(max(insertion_timestamp), 0) from temp_incremental_transactions_${CHAIN_ID}))

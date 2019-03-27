@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <transformation>
   <info>
-    <name>Incremental Load Transactions facts </name>
+    <name>incremental_load_transactions_facts</name>
     <description />
     <extended_description />
     <trans_version />
@@ -584,7 +584,7 @@
   <order>
   </order>
   <step>
-    <name>Load Transactions Cube</name>
+    <name>Load Token Transfer Facts</name>
     <type>ExecSQL</type>
     <description />
     <distribute>N</distribute>

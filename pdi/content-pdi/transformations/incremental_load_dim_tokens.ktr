@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <transformation>
   <info>
-    <name>Load Dim Tokens</name>
+    <name>incremental_load_dim_tokens</name>
     <description />
     <extended_description />
     <trans_version>1</trans_version>
@@ -459,7 +459,7 @@
       </attribute>
       <attribute>
         <code>INITIAL_POOL_SIZE</code>
-        <attribute>3</attribute>
+        <attribute>5</attribute>
       </attribute>
       <attribute>
         <code>IS_CLUSTERED</code>
@@ -467,7 +467,7 @@
       </attribute>
       <attribute>
         <code>MAXIMUM_POOL_SIZE</code>
-        <attribute>8</attribute>
+        <attribute>10</attribute>
       </attribute>
       <attribute>
         <code>PORT_NUMBER</code>
@@ -513,6 +513,10 @@
     <index_tablespace />
     <attributes>
       <attribute>
+        <code>EXTRA_OPTION_MYSQL.queryTimeout</code>
+        <attribute>90</attribute>
+      </attribute>
+      <attribute>
         <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
         <attribute>N</attribute>
       </attribute>
@@ -522,7 +526,7 @@
       </attribute>
       <attribute>
         <code>INITIAL_POOL_SIZE</code>
-        <attribute>5</attribute>
+        <attribute>10</attribute>
       </attribute>
       <attribute>
         <code>IS_CLUSTERED</code>
@@ -530,7 +534,7 @@
       </attribute>
       <attribute>
         <code>MAXIMUM_POOL_SIZE</code>
-        <attribute>10</attribute>
+        <attribute>20</attribute>
       </attribute>
       <attribute>
         <code>PORT_NUMBER</code>
@@ -633,7 +637,7 @@
     </hop>
     <hop>
       <from>Get Updated Tokens</from>
-      <to>Insert / update</to>
+      <to>Insert/update tokens</to>
       <enabled>Y</enabled>
     </hop>
   </order>
@@ -708,7 +712,7 @@ where updated_at > ?;
     </GUI>
   </step>
   <step>
-    <name>Insert / update</name>
+    <name>Insert/update tokens</name>
     <type>InsertUpdate</type>
     <description />
     <distribute>Y</distribute>

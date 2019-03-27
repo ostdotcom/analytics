@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <transformation>
   <info>
-    <name>Incremental Load Transactions data to mysql</name>
+    <name>incremental_load_transactions_data_to_mysql</name>
     <description />
     <extended_description />
     <trans_version />
@@ -642,64 +642,18 @@
   </connection>
   <order>
     <hop>
-      <from>Load Transactions Cube</from>
-      <to>Get agg rows </to>
+      <from>Create Temp Table</from>
+      <to>Get aggregate rows</to>
       <enabled>Y</enabled>
     </hop>
     <hop>
-      <from>Get agg rows </from>
-      <to>Table output</to>
+      <from>Get aggregate rows</from>
+      <to>Mysql Table output</to>
       <enabled>Y</enabled>
     </hop>
   </order>
   <step>
-    <name>Get agg rows </name>
-    <type>TableInput</type>
-    <description />
-    <distribute>Y</distribute>
-    <custom_distribution />
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name />
-    </partitioning>
-    <connection>analytics_redshift_connection</connection>
-    <sql>SELECT rounded_time_timestamp,
-       rounded_date_timestamp,
-       token_id,
-       meta_type,
-       meta_name,
-       final_status AS final_status,
-       total_transactions::DECIMAL(30,0) AS total_transactions,
-       total_transfers::DECIMAL(30,0) AS total_transfers,
-       total_volume::DECIMAL(30,0) AS total_volume,
-       total_gas_used::DECIMAL(30,0) AS total_gas_used	
-FROM ${TEMP_PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.temp_aggregated_transfers_details_${CHAIN_ID}
-ORDER BY rounded_date_timestamp,
-         token_id,
-         final_status,
-         rounded_time_timestamp;</sql>
-    <limit>0</limit>
-    <lookup />
-    <execute_each_row>N</execute_each_row>
-    <variables_active>Y</variables_active>
-    <lazy_conversion_active>N</lazy_conversion_active>
-    <attributes />
-    <cluster_schema />
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>288</xloc>
-      <yloc>192</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>Load Transactions Cube</name>
+    <name>Create Temp Table</name>
     <type>ExecSQL</type>
     <description />
     <distribute>N</distribute>
@@ -820,7 +774,53 @@ commit;</sql>
     </GUI>
   </step>
   <step>
-    <name>Table output</name>
+    <name>Get aggregate rows</name>
+    <type>TableInput</type>
+    <description />
+    <distribute>Y</distribute>
+    <custom_distribution />
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name />
+    </partitioning>
+    <connection>analytics_redshift_connection</connection>
+    <sql>SELECT rounded_time_timestamp,
+       rounded_date_timestamp,
+       token_id,
+       meta_type,
+       meta_name,
+       final_status AS final_status,
+       total_transactions::DECIMAL(30,0) AS total_transactions,
+       total_transfers::DECIMAL(30,0) AS total_transfers,
+       total_volume::DECIMAL(30,0) AS total_volume,
+       total_gas_used::DECIMAL(30,0) AS total_gas_used	
+FROM ${TEMP_PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.temp_aggregated_transfers_details_${CHAIN_ID}
+ORDER BY rounded_date_timestamp,
+         token_id,
+         final_status,
+         rounded_time_timestamp;</sql>
+    <limit>0</limit>
+    <lookup />
+    <execute_each_row>N</execute_each_row>
+    <variables_active>Y</variables_active>
+    <lazy_conversion_active>N</lazy_conversion_active>
+    <attributes />
+    <cluster_schema />
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>288</xloc>
+      <yloc>192</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>Mysql Table output</name>
     <type>TableOutput</type>
     <description />
     <distribute>Y</distribute>
