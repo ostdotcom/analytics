@@ -513,10 +513,6 @@
     <index_tablespace />
     <attributes>
       <attribute>
-        <code>EXTRA_OPTION_MYSQL.queryTimeout</code>
-        <attribute>90</attribute>
-      </attribute>
-      <attribute>
         <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
         <attribute>N</attribute>
       </attribute>
