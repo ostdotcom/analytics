@@ -26,16 +26,6 @@ VALUES
   0
 );
 
-INSERT INTO temp_pentaho_processing_info_$[CHAIN_ID]
-(
-  property,
-  value
-)
-VALUES
-(
-  'last_processed_meta_name_tx_insert_timestamp',
-  0
-);
 
 INSERT INTO temp_pentaho_processing_info_$[CHAIN_ID]
 (
