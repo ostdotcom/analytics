@@ -12,7 +12,7 @@
     `final_status` varchar(20)  NOT NULL,
     `total_transactions` bigint NOT NULL,
     `total_transfers` bigint NOT NULL,
-    `total_volume` bigint NOT NULL,
+    `total_volume` decimal(40,0) NOT NULL,
     `total_gas_used` bigint NOT NULL,
     PRIMARY KEY (`id`)
   );
@@ -58,7 +58,7 @@
     `status` varchar(20) NOT NULL,
     `total_transactions` bigint NOT NULL,
     `total_transfers` bigint NOT NULL,
-    `total_volume` bigint NOT NULL,
+    `total_volume` decimal(40,0) NOT NULL,
     `total_gas_used` bigint NOT NULL,
     PRIMARY KEY (`id`)
   ) ;
