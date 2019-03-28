@@ -276,7 +276,7 @@ class BlockScannerService {
                             return resolve(oThis.processBlock(++oThis.nextBlockToProcess, i))
                         } else {
                             oThis.applicationMailer.perform({subject: 'block scanner failed', body: {error:res}});
-                            return Promise.reject(res);
+                            return reject(res);
                         }
                     })
                     .catch(function (err) {
@@ -287,7 +287,7 @@ class BlockScannerService {
                             debug_options: {}
                         });
                         oThis.applicationMailer.perform({subject: 'block scanner failed', body: {error: error}});
-                        return Promise.reject(error);
+                        return reject(error);
 
                         //tomorrow we can exit from here i.e. reject({success: false})
                         // return resolve(oThis.processBlock(++oThis.nextBlockToProcess, i));
