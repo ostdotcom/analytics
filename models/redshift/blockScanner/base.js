@@ -140,7 +140,7 @@ class Base {
         if (r.success) {
             return oThis.insertToMainTable();
         } else {
-            return oThis.handleBlockError({minBlock: minBlockNumberForTempTable});
+            return oThis.handleBlockError({minBlock: minBlockNumberForTempTable, maxBlock: maxAllowedEndblockInMain});
         }
     }
 

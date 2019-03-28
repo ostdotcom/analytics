@@ -34,17 +34,36 @@ class Transactions extends Base {
         return constants.PRESTAGING_SCHEMA_NAME + '.temp_transactions_' + oThis.chainId;
     };
 
-    handleBlockError(params) {
-        logger.error("handle error for transactions");
-        const oThis = this;
-        let errObj = {object: oThis.object, reason: "transactions validation error"}
-        oThis.applicationMailer.perform(errObj);
-        return Promise.reject(responseHelper.error({
-            internal_error_identifier: 'm_r_b_b_t_hbe_1',
-            api_error_identifier: 'handleBlockError',
-            debug_options: errObj
-        }));
-    }
+    // handleBlockError(params) {
+    //     logger.error("handle error for transactions");
+    //     const oThis = this;
+    //     let errObj = {object: oThis.object, reason: "transactions validation error"}
+    //     oThis.applicationMailer.perform(errObj);
+    //     return Promise.reject(responseHelper.error({
+    //         internal_error_identifier: 'm_r_b_b_t_hbe_1',
+    //         api_error_identifier: 'handleBlockError',
+    //         debug_options: errObj
+    //     }));
+    // }
+
+	handleBlockError(params) {
+
+		logger.error("handle error for transactions");
+
+		const oThis = this,
+			deleteDuplicateQuery = Util.format("DELETE from %s WHERE tx_hash IN(SELECT tx_hash from %s where block_number >= $1 and block_number <= $2);",
+				oThis.getTempTableNameWithSchema(), oThis.getTableNameWithSchema());
+
+		oThis.initRedshift();
+
+		return oThis.redshiftClient.parameterizedQuery(deleteDuplicateQuery, [params.minBlock, params.maxBlock]).then((res) => {
+			oThis.applicationMailer.perform({object: oThis.object, reason: "duplicate transactions are deleted"});
+		return Promise.resolve();
+	});
+	}
+
+
+
 }
 
 module.exports = Transactions;
