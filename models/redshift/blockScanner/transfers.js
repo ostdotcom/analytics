@@ -40,8 +40,8 @@ class Transfers extends Base {
                 oThis.getTempTableNameWithSchema(), oThis.getTableNameWithSchema());
 
         oThis.initRedshift();
-        return oThis.redshiftClient.parameterizedQuery(deleteDuplicateQuery, [params.minBlock]).then((res) => {
-            oThis.applicationMailer.perform({object: oThis.object, reason: "duplicate transfers are deleted"});
+        return oThis.redshiftClient.parameterizedQuery(deleteDuplicateQuery, [params.minBlock, params.maxBlock]).then((res) => {
+            oThis.applicationMailer.perform({subject :"duplicate transfers are deleted",  body:  oThis.object});
             return Promise.resolve();
         });
     }

@@ -135,12 +135,15 @@ class BlockScannerService {
                         await operationModel.validateAndMoveFromTempToMain(oThis.batchStartBlock, oThis.currentBatchEndBlock);
                     } catch (e) {
                         logger.error("error", e);
-                        oThis.applicationMailer.perform({err: e});
-                        return Promise.reject(responseHelper.error({
+
+                        let error = responseHelper.error({
                             internal_error_identifier: 's_bss_rbbs_1',
                             api_error_identifier: 'validateAndMoveFromTempToMain failed',
-                            debug_options: {}
-                        }));
+                            debug_options: {error: e}
+                        });
+
+                        oThis.applicationMailer.perform({subject: 'validateAndMoveFromTempToMain failed', body: error});
+                        return Proise.reject(error);
                     }
                 }
 
@@ -199,13 +202,14 @@ class BlockScannerService {
                 })
                 .catch(function (err) {
                     logger.error(err);
-                    oThis.applicationMailer.perform(err);
-
-                    return Promise.resolve(responseHelper.error({
+                    let error = responseHelper.error({
                         internal_error_identifier: 's_bss_litt_2',
                         api_error_identifier: 'block scanner failed',
-                        debug_options: {}
-                    }));
+                        debug_options: {error: err}
+                    });
+                    oThis.applicationMailer.perform({subject: 'block scanner failed', body: {error:error}});
+
+                    return Promise.resolve(error);
 
                 })
             )
@@ -271,18 +275,19 @@ class BlockScannerService {
                             logger.info("successfully parsed for blockNumber ", blockNumber, " thread=> ", i);
                             return resolve(oThis.processBlock(++oThis.nextBlockToProcess, i))
                         } else {
-                            oThis.applicationMailer.perform(res);
+                            oThis.applicationMailer.perform({subject: 'block scanner failed', body: {error:res}});
                             return Promise.reject(res);
                         }
                     })
                     .catch(function (err) {
                         logger.error(err);
-                        oThis.applicationMailer.perform(err);
-                        return Promise.reject(responseHelper.error({
+                        let error = responseHelper.error({
                             internal_error_identifier: 's_bss_pb_2',
                             api_error_identifier: 'block scanner failed',
                             debug_options: {}
-                        }));
+                        });
+                        oThis.applicationMailer.perform({subject: 'block scanner failed', body: {error: error}});
+                        return Promise.reject(error);
 
                         //tomorrow we can exit from here i.e. reject({success: false})
                         // return resolve(oThis.processBlock(++oThis.nextBlockToProcess, i));

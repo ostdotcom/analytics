@@ -32,7 +32,7 @@ class Base {
                         debug_options: oThis.object
                     }
                 );
-                oThis.applicationMailer.perform(rh);
+                oThis.applicationMailer.perform({subject: 'validateandformat blockscanner data failed', body: {error: rh}});
                 return rh;
             }
             let value = oThis.object[column[1]['name']];
