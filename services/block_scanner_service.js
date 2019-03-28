@@ -143,7 +143,7 @@ class BlockScannerService {
                         });
 
                         oThis.applicationMailer.perform({subject: 'validateAndMoveFromTempToMain failed', body: error});
-                        return Proise.reject(error);
+                        return Promise.reject(error);
                     }
                 }
 
