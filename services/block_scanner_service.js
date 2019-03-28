@@ -134,6 +134,7 @@ class BlockScannerService {
                         let operationModel = new oThis.operationIterator[operationModelName].model({config: {chainId: oThis.chainId}});
                         await operationModel.validateAndMoveFromTempToMain(oThis.batchStartBlock, oThis.currentBatchEndBlock);
                     } catch (e) {
+                        logger.error("error", e);
                         oThis.applicationMailer.perform({err: e});
                         return Promise.reject(responseHelper.error({
                             internal_error_identifier: 's_bss_rbbs_1',
