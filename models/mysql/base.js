@@ -99,7 +99,7 @@ class ModelBase extends MysqlQueryBuilders {
                         debug_options: oThis.object
                     }
                 );
-                oThis.applicationMailer.perform(rh);
+                oThis.applicationMailer.perform({subject: 'validate mysql data failed', body: {error: rh}});
                 return rh;
             }
             let value = object[column[1]['name']];
