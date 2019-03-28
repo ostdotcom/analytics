@@ -71,7 +71,7 @@ class Token {
                 api_error_identifier: 'api_error_identifier',
                 debug_options: {error: e}
             });
-            oThis.applicationMailer.perform(rH);
+            oThis.applicationMailer.perform({subject: "token service terminated due to exception" ,body: {error: rH}});
             return Promise.reject(rH);
         }
     }
