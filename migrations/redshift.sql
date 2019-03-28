@@ -1,4 +1,4 @@
-WbVarDef ENV_SUFFIX=_d4;
+WbVarDef ENV_SUFFIX=_d7;
 WbVarDef SUB_ENV=main;
 WbVarDef PRESTAGING_REDSHIFT_SCHEMA_PREFIX=ost_warehouse;
 WbVarDef CHAIN_ID=202;
@@ -31,7 +31,7 @@ CREATE TABLE temp_transactions_$[CHAIN_ID]
   meta_name             VARCHAR(255), 
   token_id              INT, 
   kind                  INT, 
-  rule_id               INT 
+  rule_id               INT
 )
   DISTKEY (tx_hash) SORTKEY (block_number, kind);
 commit;
@@ -42,7 +42,7 @@ CREATE TABLE transactions_$[CHAIN_ID]
 (
   id                    BIGINT NOT NULL IDENTITY(1,1), 
   tx_uuid               VARCHAR(36), 
-  tx_hash               VARCHAR(66) NOT NULL, 
+  tx_hash               VARCHAR(66) NOT NULL,
   gas_used              INT NOT NULL, 
   gas_limit             INT NOT NULL,  
   gas_price             BIGINT NOT NULL,  
@@ -101,14 +101,16 @@ DISTKEY (tx_hash) SORTKEY(block_number);
 DROP TABLE IF EXISTS temp_tokens_$[CHAIN_ID];
 CREATE TABLE temp_tokens_$[CHAIN_ID]
 (
-  token_id                  INT NOT NULL,
-  client_id                 int NOT NULL,
+  token_id                  BIGINT NOT NULL,
+  client_id                 INT NULL,
   name                      VARCHAR(255) NOT NULL,
   symbol                    VARCHAR(255) NOT NULL,
   conversion_factor         decimal(15,6) NOT NULL,
-  number_of_decimal         int NULL,
+  number_of_decimal         int,
   delayed_recovery_interval int NOT NULL,
   status                    int NOT NULL,
+  client_id_was             INT,
+  debug                     VARCHAR(255),
   created_at                timestamp NOT NULL,
   updated_at                timestamp NOT NULL
 )SORTKEY(token_id);
@@ -116,14 +118,16 @@ CREATE TABLE temp_tokens_$[CHAIN_ID]
 DROP TABLE IF EXISTS tokens_$[CHAIN_ID];
 CREATE TABLE tokens_$[CHAIN_ID]
 (
-  token_id                  INT NOT NULL,
-  client_id                 int NOT NULL,
+  token_id                  BIGINT NOT NULL,
+  client_id                 INT,
   name                      VARCHAR(255) NOT NULL,
   symbol                    VARCHAR(255) NOT NULL,
   conversion_factor         decimal(15,6) NOT NULL,
-  number_of_decimal         int NULL,
+  number_of_decimal         int,
   delayed_recovery_interval int NOT NULL,
   status                    int NOT NULL,
+  client_id_was             INT,
+  debug                     VARCHAR(255),
   created_at                timestamp NOT NULL,
   updated_at                timestamp NOT NULL
 )SORTKEY(token_id);

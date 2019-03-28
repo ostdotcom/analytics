@@ -222,6 +222,10 @@ class Token {
         return "/tokens";
     }
 
+    /**
+     * Delete local directory
+     *
+     */
     async _deleteLocalDirectory(localDirFullFilePath, hasFilesInTheDirectory) {
         if(hasFilesInTheDirectory){
             shell.rm("-rf", localDirFullFilePath);

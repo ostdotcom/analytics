@@ -321,6 +321,10 @@ class BlockScannerService {
         }
     }
 
+    /**
+     * Delete local directory
+     *
+     */
     async _deleteLocalDirectory(localDirFullFilePath) {
         shell.rm("-rf", localDirFullFilePath);
         logger.log("The directory " + localDirFullFilePath + " is deleted successfully");
