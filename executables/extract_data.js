@@ -108,9 +108,9 @@ class ExtractData {
         const oThis = this;
         let isStartBlockGiven;
         let startTime = Date.now();
-        logger.log("block processing started start block =>" + startBlock + ". end block => " + endBlock);
+        logger.step("block processing started start block =>" + startBlock + ". end block => " + endBlock);
 
-        logger.log("processing started at", startTime);
+        logger.step("processing started at", startTime);
 
         isStartBlockGiven = !!program.startBlock;
 
@@ -119,9 +119,9 @@ class ExtractData {
         let lastProcessedBlock = await blockScannerService.process();
 
         let endTime = Date.now();
-        logger.log("processing finished at", endTime);
+        logger.win("processing finished at", endTime);
 
-        logger.log("Total time to process in milliseconds", (endTime - startTime));
+        logger.win("Total time to process in milliseconds", (endTime - startTime));
     }
 
 

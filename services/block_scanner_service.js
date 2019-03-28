@@ -58,7 +58,7 @@ class BlockScannerService {
         let res,
             batchNo = 1;
 
-        logger.info("BlockScanner Service Started");
+        logger.step("BlockScanner Service Started");
 
         while (oThis.batchStartBlock <= oThis.endBlock && (! cronConstants.getSigIntSignal )) {
             try {
@@ -77,7 +77,7 @@ class BlockScannerService {
                 }));
             }
         }
-        logger.info("BlockScanner Service Ended");
+        logger.step("BlockScanner Service Ended");
         return Promise.resolve(responseHelper.successWithData({}));
     }
 
@@ -93,7 +93,7 @@ class BlockScannerService {
             s3UploadPath = `${Constants.SUB_ENVIRONMENT}${Constants.ENV_SUFFIX}/${oThis.chainId}/${Date.now()}`,
             localDirFullFilePath = `${Constants.LOCAL_DIR_FILE_PATH}/${s3UploadPath}`;
 
-        logger.info("BlockScanner::runBatchBlockScanning Batch started- ", batchNo, " startBlock- " + oThis.batchStartBlock +
+        logger.step("BlockScanner::runBatchBlockScanning Batch started- ", batchNo, " startBlock- " + oThis.batchStartBlock +
             "lastProcessBlock- " + oThis.batchEndBlock);
         oThis.currentBatchEndBlock = oThis.batchEndBlock;
 
@@ -147,7 +147,7 @@ class BlockScannerService {
                     }
                 }
 
-                logger.log("Starting updateLastProcessedBlock");
+                logger.step("Starting updateLastProcessedBlock");
 
                 await oThis.updateLastProcessedBlock();
 

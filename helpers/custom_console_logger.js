@@ -23,7 +23,7 @@ const packageName = packageFile.name
 
 const CONSOLE_RESET = "\x1b[0m"
     , ERR_PRE = "\x1b[31m" //Error. (RED)
-    , NOTE_PRE = "\x1b[91m" //Notify Error. (Purple)
+    , NOTE_PRE = "\x1b[35m" //Notify Error. (Purple)
     , INFO_PRE = "\x1b[33m  " //Info (YELLOW)
     , WIN_PRE = "\x1b[32m" //Success (GREEN)
     , WARN_PRE = "\x1b[43m"
@@ -124,6 +124,28 @@ CustomConsoleLoggerKlass.prototype = {
         console.log.apply(console, args);
     },
 
+
+    /*
+    * Log success
+    * */
+    win: function () {
+        var args = [appendRequest(this.WIN_PRE)];
+        args = args.concat(Array.prototype.slice.call(arguments));
+        args.push(this.WIN_PRE);
+        console.log.apply(console, args);
+    },
+
+    /*
+   * Log step
+   *
+   * */
+    step: function () {
+        var args = [appendRequest(this.STEP_PRE)];
+        args = args.concat(Array.prototype.slice.call(arguments));
+        args.push(this.STEP_PRE);
+        console.log.apply(console, args);
+    },
+
     /**
      * Log error
      */
@@ -144,6 +166,16 @@ CustomConsoleLoggerKlass.prototype = {
         console.log.apply(console, args);
     },
 
+
+    // note
+    note: function () {
+        var args = [appendRequest(this.NOTE_PRE)];
+        args = args.concat(Array.prototype.slice.call(arguments));
+        args.push(this.NOTE_PRE);
+        console.log.apply(console, args);
+    },
+
+
     /**
      * Log normal level
      */
@@ -160,6 +192,9 @@ CustomConsoleLoggerKlass.prototype = {
             console.log.apply(console, arguments);
         }
     },
+
+
+
 
 };
 

@@ -57,6 +57,7 @@ class Transactions extends Base {
 		oThis.initRedshift();
 
 		return oThis.redshiftClient.parameterizedQuery(deleteDuplicateQuery, [params.minBlock, params.maxBlock]).then((res) => {
+		    logger.warn("duplicate transactions are deleted");
 			oThis.applicationMailer.perform( {subject :"duplicate transactions are deleted",  body:  oThis.object});
 		return Promise.resolve();
 	});
