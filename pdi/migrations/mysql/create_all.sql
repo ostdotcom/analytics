@@ -41,7 +41,35 @@ drop table if exists `dim_dates`;
   INSERT INTO `dim_meta_types`(`meta_type`) VALUES('user_to_user'), ('company_to_user'), ('user_to_company');
 
 
+  CREATE TABLE `transaction_by_type_graph` (
+  `id` bigint  NOT NULL auto_increment,
+  `chain_id` integer NOT NULL,
+  `token_id` integer NOT NULL,
+  `timestamp` integer NOT NULL,
+  `meta_type` varchar(255)  NULL,
+  `graph_duration_type` varchar(10) NOT NULL,
+  `total_transactions` BIGINT NOT NULL,
+  `total_transfers` BIGINT NOT NULL,
+  `total_volume` decimal(60,0) NOT NULL,
+   PRIMARY KEY (`id`)
+);
+
+  ALTER TABLE `transaction_by_type_graph` ADD INDEX ci_ti_gdt_t (`chain_id`, `token_id`, `graph_duration_type`, `timestamp`);
 
 
+  CREATE TABLE `transaction_by_name_graph` (
+  `id` bigint  NOT NULL auto_increment,
+  `chain_id` integer NOT NULL,
+  `token_id` integer NOT NULL,
+  `timestamp` integer NOT NULL,
+  `meta_name` varchar(255)  NULL,
+  `graph_duration_type` varchar(10) NOT NULL,
+  `total_transactions` BIGINT NOT NULL,
+  `total_transfers` BIGINT NOT NULL,
+  `total_volume` decimal(60,0) NOT NULL,
+   PRIMARY KEY (`id`)
+);
+
+  ALTER TABLE `transaction_by_name_graph` ADD INDEX ci_ti_gdt_t (`chain_id`, `token_id`, `graph_duration_type`, `timestamp`);
 
 

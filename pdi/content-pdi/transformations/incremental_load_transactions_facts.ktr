@@ -11,17 +11,17 @@
     <parameters>
       <parameter>
         <name>CHAIN_ID</name>
-        <default_value>202</default_value>
+        <default_value />
         <description />
       </parameter>
       <parameter>
         <name>ENV_SUFFIX</name>
-        <default_value>_d6</default_value>
+        <default_value />
         <description />
       </parameter>
       <parameter>
         <name>SUB_ENV</name>
-        <default_value>main</default_value>
+        <default_value />
         <description />
       </parameter>
     </parameters>
@@ -566,10 +566,6 @@ drop table if exists temp_incremental_token_transfer_facts_details_${CHAIN_ID};
 create table temp_incremental_token_transfer_facts_details_${CHAIN_ID} as
 select IFNULL(min(date_sk), 2000000000) as min_date_sk from temp_incremental_token_transfer_facts_${CHAIN_ID};
 
-
-SET autocommit=0;
-START TRANSACTION;
-
 DELETE
 FROM token_transfer_facts_${CHAIN_ID}
 WHERE (date_sk >(SELECT min_date_sk
@@ -585,8 +581,6 @@ OR    (date_sk = (SELECT min_date_sk
 INSERT into token_transfer_facts_${CHAIN_ID}(time_sk, date_sk, token_sk, meta_type_sk, meta_name_sk, status, total_transactions, total_transfers, total_volume, total_gas_used)
 (select * from temp_incremental_token_transfer_facts_${CHAIN_ID} order by date_sk desc , time_sk desc, token_sk);
 
-commit;
-SET autocommit=1;
 
 drop table temp_incremental_token_transfer_facts_${CHAIN_ID};
 drop table temp_incremental_token_transfer_facts_details_${CHAIN_ID};
