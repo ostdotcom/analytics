@@ -580,12 +580,12 @@
   <order>
     <hop>
       <from>Get Timestamp</from>
-      <to>create_temp_graph_data</to>
+      <to>insert_temp_graph_data_meta_type</to>
       <enabled>Y</enabled>
     </hop>
     <hop>
       <from>Get Timestamp</from>
-      <to>create_temp_graph_data_meta_name</to>
+      <to>insert_temp_graph_data_meta_name</to>
       <enabled>Y</enabled>
     </hop>
   </order>
@@ -625,138 +625,7 @@ FROM (SELECT EXTRACT(epoch FROM GETDATE ()) AS ct));</sql>
     </GUI>
   </step>
   <step>
-    <name>create_temp_graph_data</name>
-    <type>ExecSQL</type>
-    <description />
-    <distribute>N</distribute>
-    <custom_distribution />
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name />
-    </partitioning>
-    <connection>analytics_mysql_connection</connection>
-    <execute_each_row>Y</execute_each_row>
-    <single_statement>N</single_statement>
-    <replace_variables>Y</replace_variables>
-    <quoteString>N</quoteString>
-    <sql>DELETE from transaction_by_type_graph where chain_id=${CHAIN_ID};
-
-insert into transaction_by_type_graph(chain_id, token_id, `timestamp`, meta_type, graph_duration_type, total_transactions, total_transfers, total_volume)
-(SELECT ${CHAIN_ID} as chain_id, 
-	 dtkn.token_id,
-	(dd.timestamp + dt.timestamp) as final_timestamp,
-	dmt.meta_type as meta_type,
-	'day' as graph_duration_type,
-sum(total_transactions) as total_transactions, 
-sum(total_transfers) as total_transfers, 
-sum(total_volume) as total_volume
-FROM token_transfer_facts_${CHAIN_ID} AS ttf
-  JOIN dim_tokens_${CHAIN_ID} dtkn ON ttf.token_sk = dtkn.token_sk
-  JOIN dim_times dt ON ttf.time_sk = dt.time_sk
-  JOIN dim_dates dd ON ttf.date_sk = dd.date_sk
-  left join dim_meta_types as dmt on (dmt.meta_type_sk = ttf.meta_type_sk) and (dmt.meta_type_sk >0)
-WHERE (dd.timestamp = ?)
-OR    (dd.timestamp = (? - 86400) AND dt.timestamp >= (? + 3600))
-and status = 'success'
-group by 1,2,3,4,5
-);
-
-insert into transaction_by_type_graph(chain_id, token_id, `timestamp`, meta_type, graph_duration_type, total_transactions, total_transfers, total_volume)
-(SELECT ${CHAIN_ID} as chain_id, 
-	 dtkn.token_id,
-	dd.timestamp as final_timestamp,
-	dmt.meta_type as meta_type,
-	'week' as graph_duration_type,
-sum(total_transactions) as total_transactions, 
-sum(total_transfers) as total_transfers, 
-sum(total_volume) as total_volume
-FROM token_transfer_facts_${CHAIN_ID} AS ttf
-  JOIN dim_tokens_${CHAIN_ID} dtkn ON ttf.token_sk = dtkn.token_sk
-  JOIN dim_dates dd ON ttf.date_sk = dd.date_sk
-  left join dim_meta_types as dmt on (dmt.meta_type_sk = ttf.meta_type_sk) and (dmt.meta_type_sk >0)	
-WHERE (dd.timestamp > (? - (86400*7)))
-and status = 'success'
-group by 1,2,3,4,5
-);
-
-insert into transaction_by_type_graph(chain_id, token_id, `timestamp`, meta_type, graph_duration_type, total_transactions, total_transfers, total_volume)
-(SELECT ${CHAIN_ID} as chain_id, 
-	 dtkn.token_id,
-	dd.timestamp as final_timestamp,
-	dmt.meta_type as meta_type,
-	'month' as graph_duration_type,
-sum(total_transactions) as total_transactions, 
-sum(total_transfers) as total_transfers, 
-sum(total_volume) as total_volume
-FROM token_transfer_facts_${CHAIN_ID} AS ttf
-  JOIN dim_tokens_${CHAIN_ID} dtkn ON ttf.token_sk = dtkn.token_sk
-  JOIN dim_dates dd ON ttf.date_sk = dd.date_sk
-  left join dim_meta_types as dmt on (dmt.meta_type_sk = ttf.meta_type_sk) and (dmt.meta_type_sk >0)	
-WHERE (dd.timestamp > (UNIX_TIMESTAMP(DATE_SUB(FROM_UNIXTIME(?), INTERVAL 1 MONTH))))
-and status = 'success'
-group by 1,2,3,4,5
-);
-
-insert into transaction_by_type_graph(chain_id, token_id, `timestamp`, meta_type, graph_duration_type, total_transactions, total_transfers, total_volume)
-(SELECT ${CHAIN_ID} as chain_id, 
-	 dtkn.token_id,
-	min(dd.timestamp) as final_timestamp,
-	dmt.meta_type as meta_type,
-	'year' as graph_duration_type,
-sum(total_transactions) as total_transactions, 
-sum(total_transfers) as total_transfers, 
-sum(total_volume) as total_volume
-FROM token_transfer_facts_${CHAIN_ID} AS ttf
-  JOIN dim_tokens_${CHAIN_ID} dtkn ON ttf.token_sk = dtkn.token_sk
-  JOIN dim_dates dd ON ttf.date_sk = dd.date_sk
-  left join dim_meta_types as dmt on (dmt.meta_type_sk = ttf.meta_type_sk) and (dmt.meta_type_sk >0)
-WHERE (dd.timestamp > (UNIX_TIMESTAMP( DATE_ADD(LAST_DAY(DATE_SUB(FROM_UNIXTIME(?), INTERVAL 1 year)), INTERVAL 1 day))))
-and status = 'success'
-group by 1,2,4,5, dd.month, dd.year
-);
-</sql>
-    <set_params>N</set_params>
-    <insert_field />
-    <update_field />
-    <delete_field />
-    <read_field />
-    <arguments>
-      <argument>
-        <name>rounded_current_date_timestamp</name>
-      </argument>
-      <argument>
-        <name>rounded_current_date_timestamp</name>
-      </argument>
-      <argument>
-        <name>rounded_current_time_timestamp</name>
-      </argument>
-      <argument>
-        <name>rounded_current_date_timestamp</name>
-      </argument>
-      <argument>
-        <name>rounded_current_date_timestamp</name>
-      </argument>
-      <argument>
-        <name>rounded_current_date_timestamp</name>
-      </argument>
-    </arguments>
-    <attributes />
-    <cluster_schema />
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>288</xloc>
-      <yloc>96</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>create_temp_graph_data_meta_name</name>
+    <name>insert_temp_graph_data_meta_name</name>
     <type>ExecSQL</type>
     <description />
     <distribute>N</distribute>
@@ -889,6 +758,137 @@ group by 1,2,4,5
     <GUI>
       <xloc>256</xloc>
       <yloc>272</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>insert_temp_graph_data_meta_type</name>
+    <type>ExecSQL</type>
+    <description />
+    <distribute>N</distribute>
+    <custom_distribution />
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name />
+    </partitioning>
+    <connection>analytics_mysql_connection</connection>
+    <execute_each_row>Y</execute_each_row>
+    <single_statement>N</single_statement>
+    <replace_variables>Y</replace_variables>
+    <quoteString>N</quoteString>
+    <sql>DELETE from transaction_by_type_graph where chain_id=${CHAIN_ID};
+
+insert into transaction_by_type_graph(chain_id, token_id, `timestamp`, meta_type, graph_duration_type, total_transactions, total_transfers, total_volume)
+(SELECT ${CHAIN_ID} as chain_id, 
+	 dtkn.token_id,
+	(dd.timestamp + dt.timestamp) as final_timestamp,
+	dmt.meta_type as meta_type,
+	'day' as graph_duration_type,
+sum(total_transactions) as total_transactions, 
+sum(total_transfers) as total_transfers, 
+sum(total_volume) as total_volume
+FROM token_transfer_facts_${CHAIN_ID} AS ttf
+  JOIN dim_tokens_${CHAIN_ID} dtkn ON ttf.token_sk = dtkn.token_sk
+  JOIN dim_times dt ON ttf.time_sk = dt.time_sk
+  JOIN dim_dates dd ON ttf.date_sk = dd.date_sk
+  left join dim_meta_types as dmt on (dmt.meta_type_sk = ttf.meta_type_sk) and (dmt.meta_type_sk >0)
+WHERE (dd.timestamp = ?)
+OR    (dd.timestamp = (? - 86400) AND dt.timestamp >= (? + 3600))
+and status = 'success'
+group by 1,2,3,4,5
+);
+
+insert into transaction_by_type_graph(chain_id, token_id, `timestamp`, meta_type, graph_duration_type, total_transactions, total_transfers, total_volume)
+(SELECT ${CHAIN_ID} as chain_id, 
+	 dtkn.token_id,
+	dd.timestamp as final_timestamp,
+	dmt.meta_type as meta_type,
+	'week' as graph_duration_type,
+sum(total_transactions) as total_transactions, 
+sum(total_transfers) as total_transfers, 
+sum(total_volume) as total_volume
+FROM token_transfer_facts_${CHAIN_ID} AS ttf
+  JOIN dim_tokens_${CHAIN_ID} dtkn ON ttf.token_sk = dtkn.token_sk
+  JOIN dim_dates dd ON ttf.date_sk = dd.date_sk
+  left join dim_meta_types as dmt on (dmt.meta_type_sk = ttf.meta_type_sk) and (dmt.meta_type_sk >0)	
+WHERE (dd.timestamp > (? - (86400*7)))
+and status = 'success'
+group by 1,2,3,4,5
+);
+
+insert into transaction_by_type_graph(chain_id, token_id, `timestamp`, meta_type, graph_duration_type, total_transactions, total_transfers, total_volume)
+(SELECT ${CHAIN_ID} as chain_id, 
+	 dtkn.token_id,
+	dd.timestamp as final_timestamp,
+	dmt.meta_type as meta_type,
+	'month' as graph_duration_type,
+sum(total_transactions) as total_transactions, 
+sum(total_transfers) as total_transfers, 
+sum(total_volume) as total_volume
+FROM token_transfer_facts_${CHAIN_ID} AS ttf
+  JOIN dim_tokens_${CHAIN_ID} dtkn ON ttf.token_sk = dtkn.token_sk
+  JOIN dim_dates dd ON ttf.date_sk = dd.date_sk
+  left join dim_meta_types as dmt on (dmt.meta_type_sk = ttf.meta_type_sk) and (dmt.meta_type_sk >0)	
+WHERE (dd.timestamp > (UNIX_TIMESTAMP(DATE_SUB(FROM_UNIXTIME(?), INTERVAL 1 MONTH))))
+and status = 'success'
+group by 1,2,3,4,5
+);
+
+insert into transaction_by_type_graph(chain_id, token_id, `timestamp`, meta_type, graph_duration_type, total_transactions, total_transfers, total_volume)
+(SELECT ${CHAIN_ID} as chain_id, 
+	 dtkn.token_id,
+	min(dd.timestamp) as final_timestamp,
+	dmt.meta_type as meta_type,
+	'year' as graph_duration_type,
+sum(total_transactions) as total_transactions, 
+sum(total_transfers) as total_transfers, 
+sum(total_volume) as total_volume
+FROM token_transfer_facts_${CHAIN_ID} AS ttf
+  JOIN dim_tokens_${CHAIN_ID} dtkn ON ttf.token_sk = dtkn.token_sk
+  JOIN dim_dates dd ON ttf.date_sk = dd.date_sk
+  left join dim_meta_types as dmt on (dmt.meta_type_sk = ttf.meta_type_sk) and (dmt.meta_type_sk >0)
+WHERE (dd.timestamp > (UNIX_TIMESTAMP( DATE_ADD(LAST_DAY(DATE_SUB(FROM_UNIXTIME(?), INTERVAL 1 year)), INTERVAL 1 day))))
+and status = 'success'
+group by 1,2,4,5, dd.month, dd.year
+);
+</sql>
+    <set_params>N</set_params>
+    <insert_field />
+    <update_field />
+    <delete_field />
+    <read_field />
+    <arguments>
+      <argument>
+        <name>rounded_current_date_timestamp</name>
+      </argument>
+      <argument>
+        <name>rounded_current_date_timestamp</name>
+      </argument>
+      <argument>
+        <name>rounded_current_time_timestamp</name>
+      </argument>
+      <argument>
+        <name>rounded_current_date_timestamp</name>
+      </argument>
+      <argument>
+        <name>rounded_current_date_timestamp</name>
+      </argument>
+      <argument>
+        <name>rounded_current_date_timestamp</name>
+      </argument>
+    </arguments>
+    <attributes />
+    <cluster_schema />
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>288</xloc>
+      <yloc>96</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
