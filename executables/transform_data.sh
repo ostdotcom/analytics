@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Following environment variables are required
-# SUB_ENV
+# SUB_ENVIRONMENT
 # KETTLE_CLIENT_PATH
 # ENV_SUFFIX
 
@@ -28,7 +28,7 @@ do
 done
 
 # Check command line args
-if [[ $SUB_ENV != 'sandbox' && $SUB_ENV != 'main' ]]; then
+if [[ $SUB_ENVIRONMENT != 'sandbox' && $SUB_ENVIRONMENT != 'main' ]]; then
     echo "Invalid sub-environment!";
     exit 1;
 fi
@@ -60,7 +60,7 @@ SECONDS=0;
 task=load_all_cubes
 echo "Started data transformation for task: ${task} [$(date '+%Y-%m-%d %H:%M:%S')]";
 job_dir="${app_root}/pdi/content-pdi/jobs"
-/bin/bash ${KETTLE_CLIENT_PATH}/kitchen.sh -file ${job_dir}/${task}.kjb -level=Debug -param:CHAIN_ID=${CHAIN_ID} -param:SUB_ENV=${SUB_ENV} -param:ENV_SUFFIX=${ENV_SUFFIX} >> ${app_root}/log/${task}.log 2>&1;
+/bin/bash ${KETTLE_CLIENT_PATH}/kitchen.sh -file ${job_dir}/${task}.kjb -level=Debug -param:CHAIN_ID=${CHAIN_ID} -param:SUB_ENV=${SUB_ENVIRONMENT} -param:ENV_SUFFIX=${ENV_SUFFIX} >> ${app_root}/log/${task}.log 2>&1;
 status=$?
 if [[ $status != 0 ]]; then
     # Send error email to devs
