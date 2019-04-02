@@ -159,7 +159,7 @@ class ExtractData {
     async getEndBlock() {
         const oThis = this;
         let lastFinalizedBlock = await oThis.getEndBlockFromBlockScanner();
-        return program.endBlock && program.endBlock <= lastFinalizedBlock ? parseInt(program.endBlock) : parseInt(lastFinalizedBlock);
+        return program.endBlock && parseInt(program.endBlock) <= lastFinalizedBlock ? parseInt(program.endBlock) : parseInt(lastFinalizedBlock);
     }
 
     /**
