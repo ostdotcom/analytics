@@ -644,7 +644,10 @@ SELECT a.tx_hash,
        (a.block_timestamp - MOD(a.block_timestamp,86400)::INTEGER) AS rounded_date_timestamp,
        3600 *((MOD(a.block_timestamp,86400) / 3600)::INTEGER) AS rounded_time_timestamp,
        COALESCE(COUNT(b.tx_hash), 0) AS total_transfers,
-       COALESCE(SUM(b.amount), 0) AS total_transfer_amount
+      COALESCE(SUM(CASE(b.from_address = '0x0000000000000000000000000000000000000000' OR b.to_address = '0x0000000000000000000000000000000000000000')
+         WHEN TRUE THEN 0
+         ELSE b.amount
+       END), 0) AS total_transfer_amount
 FROM temp_incremental_transactions_${CHAIN_ID} as a
   left outer JOIN ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.transfers_${CHAIN_ID} as b 
   ON a.tx_hash = b.tx_hash

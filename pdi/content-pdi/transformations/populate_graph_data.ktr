@@ -887,8 +887,8 @@ group by 1,2,4,5, dd.month, dd.year
       </output>
     </remotesteps>
     <GUI>
-      <xloc>288</xloc>
-      <yloc>96</yloc>
+      <xloc>448</xloc>
+      <yloc>272</yloc>
       <draw>Y</draw>
     </GUI>
   </step>

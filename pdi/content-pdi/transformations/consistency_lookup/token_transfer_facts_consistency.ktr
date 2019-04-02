@@ -15,6 +15,11 @@
         <description />
       </parameter>
       <parameter>
+        <name>CONSISTENCY_LOGS_PATH</name>
+        <default_value />
+        <description />
+      </parameter>
+      <parameter>
         <name>ENV_SUFFIX</name>
         <default_value />
         <description />
@@ -703,11 +708,11 @@
     <fileNameField />
     <create_parent_folder>Y</create_parent_folder>
     <file>
-      <name>${CONSISTENCY_LOGS_PATH}/all_incremental_data_difference_${CHAIN_ID}${ENV_SUFFIX}</name>
+      <name>${CONSISTENCY_LOGS_PATH}/all_incremental_data_difference</name>
       <servlet_output>N</servlet_output>
-      <do_not_open_new_file_init>N</do_not_open_new_file_init>
+      <do_not_open_new_file_init>Y</do_not_open_new_file_init>
       <extention>log</extention>
-      <append>Y</append>
+      <append>N</append>
       <split>N</split>
       <haspartno>N</haspartno>
       <add_date>N</add_date>
@@ -785,11 +790,11 @@
     <fileNameField />
     <create_parent_folder>Y</create_parent_folder>
     <file>
-      <name>${CONSISTENCY_LOGS_PATH}/incremental_data_difference_${CHAIN_ID}${ENV_SUFFIX}</name>
+      <name>${CONSISTENCY_LOGS_PATH}/incremental_data_difference</name>
       <servlet_output>N</servlet_output>
-      <do_not_open_new_file_init>N</do_not_open_new_file_init>
+      <do_not_open_new_file_init>Y</do_not_open_new_file_init>
       <extention>log</extention>
-      <append>Y</append>
+      <append>N</append>
       <split>N</split>
       <haspartno>N</haspartno>
       <add_date>N</add_date>

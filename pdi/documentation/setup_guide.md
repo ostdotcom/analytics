@@ -3,6 +3,11 @@
 	2. Download SqlWorkbench (download from https://www.sql-workbench.eu/downloads.html)
 	3. Copy JDBC Drivers to data-integration/lib for mysql and Redshift (MySQL Connector/J 8.0) (RedshiftJDBC42-no-awssdk-1.2.20.1043.jar)
 	4. configure connections
+	5. Refer: https://gist.github.com/matthewtckr/5e9167f283f2267a4890       
+        rm -r plugins/pentaho-big-data-plugin/
+        rm -rf plugins/kettle5-log4j-plugin/
+        vim classes/kettle-lifecycle-listeners.xml
+        vim classes/kettle-registry-extensions.xml
 
 ## Setup PDI spoon:
 	1. download from https://sourceforge.net/projects/pentaho/files/latest/download
