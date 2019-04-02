@@ -90,8 +90,6 @@ class ModelBase extends MysqlQueryBuilders {
         for (let column of oThis.constructor.mapping) {
             //eg. column[0] => token_id, column[1] => {name: 'id', isSerialized: false, required: true}
             if (column[1]['required'] && !(column[1]['name'] in object)) {
-
-                console.log(column[1]['name']);
                 let rh = responseHelper.error(
                     {
                         internal_error_identifier: 'm_m_b_vafmd',

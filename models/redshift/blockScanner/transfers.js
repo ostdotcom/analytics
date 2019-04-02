@@ -17,6 +17,10 @@ class Transfers extends Base {
         return transfersGC.mapping;
     }
 
+    static get fieldsToBeMoveToAnalytics() {
+        return transfersGC.fieldsToBeMoveToAnalytics;
+    }
+
     getTableNameWithSchema() {
         const oThis = this;
         return constants.PRESTAGING_SCHEMA_NAME + '.transfers_' + oThis.chainId;

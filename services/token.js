@@ -126,7 +126,7 @@ class Token {
         const oThis = this;
 
         return await oThis.redshiftClient.parameterizedQuery("select * from " + dataProcessingInfoGC.getTableNameWithSchema + "_" + oThis.chainId + " "+"where property= $1", [dataProcessingInfoGC.tokenLastUpdatedAtProperty]).then((res) => {
-            console.log(res.rows);
+            logger.log(res.rows);
             return (res.rows[0].value);
         });
     }
@@ -191,7 +191,7 @@ class Token {
         const oThis = this;
 
         return await oThis.redshiftClient.query("select max(updated_at) from " + new tokenModel({chainId: oThis.chainId}).getTableNameWithSchema()).then((res) => {
-            console.log(res.rows);
+            logger.log(res.rows);
             let LastUpdatedAtValue = dateUtil.convertDateToString(res.rows[0].max);
             return (LastUpdatedAtValue);
         });
@@ -210,7 +210,7 @@ class Token {
 
         return await oThis.redshiftClient.parameterizedQuery("update " + dataProcessingInfoGC.getTableNameWithSchema + "_" + oThis.chainId +  " set value=$1 " +
             "where property=$2", [LastUpdatedAtValue, dataProcessingInfoGC.tokenLastUpdatedAtProperty]).then((res) => {
-            console.log("token_last_updated_at value of the data_processing_info table updated successfully");
+            logger.log("token_last_updated_at value of the data_processing_info table updated successfully");
         });
     }
 
@@ -229,7 +229,7 @@ class Token {
     async _deleteLocalDirectory(localDirFullFilePath, hasFilesInTheDirectory) {
         if(hasFilesInTheDirectory){
             shell.rm("-rf", localDirFullFilePath);
-            console.log("The directory " + localDirFullFilePath + " is deleted successfully");
+            logger.log("The directory " + localDirFullFilePath + " is deleted successfully");
         }
     }
 

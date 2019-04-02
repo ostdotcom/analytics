@@ -1,7 +1,7 @@
 
 export SUB_ENVIRONMENT='main'
 export ENVIRONMENT='development'
-export ENV_SUFFIX='_d6'
+export ENV_SUFFIX='_d4'
 export SAAS_MYSQL_DATABASE_ENVIRONMENT='staging'
 
 export KIT_MYSQL_CONNECTION_POOL_SIZE='3'

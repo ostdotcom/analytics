@@ -20,6 +20,10 @@ class Transactions extends Base {
         return transactionsGC.mapping;
     }
 
+    static get fieldsToBeMoveToAnalytics() {
+        return transactionsGC.fieldsToBeMoveToAnalytics;
+    }
+
     getTableNameWithSchema() {
         const oThis = this;
         return constants.PRESTAGING_SCHEMA_NAME + '.transactions_' + oThis.chainId;

@@ -319,8 +319,8 @@ class BlockScannerService {
      */
     async updateLastProcessedBlock() {
         const oThis = this;
-        logger.step("Starting updateLastProcessedBlock");
         if (oThis.isStartBlockGiven == false) {
+            logger.step("Starting updateLastProcessedBlock");
             return oThis.redshiftClient.parameterizedQuery("update " + dataProcessingInfoGC.getTableNameWithSchema + "_" + oThis.chainId + " set value=$1 " +
                 "where property=$2", [oThis.currentBatchEndBlock, dataProcessingInfoGC.lastProcessedBlockProperty]).then((res) => {
                 logger.log("last processed block updated successfully");

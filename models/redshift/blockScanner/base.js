@@ -18,9 +18,11 @@ class Base {
         oThis.applicationMailer = new ApplicationMailer();
     }
 
-    validateField(columnInfo, fieldName){
+    validateField(columnInfo, value){
         const oThis = this;
-        if(columnInfo[1]['required'] && (oThis.object[fieldName] == '' || oThis.object[fieldName] == null)){
+        let fieldName = columnInfo[0];
+
+        if(columnInfo[1]['required'] && !oThis.isPresent(value)){
             return responseHelper.error(
                 {
                     internal_error_identifier: 'm_r_b_b_vf_1',
@@ -29,7 +31,7 @@ class Base {
                 }
             )
         }
-        if (oThis.isPresent(oThis.object[fieldName]) && columnInfo[1]['min']  && parseInt(oThis.object[fieldName]) < columnInfo[1]['min']){
+        if (oThis.isPresent(value) && columnInfo[1]['min']  && parseInt(value) < columnInfo[1]['min']){
             return responseHelper.error(
                 {
                     internal_error_identifier: 'm_r_b_b_vf_2',
@@ -39,10 +41,10 @@ class Base {
             )
         }
 
-        if(oThis.isPresent(oThis.object[fieldName]) && columnInfo[1]['between']  && ! columnInfo[1]['between'].includes(oThis.object[fieldName])){
+        if(oThis.isPresent(value) && columnInfo[1]['between']  && ! columnInfo[1]['between'].includes(parseInt(value))){
             return responseHelper.error(
                 {
-                    internal_error_identifier: 'm_r_b_b_vf_2',
+                    internal_error_identifier: 'm_r_b_b_vf_3',
                     api_error_identifier: fieldName + '_is_not_included_in_field',
                     debug_options: oThis.object
                 }
@@ -52,31 +54,48 @@ class Base {
     }
 
     isPresent(val){
-        return val || val == 0;
+        return val || parseInt(val) === 0;
     }
 
     validateAndFormatBlockScannerData() {
         const oThis = this;
-        let formattedMap = new Map();
+        let formattedMap = new Map(),
+        finalFormattedMap = new Map();
+
         for (let column of oThis.constructor.mapping) {
             //eg. column[0] => tx_uuid, column[1] => {name: 'transactionUuid', isSerialized: false, required: true,
             // copyIfNotPresent: 'transactionStatus'}
             let name = column[1]['name'];
 
-            let r = oThis.validateField(column, name);
-            if(! r.success){
-                return r;
-            }
-            let value = oThis.object[column[1]['name']];
+            let value = oThis.object[name];
             if (column[1]['isSerialized'] == true && value) {
                 let fieldData = JSON.parse(value);
                 value = fieldData[column[1]['property']];
             }
-            value = typeof value == 'undefined' ? oThis.object[column[1]['copyIfNotPresent']] : value;
+            value = typeof value == 'undefined' && column[1]['copyIfNotPresent'] ? oThis.object[column[1]['copyIfNotPresent']] : value;
+
+            let r = oThis.validateField(column, value);
+
+            if(! r.success){
+                oThis.applicationMailer.perform({subject: "Validation failed" , body: {err: r}});
+                if (constants.ENVIRONMENT == "staging" || constants.ENVIRONMENT == "development"){
+
+                    return responseHelper.successWithData({
+                        data: new Map()
+                    });
+                }
+                return r;
+            }
+
             formattedMap.set(column[0], value);
         }
+
+        for (let key of oThis.constructor.fieldsToBeMoveToAnalytics){
+            finalFormattedMap.set(key, formattedMap.get(key));
+        }
+
         return responseHelper.successWithData({
-            data: formattedMap
+            data: finalFormattedMap
         });
 
     }
@@ -91,25 +110,6 @@ class Base {
         });
     }
 
-
-    async create(insertParams) {
-        const oThis = this
-        ;
-        return new Promise(function (resolve, reject) {
-            try {
-                oThis.tableModel.create(insertParams, function (err, response) {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        logger.log("batch data inserted successfully");
-                        resolve(response);
-                    }
-                });
-            } catch (err) {
-                reject(err);
-            }
-        });
-    }
 
 
     initRedshift() {
@@ -135,7 +135,8 @@ class Base {
             }).then(function () {
                 logger.log("copy to Temp table done");
                 return responseHelper.successWithData({});
-            }).catch(()=>{
+            }).catch((e)=>{
+                logger.error(e);
                 return responseHelper.error({
                     internal_error_identifier: 'm_r_b_b_cfs',
                     api_error_identifier: 'copy to temp table failed',
@@ -200,8 +201,8 @@ class Base {
 
         let maxBlockNumberFromMain = parseInt(maxBlockNumberFromMainQuery.rows[0].max_block_number);
 
-        console.log("minBlockNumberForTempTable",minBlockNumberForTempTable);
-        console.log("maxBlockNumberFromMain",maxBlockNumberFromMain);
+        logger.log("minBlockNumberForTempTable " + minBlockNumberForTempTable);
+        logger.log("maxBlockNumberFromMain " + maxBlockNumberFromMain);
 
         if (minBlockNumberForTempTable > maxBlockNumberFromMain) {
             return responseHelper.successWithData({});
@@ -216,12 +217,7 @@ class Base {
 
     get getColumnList() {
         const oThis = this;
-        const mapping = oThis.constructor.mapping,
-            columns = [];
-        for (let col of mapping) {
-            columns.push(col[0]);
-        }
-        return columns.join(", ");
+        return oThis.constructor.fieldsToBeMoveToAnalytics.join(", ");
     }
 
     getModelImportString() {

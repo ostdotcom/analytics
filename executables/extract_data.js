@@ -53,11 +53,11 @@ class ExtractData {
 
         try {
 
-            if (program.token !== 'false') {
+            if (program.token !== 'false' && program.token != undefined) {
                 await oThis.extractTokens();
             }
 
-            if (program.blockScanner !== 'false') {
+            if (program.blockScanner !== 'false' && program.blockScanner != undefined){
                 await oThis.extractBlockScannerData(await oThis.getStartBlock(), await oThis.getEndBlock());
             }
         } catch (e) {
