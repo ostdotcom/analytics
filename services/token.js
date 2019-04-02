@@ -64,7 +64,7 @@ class Token {
             await oThis._uploadLocalFilesToS3();
             await oThis._updateTokenLastUpdatedAtValue();
         } catch(e){
-            logger.log("token service terminated due to exception-" , e);
+            logger.error("token service terminated due to exception-" , e);
             let rH = responseHelper.error({
 
                 internal_error_identifier: 's_t_p_1',
