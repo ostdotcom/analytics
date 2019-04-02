@@ -18,22 +18,54 @@ class Base {
         oThis.applicationMailer = new ApplicationMailer();
     }
 
+    validateField(columnInfo, fieldName){
+        const oThis = this;
+        if(columnInfo[1]['required'] && (oThis.object[fieldName] == '' || oThis.object[fieldName] == null)){
+            return responseHelper.error(
+                {
+                    internal_error_identifier: 'm_r_b_b_vf_1',
+                    api_error_identifier: fieldName + '_is_missing',
+                    debug_options: oThis.object
+                }
+            )
+        }
+        if (oThis.isPresent(oThis.object[fieldName]) && columnInfo[1]['min']  && parseInt(oThis.object[fieldName]) < columnInfo[1]['min']){
+            return responseHelper.error(
+                {
+                    internal_error_identifier: 'm_r_b_b_vf_2',
+                    api_error_identifier: fieldName + '_is_lesser_than_valid',
+                    debug_options: oThis.object
+                }
+            )
+        }
+
+        if(oThis.isPresent(oThis.object[fieldName]) && columnInfo[1]['between']  && ! columnInfo[1]['between'].includes(oThis.object[fieldName])){
+            return responseHelper.error(
+                {
+                    internal_error_identifier: 'm_r_b_b_vf_2',
+                    api_error_identifier: fieldName + '_is_not_included_in_field',
+                    debug_options: oThis.object
+                }
+            )
+        }
+        return responseHelper.successWithData({});
+    }
+
+    isPresent(val){
+        return val || val == 0;
+    }
+
     validateAndFormatBlockScannerData() {
         const oThis = this;
         let formattedMap = new Map();
         for (let column of oThis.constructor.mapping) {
             //eg. column[0] => tx_uuid, column[1] => {name: 'transactionUuid', isSerialized: false, required: true,
             // copyIfNotPresent: 'transactionStatus'}
-            if (column[1]['required'] && !(column[1]['name'] in oThis.object)) {
-                let rh = responseHelper.error(
-                    {
-                        internal_error_identifier: 'm_r_b_b_vafbsd',
-                        api_error_identifier: '',
-                        debug_options: oThis.object
-                    }
-                );
-                oThis.applicationMailer.perform({subject: 'validateandformat blockscanner data failed', body: {error: rh}});
-                return rh;
+            let name = column[1]['name'];
+
+            let r = oThis.validateField(column, name);
+            if(! r.success){
+                return r;
             }
             let value = oThis.object[column[1]['name']];
             if (column[1]['isSerialized'] == true && value) {

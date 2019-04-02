@@ -148,8 +148,6 @@ class BlockScannerService {
                     }
                 }
 
-                logger.step("Starting updateLastProcessedBlock");
-
                 await oThis.updateLastProcessedBlock();
 
                 return Promise.resolve(responseHelper.successWithData({lastProcessedBlock: oThis.currentBatchEndBlock}));
@@ -282,10 +280,11 @@ class BlockScannerService {
                     })
                     .catch(function (err) {
                         logger.error(err);
+                        logger.error("block number, ", blockNumber);
                         let error = responseHelper.error({
                             internal_error_identifier: 's_bss_pb_2',
                             api_error_identifier: 'block scanner failed',
-                            debug_options: {}
+                            debug_options: {blockNumber: blockNumber}
                         });
                         oThis.applicationMailer.perform({subject: 'block scanner failed', body: {error: error}});
                         return reject(error);
@@ -320,6 +319,7 @@ class BlockScannerService {
      */
     async updateLastProcessedBlock() {
         const oThis = this;
+        logger.step("Starting updateLastProcessedBlock");
         if (oThis.isStartBlockGiven == false) {
             return oThis.redshiftClient.parameterizedQuery("update " + dataProcessingInfoGC.getTableNameWithSchema + "_" + oThis.chainId + " set value=$1 " +
                 "where property=$2", [oThis.currentBatchEndBlock, dataProcessingInfoGC.lastProcessedBlockProperty]).then((res) => {
