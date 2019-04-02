@@ -8,6 +8,7 @@ export KIT_MYSQL_CONNECTION_POOL_SIZE='3'
 export KIT_SAAS_SUBENV_MYSQL_HOST='127.0.0.1'
 export KIT_SAAS_SUBENV_MYSQL_USER='analytics_read'
 export KIT_SAAS_SUBENV_MYSQL_PASSWORD='f234jhfruir12s*sdfyuqws'
+export KIT_SAAS_SUBENV_MYSQL_PORT=3307
 
 export PRESTAGING_REDSHIFT_USER='ost_pentaho_stag_user'
 export PRESTAGING_REDSHIFT_DATABASE='analytics_staging'

@@ -7,7 +7,7 @@
 const rootPrefix = '../..',
     ModelBase = require(rootPrefix + '/models/mysql/base'),
     Constants = require(rootPrefix + '/configs/constants'),
-    tokensGC = require(rootPrefix + '/lib/globalConstants/redshift/token');
+    tokensGC = require(rootPrefix + '/lib/globalConstants/redshift/tokens');
 
 // Declare variables.
 const dbName = 'kit_saas_' + Constants.SUB_ENVIRONMENT + '_' + Constants.SAAS_MYSQL_DATABASE_ENVIRONMENT;

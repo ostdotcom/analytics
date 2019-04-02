@@ -24,7 +24,7 @@ const mysqlConfig = {
                 host: Constants.KIT_SAAS_SUBENV_MYSQL_HOST,
                 user: Constants.KIT_SAAS_SUBENV_MYSQL_USER,
                 password: Constants.KIT_SAAS_SUBENV_MYSQL_PASSWORD,
-                port: 3307
+                port: Constants.KIT_SAAS_SUBENV_MYSQL_PORT
             }
         }
     },

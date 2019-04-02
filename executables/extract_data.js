@@ -51,23 +51,14 @@ class ExtractData {
         oThis.ProcessLocker.canStartProcess({process_title: 'cron_extract_data_c_' + parseInt(program.chainId) + "_" + parseInt(program.startBlock) + "_" + parseInt(program.endBlock)});
 
 
-
         try {
 
-            // it means no parameter is given, in this case we need to extract data from block-scanner as well as mysql
-            if (process.argv.length == 2) {
+            if (program.token !== 'false') {
                 await oThis.extractTokens();
+            }
+
+            if (program.blockScanner !== 'false') {
                 await oThis.extractBlockScannerData(await oThis.getStartBlock(), await oThis.getEndBlock());
-
-            } else {
-
-                if (program.token === 'true') {
-                    await oThis.extractTokens();
-                }
-
-                if (program.blockScanner === 'true') {
-                    await oThis.extractBlockScannerData(await oThis.getStartBlock(), await oThis.getEndBlock());
-                }
             }
         } catch (e) {
             logger.error("Terminating error due to exception");
