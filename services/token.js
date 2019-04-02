@@ -88,30 +88,41 @@ class Token {
 
         oThis.s3UploadPath = `${Constants.SUB_ENVIRONMENT}${Constants.ENV_SUFFIX}/${oThis.chainId}/${Date.now()}`;
         oThis.localDirFullFilePath = `${Constants.LOCAL_DIR_FILE_PATH}/${oThis.s3UploadPath}`;
-        oThis.fileName = oThis.localDirFullFilePath + oThis.getFilePath + "/" + Date.now() + '.csv';
+        let folderPath= oThis.localDirFullFilePath + oThis.getFilePath;
+        let localWriteObj = new localWrite({separator: "|"});
+        let arrayOfList = [];
+        let fileName = '';
 
-        let lastUpdatedAtValue = await oThis._getTokenLastUpdatedAtValue();
-        tokensRecords = await new tokenModel({}).select("*").where(['updated_at > ?', lastUpdatedAtValue]).order_by("id").limit(50).offset(offset).fire();
 
-        let LocalWrite = new localWrite({separator: "|"});
-        if(tokensRecords.length > 0){
-            shell.mkdir("-p", oThis.localDirFullFilePath + oThis.getFilePath);
-        }
+        while(true){
 
-        while (tokensRecords.length > 0) {
-            totalRecordProcessed += tokensRecords.length;
-            if(totalRecordProcessed > 500){
-                totalRecordProcessed = 0;
-                oThis.fileName = oThis.localDirFullFilePath + oThis.getFilePath + "/" + Date.now() + '.csv';
-            }
-            let arrayOfList = new tokenModel({}).formatData(tokensRecords);
-            if (arrayOfList.length === 0) {
-                return Promise.resolve(responseHelper.successWithData({hasTokens: false}));
-            }
-
-            await LocalWrite.writeArray(arrayOfList, oThis.fileName);
-            offset += 50;
+            let lastUpdatedAtValue = await oThis._getTokenLastUpdatedAtValue();
             tokensRecords = await new tokenModel({}).select("*").where(['updated_at > ?', lastUpdatedAtValue]).order_by("id").limit(50).offset(offset).fire();
+
+            if(tokensRecords.length > 0 && offset == 0){
+                shell.mkdir("-p", folderPath);
+            }
+
+            if(totalRecordProcessed > 500 || offset == 0){
+                totalRecordProcessed = 0;
+                fileName = folderPath + "/" + Date.now() + '.csv';
+            }
+
+            totalRecordProcessed += tokensRecords.length;
+
+            arrayOfList = new tokenModel({}).formatData(tokensRecords);
+
+            if (arrayOfList.length === 0 ) {
+                return Promise.resolve(responseHelper.successWithData({hasTokens: (offset != 0)}));
+            }
+
+            await localWriteObj.writeArray(arrayOfList, fileName);
+
+            if (arrayOfList.length < 50 ) {
+                return Promise.resolve(responseHelper.successWithData({hasTokens: true}));
+            }
+
+            offset += 50;
         }
 
     }
