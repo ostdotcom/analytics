@@ -5,6 +5,8 @@ WbVarDef CHAIN_ID=202;
 WbVarDef TRANSACTION_DDB_TABLENAME=s6_m_a_202_1_transactions;
 WbVarDef TRANSFERS_DDB_TABLENAME=s6_m_a_202_1_token_transfers;
 WbVarDef MAX_BLOCK_NUMBER=800000;
+WbVarDef AWS_ACCESS_KEY_ID=AKIAIG7G5KJ53INDY36A;
+WbVarDef AWS_SECRET_ACCESS_KEY=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;
 
 
 create schema if not exists $[PRESTAGING_REDSHIFT_SCHEMA_PREFIX]_$[SUB_ENV]$[ENV_SUFFIX];
@@ -45,7 +47,7 @@ COMMIT;
 
 
 copy  $[TRANSACTION_DDB_TABLENAME] from 'dynamodb://$[TRANSACTION_DDB_TABLENAME]'
-  credentials 'aws_access_key_id=AKIAIG7G5KJ53INDY36A;aws_secret_access_key=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'
+  credentials 'aws_access_key_id=$[AWS_ACCESS_KEY_ID];aws_secret_access_key=$[AWS_SECRET_ACCESS_KEY]'
    readratio 80;
 commit;
 
@@ -92,7 +94,7 @@ json_extract_path_text(mp, 'n'),
  COALESCE(kd, 0),
 COALESCE(rid, 0),
 EXTRACT(epoch FROM GETDATE())
-from $[TRANSACTION_DDB_TABLENAME] where bno <= $[MAX_BLOCK_NUMBER] and bno is not null or and tst is not  null);
+from $[TRANSACTION_DDB_TABLENAME] where bno <= $[MAX_BLOCK_NUMBER] and bno is not null and tst is not  null and bts is not null);
 commit;
 
 
@@ -118,7 +120,7 @@ CREATE TABLE $[TRANSFERS_DDB_TABLENAME]
 COMMIT;
 
  copy $[TRANSFERS_DDB_TABLENAME] from 'dynamodb://$[TRANSFERS_DDB_TABLENAME]'
-  credentials 'aws_access_key_id=AKIAIG7G5KJ53INDY36A;aws_secret_access_key=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'
+  credentials 'aws_access_key_id=$[AWS_ACCESS_KEY_ID];aws_secret_access_key=$[AWS_SECRET_ACCESS_KEY]'
    readratio 80;
 commit;
 

@@ -1,8 +1,8 @@
 -- define CHAIN_ID
 
-  drop table if exists `incremental_aggregated_transfers_details_{CHAIN_ID}` ;
+  drop table if exists `incremental_aggregated_transfers_details_${CHAIN_ID}` ;
 
-  CREATE TABLE `incremental_aggregated_transfers_details_{CHAIN_ID}` (
+  CREATE TABLE `incremental_aggregated_transfers_details_${CHAIN_ID}` (
     `id` bigint  NOT NULL auto_increment,
     `rounded_time_timestamp` integer  NOT NULL,
     `rounded_date_timestamp` integer  NOT NULL,
