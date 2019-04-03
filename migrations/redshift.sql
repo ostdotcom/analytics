@@ -86,8 +86,8 @@ CREATE TABLE temp_transfers_$[CHAIN_ID]
   event_index      INT          NOT NULL,
   block_number     BIGINT       NOT NULL,
   from_address     VARCHAR(255) NOT NULL,
-  to_address       VARCHAR(255),
-  contract_address VARCHAR(255),
+  to_address       VARCHAR(255) NOT NULL,
+  contract_address VARCHAR(255) NOT NULL,
   amount           DECIMAL(30,0) NOT NULL
 )
   DISTKEY (tx_hash) SORTKEY(block_number);
