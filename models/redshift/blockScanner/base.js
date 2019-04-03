@@ -5,6 +5,7 @@ const rootPrefix = "../../.."
     , Util = require('util')
     , logger = require(rootPrefix + '/helpers/custom_console_logger.js')
     , ValidateAndSanitize = require(rootPrefix + '/lib/validateAndSanatize')
+    , ApplicationMailer = require(rootPrefix + '/lib/applicationMailer')
 ;
 
 /**
@@ -16,8 +17,9 @@ class Base {
         const oThis = this;
         oThis.chainId = params.config.chainId;
         oThis.object = params.object || {};
+        oThis.applicationMailer = new ApplicationMailer();
         oThis.validateAndSanitize = new ValidateAndSanitize({mapping: oThis.constructor.mapping,
-            fieldsToBeMoveToAnalytics: oThis.constructor.fieldsToBeMoveToAnalytics });
+            fieldsToBeMoveToAnalytics: oThis.constructor.fieldsToBeMoveToAnalytics })
     }
 
     formatBlockScannerDataToArray() {
