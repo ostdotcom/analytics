@@ -42,23 +42,8 @@ class Token extends ModelBase {
         return tokensGC.mapping;
     }
 
-    /**
-     * Format data
-     *
-     * @returns {Array[objects]}
-     */
-    formatData(arrayToFormat) {
-        const oThis = this;
-        let arrayOfObjects = [];
-        for (let object of arrayToFormat) {
-            // let model = new tokensModel({object: object, chainId: oThis.chainId});
-            let r = oThis.formatMysqlDataToArray(object);
-            if (!r.success) {
-                continue;
-            }
-            arrayOfObjects.push(r.data.data);
-        }
-        return arrayOfObjects;
+    static get fieldsToBeMoveToAnalytics() {
+        return tokensGC.fieldsToBeMoveToAnalytics;
     }
 
     /**

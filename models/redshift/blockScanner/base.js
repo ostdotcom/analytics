@@ -17,7 +17,7 @@ class Base {
         oThis.chainId = params.config.chainId;
         oThis.object = params.object || {};
         oThis.validateAndSanitize = new ValidateAndSanitize({mapping: oThis.constructor.mapping,
-            fieldsToBeMoveToAnalytics: oThis.constructor.fieldsToBeMoveToAnalytics })
+            fieldsToBeMoveToAnalytics: oThis.constructor.fieldsToBeMoveToAnalytics });
     }
 
     formatBlockScannerDataToArray() {

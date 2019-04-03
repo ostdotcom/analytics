@@ -10,7 +10,8 @@ const rootPrefix = '../..',
     Util = require('util'),
     logger = require(rootPrefix + '/lib/logger/customConsoleLogger'),
     responseHelper = require(rootPrefix + '/lib/formatter/response'),
-    ApplicationMailer = require(rootPrefix + '/lib/applicationMailer');
+    ApplicationMailer = require(rootPrefix + '/lib/applicationMailer'),
+    ValidateAndSanitize = require(rootPrefix + '/lib/validateAndSanatize');
 
 /**
  * Class ModelBase
@@ -32,6 +33,8 @@ class ModelBase extends MysqlQueryBuilders {
         oThis.chainId = params.chainId;
         oThis.dbName = params.dbName;
         oThis.applicationMailer = new ApplicationMailer();
+        oThis.validateAndSanitize = new ValidateAndSanitize({mapping: oThis.constructor.mapping,
+            fieldsToBeMoveToAnalytics: oThis.constructor.fieldsToBeMoveToAnalytics });
     }
 
     /**
@@ -77,6 +80,25 @@ class ModelBase extends MysqlQueryBuilders {
                     }
                 });
         });
+    }
+
+    /**
+     * Format data
+     *
+     * @returns {Array[objects]}
+     */
+    formatData(arrayToFormat) {
+        const oThis = this;
+        let arrayOfObjects = [];
+        for (let object of arrayToFormat) {
+            // let model = new tokensModel({object: object, chainId: oThis.chainId});
+            let r =  oThis.validateAndSanitize.perform({ object: object });
+            if (!r.success) {
+                continue;
+            }
+            arrayOfObjects.push(Array.from(r.data.data.values()) );
+        }
+        return arrayOfObjects;
     }
 
     /**
@@ -216,14 +238,9 @@ class ModelBase extends MysqlQueryBuilders {
      *
      * @return {string}
      */
-    get getColumnList(){
+    get getColumnList() {
         const oThis = this;
-        const mapping = oThis.constructor.mapping,
-            columns = [];
-        for (let col of mapping){
-            columns.push(col[0]);
-        }
-        return columns.join(", ");
+        return oThis.constructor.fieldsToBeMoveToAnalytics.join(", ");
     }
 
     /**
