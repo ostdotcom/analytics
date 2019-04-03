@@ -92,11 +92,11 @@ class Token {
         let localWriteObj = new localWrite({separator: "|"});
         let arrayOfList = [];
         let fileName = '';
+        let lastUpdatedAtValue = await oThis._getTokenLastUpdatedAtValue();
 
 
         while(true){
 
-            let lastUpdatedAtValue = await oThis._getTokenLastUpdatedAtValue();
             tokensRecords = await new tokenModel({}).select("*").where(['updated_at > ?', lastUpdatedAtValue]).order_by("id").limit(50).offset(offset).fire();
 
             if(tokensRecords.length > 0 && offset == 0){
