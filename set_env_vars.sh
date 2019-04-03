@@ -30,4 +30,4 @@ export S3_ACCESS_SECRET='i4GB4zJmUK6QhojLkLjZUBs0Po+modDdFaZu4M92'
 export S3_BUCKET_NAME='temp-analytics.ost.com'
 
 export LOCAL_DIR_FILE_PATH='/tmp/analytics_prestaging_data'
-export BLOCK_SCANNER_CONFIG_FILE_PATH='/Users/mayurpatil/workspace/analytics/block_scanner_config.json'
+export BLOCK_SCANNER_CONFIG_FILE_PATH=''
