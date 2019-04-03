@@ -73,7 +73,7 @@ CREATE TABLE transactions_$[CHAIN_ID]
   token_id              INT, 
   kind                  INT, 
   rule_id               INT,
-  insertion_timestamp   INT
+  insertion_timestamp   INT NOT NULL
 )
   DISTKEY (tx_hash) SORTKEY (block_number, kind);
 commit;
@@ -106,7 +106,7 @@ CREATE TABLE transfers_$[CHAIN_ID]
   to_address       VARCHAR(255) NOT NULL,
   contract_address VARCHAR(255) NOT NULL,
   amount           DECIMAL(30,0) NOT NULL,
-  insertion_timestamp             INT
+  insertion_timestamp             INT NOT NULL
 )
 DISTKEY (tx_hash) SORTKEY(block_number);
 
