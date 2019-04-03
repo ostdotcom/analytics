@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-app_root=".."
-
 while [[ $# -gt 0 ]]
 do
     key="$1";
@@ -33,10 +31,10 @@ done
 
 # Extract data
 printf "\n\n Extraction started"
-/bin/node ${app_root}/executables/extract_data.js --blockScanner --token --chainId ${CHAIN_ID} --startBlock ${START_BLOCK_NO} --endBlock ${END_BLOCK_NO}
+/bin/node executables/extract_data.js --blockScanner true --token true --chainId ${CHAIN_ID} --startBlock ${START_BLOCK_NO} --endBlock ${END_BLOCK_NO}
 printf "Extraction ended \n\n"
 
 # Transform data
 printf "\n\n Transformation started"
-/bin/bash ${app_root}/executables/transform_data.sh --chain-id ${CHAIN_ID}
+/bin/bash executables/transform_data.sh --chain-id ${CHAIN_ID}
 printf "Transformation ended \n\n"

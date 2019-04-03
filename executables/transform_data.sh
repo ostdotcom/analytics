@@ -46,7 +46,7 @@ email_subject_tag="Analytics:${ENV}:${SUB_ENV}";
 
 echo ""
 echo "ENVIRONMENT: ${ENVIRONMENT}"
-echo "SUB_ENV: ${SUB_ENV}"
+echo "SUB_ENVIRONMENT: ${SUB_ENVIRONMENT}"
 echo "CHAIN_ID: ${CHAIN_ID}"
 echo "ENV_SUFFIX: ${ENV_SUFFIX}"
 echo ""
@@ -55,9 +55,6 @@ echo "Data transformation started...";
 echo "";
 
 SECONDS=0;
-
-export KETTLE_HOME=pdi/configs/${ENVIRONMENT}
-export KETTLE_JNDI_ROOT=pdi/configs/${ENVIRONMENT}/simple-jndi
 
 # Start transformation
 task=load_all_cubes
@@ -78,7 +75,7 @@ fi
 
 # Verify transformation
 task=incremental_consistency
-/bin/bash ${KETTLE_CLIENT_PATH}/kitchen.sh -file ${job_dir}/${task}.kjb -level=Debug -param:CHAIN_ID=${CHAIN_ID} -param:SUB_ENV=${SUB_ENV} -param:ENV_SUFFIX=${ENV_SUFFIX} >> log/${task}.log 2>&1;
+/bin/bash ${KETTLE_CLIENT_PATH}/kitchen.sh -file ${job_dir}/${task}.kjb -level=Debug -param:CHAIN_ID=${CHAIN_ID} -param:SUB_ENV=${SUB_ENVIRONMENT} -param:ENV_SUFFIX=${ENV_SUFFIX} -param:CONSISTENCY_LOGS_PATH=${CONSISTENCY_LOGS_PATH} >> log/${task}.log 2>&1;
 status=$?
 if [[ $status != 0 ]]; then
     # Send error email to devs
@@ -95,4 +92,5 @@ duration=$SECONDS;
 echo "";
 echo "Data transformation ended";
 subject="${email_subject_tag} Data transformation completed in $(($duration / 60)) minutes and $(($duration % 60)) seconds."
+echo "***** ${subject} *****"
 mail -s "$subject" "$email_addrs" < /dev/null > /dev/null 2>&1;
