@@ -46,9 +46,10 @@ do
     esac
 done
 
+SECONDS=0;
 # Extract data
 printf "\n\n Extraction started"
-/bin/node executables/extract_data.js --blockScanner true --token true --chainId ${CHAIN_ID} --startBlock ${START_BLOCK_NO}
+/bin/node executables/extract_data.js --blockScanner true --token true --chainId ${CHAIN_ID}
 if [[ $? != 0 ]]; then
     echo "Error in Extraction!";
     exit 1;
@@ -63,3 +64,5 @@ if [[ $? != 0 ]]; then
     exit 1;
 fi
 printf "Transformation ended \n\n"
+duration=$SECONDS;
+echo "^^^^^ Total time: $(($duration / 60)) minutes and $(($duration % 60)) seconds. ^^^^^"
