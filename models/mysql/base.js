@@ -216,14 +216,9 @@ class ModelBase extends MysqlQueryBuilders {
      *
      * @return {string}
      */
-    get getColumnList(){
+    get getColumnList() {
         const oThis = this;
-        const mapping = oThis.constructor.mapping,
-            columns = [];
-        for (let col of mapping){
-            columns.push(col[0]);
-        }
-        return columns.join(", ");
+        return oThis.constructor.fieldsToBeMoveToAnalytics.join(", ");
     }
 
     /**

@@ -7,7 +7,8 @@
 const rootPrefix = '../..',
     ModelBase = require(rootPrefix + '/models/mysql/base'),
     Constants = require(rootPrefix + '/configs/constants'),
-    tokensGC = require(rootPrefix + '/lib/globalConstants/redshift/tokens');
+    tokensGC = require(rootPrefix + '/lib/globalConstants/redshift/tokens'),
+    ValidateAndSanitize = require(rootPrefix + '/lib/validateAndSanatize');
 
 // Declare variables.
 const dbName = 'kit_saas_' + Constants.SUB_ENVIRONMENT + '_' + Constants.SAAS_MYSQL_DATABASE_ENVIRONMENT;
@@ -31,6 +32,8 @@ class Token extends ModelBase {
         const oThis = this;
 
         oThis.tableName = 'tokens';
+        oThis.validateAndSanitize = new ValidateAndSanitize({mapping: oThis.constructor.mapping,
+            fieldsToBeMoveToAnalytics: oThis.constructor.fieldsToBeMoveToAnalytics });
     }
 
     /**
@@ -52,13 +55,17 @@ class Token extends ModelBase {
         let arrayOfObjects = [];
         for (let object of arrayToFormat) {
             // let model = new tokensModel({object: object, chainId: oThis.chainId});
-            let r = oThis.formatMysqlDataToArray(object);
+            let r =  oThis.validateAndSanitize.perform({ object: object });
             if (!r.success) {
                 continue;
             }
-            arrayOfObjects.push(r.data.data);
+            arrayOfObjects.push(Array.from(r.data.data.values()) );
         }
         return arrayOfObjects;
+    }
+
+    static get fieldsToBeMoveToAnalytics() {
+        return tokensGC.fieldsToBeMoveToAnalytics;
     }
 
     /**
