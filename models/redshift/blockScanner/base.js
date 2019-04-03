@@ -4,7 +4,6 @@ const rootPrefix = "../../.."
     , constants = require(rootPrefix + '/configs/constants')
     , Util = require('util')
     , logger = require(rootPrefix + '/helpers/custom_console_logger.js')
-    , ApplicationMailer = require(rootPrefix + '/lib/applicationMailer')
     , ValidateAndSanitize = require(rootPrefix + '/lib/validateAndSanatize')
 ;
 
@@ -17,7 +16,6 @@ class Base {
         const oThis = this;
         oThis.chainId = params.config.chainId;
         oThis.object = params.object || {};
-        oThis.applicationMailer = new ApplicationMailer();
         oThis.validateAndSanitize = new ValidateAndSanitize({mapping: oThis.constructor.mapping,
             fieldsToBeMoveToAnalytics: oThis.constructor.fieldsToBeMoveToAnalytics })
     }
