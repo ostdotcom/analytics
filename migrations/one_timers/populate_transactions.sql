@@ -144,9 +144,13 @@ tad,
 ca,
 amt,
 EXTRACT(epoch FROM GETDATE()) 
-from $[TRANSFERS_DDB_TABLENAME] where bno <= (select max(block_number) from transactions_$[CHAIN_ID]));
+from $[TRANSFERS_DDB_TABLENAME] where bno <= $[MAX_BLOCK_NUMBER]);
 commit;
 
+
+
+UPDATE   data_processing_info_$[CHAIN_ID] SET value = $[MAX_BLOCK_NUMBER] where property = 'last_processed_block';
+commit;
 
 
 
