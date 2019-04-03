@@ -705,7 +705,7 @@ group by 1,2,3,4,5
 insert into transaction_by_name_graph(chain_id, token_id, `timestamp`, meta_name, graph_duration_type, total_transactions, total_transfers, total_volume)
 (SELECT ${CHAIN_ID} as chain_id, 
 	 dtkn.token_id,
-	min(dd.timestamp) as final_timestamp,
+	UNIX_TIMESTAMP(DATE_FORMAT(FROM_UNIXTIME(min(dd.timestamp)),'%Y-%m-01 00:00:00')) as final_timestamp,
 	dmn.meta_name as meta_name,
 	'year' as graph_type,
 sum(total_transactions) as total_transactions, 
@@ -838,7 +838,7 @@ group by 1,2,3,4,5
 insert into transaction_by_type_graph(chain_id, token_id, `timestamp`, meta_type, graph_duration_type, total_transactions, total_transfers, total_volume)
 (SELECT ${CHAIN_ID} as chain_id, 
 	 dtkn.token_id,
-	min(dd.timestamp) as final_timestamp,
+	UNIX_TIMESTAMP(DATE_FORMAT(FROM_UNIXTIME(min(dd.timestamp)),'%Y-%m-01 00:00:00')) as final_timestamp,
 	dmt.meta_type as meta_type,
 	'year' as graph_duration_type,
 sum(total_transactions) as total_transactions, 
