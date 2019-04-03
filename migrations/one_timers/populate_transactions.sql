@@ -52,9 +52,9 @@ copy  $[TRANSACTION_DDB_TABLENAME] from 'dynamodb://$[TRANSACTION_DDB_TABLENAME]
 commit;
 
 
-truncate table into tansactions_$[CHAIN_ID];
+truncate transactions_$[CHAIN_ID];
 
-insert into tansactions_$[CHAIN_ID](
+insert into transactions_$[CHAIN_ID](
 tx_uuid,
 tx_hash,
 gas_used,
