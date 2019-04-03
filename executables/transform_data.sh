@@ -51,6 +51,9 @@ echo "CHAIN_ID: ${CHAIN_ID}"
 echo "ENV_SUFFIX: ${ENV_SUFFIX}"
 echo ""
 
+export KETTLE_HOME=/mnt/st-company/apps/ostAnalytics/current/pdi/configs/${ENVIRONMENT}
+export KETTLE_JNDI_ROOT=/mnt/st-company/apps/ostAnalytics/current/pdi/configs/${ENVIRONMENT}/simple-jndi
+
 echo "Data transformation started...";
 echo "";
 
@@ -74,6 +77,7 @@ else
 fi
 
 # Verify transformation
+echo "Started data verification for task: ${task} [$(date '+%Y-%m-%d %H:%M:%S')]";
 task=incremental_consistency
 /bin/bash ${KETTLE_CLIENT_PATH}/kitchen.sh -file ${job_dir}/${task}.kjb -level=Debug -param:CHAIN_ID=${CHAIN_ID} -param:SUB_ENV=${SUB_ENVIRONMENT} -param:ENV_SUFFIX=${ENV_SUFFIX} -param:CONSISTENCY_LOGS_PATH=${CONSISTENCY_LOGS_PATH} >> log/${task}.log 2>&1;
 status=$?
