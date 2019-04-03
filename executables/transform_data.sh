@@ -6,7 +6,6 @@
 # ENV_SUFFIX
 
 email_addrs="${OS_EMAIL_SUBSCRIBERS:-aman@ost.com,bala@ost.com}";
-app_root=".."
 
 usage_str="Usage: ./transform_data.sh --chain-id [Number]";
 # Read parameters
@@ -46,9 +45,10 @@ fi
 email_subject_tag="Analytics:${ENV}:${SUB_ENV}";
 
 echo ""
-echo "ENV: ${ENV}"
+echo "ENVIRONMENT: ${ENVIRONMENT}"
 echo "SUB_ENV: ${SUB_ENV}"
 echo "CHAIN_ID: ${CHAIN_ID}"
+echo "ENV_SUFFIX: ${ENV_SUFFIX}"
 echo ""
 
 echo "Data transformation started...";
@@ -56,11 +56,14 @@ echo "";
 
 SECONDS=0;
 
+export KETTLE_HOME=pdi/configs/${ENVIRONMENT}
+export KETTLE_JNDI_ROOT=pdi/configs/${ENVIRONMENT}/simple-jndi
+
 # Start transformation
 task=load_all_cubes
 echo "Started data transformation for task: ${task} [$(date '+%Y-%m-%d %H:%M:%S')]";
-job_dir="${app_root}/pdi/content-pdi/jobs"
-/bin/bash ${KETTLE_CLIENT_PATH}/kitchen.sh -file ${job_dir}/${task}.kjb -level=Debug -param:CHAIN_ID=${CHAIN_ID} -param:SUB_ENV=${SUB_ENVIRONMENT} -param:ENV_SUFFIX=${ENV_SUFFIX} >> ${app_root}/log/${task}.log 2>&1;
+job_dir="pdi/content-pdi/jobs"
+/bin/bash ${KETTLE_CLIENT_PATH}/kitchen.sh -file ${job_dir}/${task}.kjb -level=Debug -param:CHAIN_ID=${CHAIN_ID} -param:SUB_ENV=${SUB_ENVIRONMENT} -param:ENV_SUFFIX=${ENV_SUFFIX} >> log/${task}.log 2>&1;
 status=$?
 if [[ $status != 0 ]]; then
     # Send error email to devs
@@ -75,7 +78,7 @@ fi
 
 # Verify transformation
 task=incremental_consistency
-/bin/bash ${KETTLE_CLIENT_PATH}/kitchen.sh -file ${job_dir}/${task}.kjb -level=Debug -param:CHAIN_ID=${CHAIN_ID} -param:SUB_ENV=${SUB_ENV} -param:ENV_SUFFIX=${ENV_SUFFIX} >> ${app_root}/log/${task}.log 2>&1;
+/bin/bash ${KETTLE_CLIENT_PATH}/kitchen.sh -file ${job_dir}/${task}.kjb -level=Debug -param:CHAIN_ID=${CHAIN_ID} -param:SUB_ENV=${SUB_ENV} -param:ENV_SUFFIX=${ENV_SUFFIX} >> log/${task}.log 2>&1;
 status=$?
 if [[ $status != 0 ]]; then
     # Send error email to devs
