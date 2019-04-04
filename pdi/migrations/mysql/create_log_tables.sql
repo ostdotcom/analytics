@@ -1,7 +1,7 @@
 -- define CHAIN_ID
 
 -- Job log table
-
+drop table if exists `job_logs_${CHAIN_ID}`;
 CREATE TABLE job_logs_${CHAIN_ID}
 (
   ID_JOB INT
@@ -30,7 +30,7 @@ CREATE INDEX IDX_job_logs_${CHAIN_ID}_2 ON job_logs_${CHAIN_ID}(ERRORS, STATUS, 
 
 
 
-
+drop table if exists `transformation_logs_${CHAIN_ID}`;
 -- Transformation log table
 --
 
