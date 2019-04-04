@@ -49,8 +49,6 @@ done
 SECONDS=0;
 # Extract data
 echo "******************************** DATA Extraction Started [$(date '+%Y-%m-%d %H:%M:%S')] ********************************"
-echo ""
-echo ""
 /bin/node executables/extract_data.js --blockScanner true --token true --chainId ${CHAIN_ID} >> log/extract_data.log 2>&1
 if [[ $? != 0 ]]; then
     echo ""
@@ -59,16 +57,10 @@ if [[ $? != 0 ]]; then
     exit 1;
 fi
 
-echo ""
-echo ""
 echo "******************************** DATA Extraction Ended [$(date '+%Y-%m-%d %H:%M:%S')] ********************************"
-
-echo ""
 echo ""
 # Transform data
 echo "******************************** DATA Transformation Started [$(date '+%Y-%m-%d %H:%M:%S')] ********************************"
-echo ""
-echo ""
 /bin/bash executables/transform_data.sh --chain-id ${CHAIN_ID} >> log/transform_data.log 2>&1
 if [[ $? != 0 ]]; then
     echo ""
@@ -79,6 +71,7 @@ fi
 
 duration=$SECONDS;
 echo "^^^^^ Total time: $(($duration / 60)) minutes and $(($duration % 60)) seconds. ^^^^^"
-echo ""
-echo ""
+
 echo "******************************** DATA Transformation Ended [$(date '+%Y-%m-%d %H:%M:%S')] ********************************"
+echo ""
+echo ""

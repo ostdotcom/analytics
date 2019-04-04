@@ -44,19 +44,12 @@ fi
 
 email_subject_tag="Analytics:${ENV}:${SUB_ENV}";
 
-echo "******************************** DATA Transformation Started [$(date '+%Y-%m-%d %H:%M:%S')] ********************************"
-echo ""
-echo ""
-
 echo ""
 echo "ENVIRONMENT: ${ENVIRONMENT}"
 echo "SUB_ENVIRONMENT: ${SUB_ENVIRONMENT}"
 echo "CHAIN_ID: ${CHAIN_ID}"
 echo "ENV_SUFFIX: ${ENV_SUFFIX}"
 echo ""
-
-export KETTLE_HOME=/mnt/st-company/apps/ostAnalytics/current/pdi/configs/${ENVIRONMENT}
-export KETTLE_JNDI_ROOT=/mnt/st-company/apps/ostAnalytics/current/pdi/configs/${ENVIRONMENT}/simple-jndi
 
 SECONDS=0;
 
@@ -69,20 +62,22 @@ status=$?
 if [[ $status != 0 ]]; then
     # Send error email to devs
     subject="Error while data transformation for job: ${task}";
-    mail -s "${email_subject_tag} ${subject}" "${email_addrs}" < /dev/null > /dev/null 2>&1;
-
     echo "${subject} [$(date '+%Y-%m-%d %H:%M:%S')]";
+    echo ""
+    echo ""
+    echo "*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*"
+    echo "*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*"
+    echo "*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*"
+    echo ""
+    echo ""
+    mail -s "${email_subject_tag} ${subject}" "${email_addrs}" < /dev/null > /dev/null 2>&1;
     exit 1;
 else
     echo "Ended data transformation for task: ${task} [$(date '+%Y-%m-%d %H:%M:%S')]";
 fi
 
 echo ""
-echo ""
 echo "*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*"
-echo "*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*"
-echo "*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*"
-echo ""
 echo ""
 
 # Verify transformation
@@ -109,4 +104,8 @@ mail -s "$subject" "$email_addrs" < /dev/null > /dev/null 2>&1;
 
 echo ""
 echo ""
-echo "******************************** DATA Transformation Ended [$(date '+%Y-%m-%d %H:%M:%S')] ********************************"
+echo "*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*"
+echo "*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*"
+echo "*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*"
+echo ""
+echo ""
