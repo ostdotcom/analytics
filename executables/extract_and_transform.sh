@@ -46,9 +46,9 @@ do
     esac
 done
 
-SECONDS=0;
 # Extract data
 echo "******************************** DATA Extraction Started [$(date '+%Y-%m-%d %H:%M:%S')] ********************************"
+SECONDS=0;
 /bin/node executables/extract_data.js --blockScanner true --token true --chainId ${CHAIN_ID} >> log/extract_data.log 2>&1
 if [[ $? != 0 ]]; then
     echo ""
@@ -57,10 +57,15 @@ if [[ $? != 0 ]]; then
     exit 1;
 fi
 
+duration=$SECONDS;
+echo "Total time: $(($duration / 60)) minutes and $(($duration % 60)) seconds."
+
 echo "******************************** DATA Extraction Ended [$(date '+%Y-%m-%d %H:%M:%S')] ********************************"
 echo ""
+
 # Transform data
 echo "******************************** DATA Transformation Started [$(date '+%Y-%m-%d %H:%M:%S')] ********************************"
+SECONDS=0;
 /bin/bash executables/transform_data.sh --chain-id ${CHAIN_ID} >> log/transform_data.log 2>&1
 if [[ $? != 0 ]]; then
     echo ""
@@ -70,7 +75,7 @@ if [[ $? != 0 ]]; then
 fi
 
 duration=$SECONDS;
-echo "^^^^^ Total time: $(($duration / 60)) minutes and $(($duration % 60)) seconds. ^^^^^"
+echo "Total time: $(($duration / 60)) minutes and $(($duration % 60)) seconds."
 
 echo "******************************** DATA Transformation Ended [$(date '+%Y-%m-%d %H:%M:%S')] ********************************"
 echo ""
