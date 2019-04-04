@@ -44,6 +44,10 @@ fi
 
 email_subject_tag="Analytics:${ENV}:${SUB_ENV}";
 
+echo "******************************** DATA Transformation Started [$(date '+%Y-%m-%d %H:%M:%S')] ********************************"
+echo ""
+echo ""
+
 echo ""
 echo "ENVIRONMENT: ${ENVIRONMENT}"
 echo "SUB_ENVIRONMENT: ${SUB_ENVIRONMENT}"
@@ -54,16 +58,13 @@ echo ""
 export KETTLE_HOME=/mnt/st-company/apps/ostAnalytics/current/pdi/configs/${ENVIRONMENT}
 export KETTLE_JNDI_ROOT=/mnt/st-company/apps/ostAnalytics/current/pdi/configs/${ENVIRONMENT}/simple-jndi
 
-echo "Data transformation started...";
-echo "";
-
 SECONDS=0;
 
 # Start transformation
 task=load_all_cubes
 echo "Started data transformation for task: ${task} [$(date '+%Y-%m-%d %H:%M:%S')]";
 job_dir="pdi/content-pdi/jobs"
-/bin/bash ${KETTLE_CLIENT_PATH}/kitchen.sh -file ${job_dir}/${task}.kjb -level=Debug -param:CHAIN_ID=${CHAIN_ID} -param:SUB_ENV=${SUB_ENVIRONMENT} -param:ENV_SUFFIX=${ENV_SUFFIX} >> log/${task}.log 2>&1;
+/bin/bash ${KETTLE_CLIENT_PATH}/kitchen.sh -file ${job_dir}/${task}.kjb -level=Debug -param:CHAIN_ID=${CHAIN_ID} -param:SUB_ENV=${SUB_ENVIRONMENT} -param:ENV_SUFFIX=${ENV_SUFFIX};
 status=$?
 if [[ $status != 0 ]]; then
     # Send error email to devs
@@ -76,10 +77,18 @@ else
     echo "Ended data transformation for task: ${task} [$(date '+%Y-%m-%d %H:%M:%S')]";
 fi
 
+echo ""
+echo ""
+echo "*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*"
+echo "*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*"
+echo "*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*"
+echo ""
+echo ""
+
 # Verify transformation
 echo "Started data verification for task: ${task} [$(date '+%Y-%m-%d %H:%M:%S')]";
 task=incremental_consistency
-/bin/bash ${KETTLE_CLIENT_PATH}/kitchen.sh -file ${job_dir}/${task}.kjb -level=Debug -param:CHAIN_ID=${CHAIN_ID} -param:SUB_ENV=${SUB_ENVIRONMENT} -param:ENV_SUFFIX=${ENV_SUFFIX} -param:CONSISTENCY_LOGS_PATH=${CONSISTENCY_LOGS_PATH} >> log/${task}.log 2>&1;
+/bin/bash ${KETTLE_CLIENT_PATH}/kitchen.sh -file ${job_dir}/${task}.kjb -level=Debug -param:CHAIN_ID=${CHAIN_ID} -param:SUB_ENV=${SUB_ENVIRONMENT} -param:ENV_SUFFIX=${ENV_SUFFIX} -param:CONSISTENCY_LOGS_PATH=${CONSISTENCY_LOGS_PATH};
 status=$?
 if [[ $status != 0 ]]; then
     # Send error email to devs
@@ -93,8 +102,11 @@ else
 fi
 duration=$SECONDS;
 
-echo "";
-echo "Data transformation ended";
+echo ""
 subject="${email_subject_tag} Data transformation completed in $(($duration / 60)) minutes and $(($duration % 60)) seconds."
 echo "***** ${subject} *****"
 mail -s "$subject" "$email_addrs" < /dev/null > /dev/null 2>&1;
+
+echo ""
+echo ""
+echo "******************************** DATA Transformation Ended [$(date '+%Y-%m-%d %H:%M:%S')] ********************************"
