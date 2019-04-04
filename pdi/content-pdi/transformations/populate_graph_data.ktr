@@ -674,7 +674,7 @@ insert into transaction_by_name_graph(chain_id, token_id, `timestamp`, meta_name
 sum(total_transactions) as total_transactions, 
 sum(total_transfers) as total_transfers, 
 sum(total_volume) as total_volume
-FROM token_transfer_facts_202 AS ttf
+FROM token_transfer_facts_${CHAIN_ID} AS ttf
   JOIN dim_tokens_${CHAIN_ID} dtkn ON ttf.token_sk = dtkn.token_sk
   JOIN dim_dates dd ON ttf.date_sk = dd.date_sk
     left join dim_meta_names_${CHAIN_ID} as dmn on (dmn.meta_name_sk = ttf.meta_name_sk and ttf.meta_name_sk >0)	
