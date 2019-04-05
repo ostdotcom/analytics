@@ -48,7 +48,8 @@ class ExtractData {
         let oThis = this;
         process.on('SIGINT', oThis.handle);
         process.on('SIGTERM', oThis.handle);
-        oThis.ProcessLocker.canStartProcess({process_title: 'cron_extract_data_c_' + parseInt(program.chainId) + "_" + parseInt(program.startBlock) + "_" + parseInt(program.endBlock)});
+        oThis.ProcessLocker.canStartProcess({process_title: 'cron_extract_data_c_' + parseInt(program.chainId) + "_" + parseInt(program.startBlock) + "_" +
+                parseInt(program.endBlock) + "_" + Constant.ENVIRONMENT + "_" + Constant.SUB_ENVIRONMENT + "_" + Constant.ENV_SUFFIX });
 
 
         try {
