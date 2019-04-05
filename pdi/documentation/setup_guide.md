@@ -26,7 +26,7 @@
 ## To Open Spoon:
 	export KETTLE_HOME=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/configs/development
 	cp ${KETTLE_HOME}/simple-jndi/jdbc.properties /Users/amanbarbaria/Downloads/data-integration/simple-jndi/jdbc.properties
-	cp ${KETTLE_HOME}/.kettle/kettle.properties ~/.kettle/kettle.properties	
+	cp -r ${KETTLE_HOME}/.kettle/ ~/.kettle/	
 
 	GO TO data-integration folder
 	right click on app icon
