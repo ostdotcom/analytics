@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <job>
-  <name>environment_specific</name>
+  <name>setup new sub environment</name>
   <description />
   <extended_description />
   <job_version />
@@ -95,10 +95,10 @@
   <job-log-table>
     <connection />
     <schema />
-    <table />
+    <table>${KETTLE_JOB_LOG_TABLE}_${CHAIN_ID}</table>
     <size_limit_lines />
     <interval />
-    <timeout_days />
+    <timeout_days>${JOB_LOGS_RECORD_TIMEOUT}</timeout_days>
     <field>
       <id>ID_JOB</id>
       <enabled>Y</enabled>
@@ -362,7 +362,7 @@
       <name>ROOT_CHANNEL_ID</name>
     </field>
   </channel-log-table>
-  <pass_batchid>N</pass_batchid>
+  <pass_batchid>Y</pass_batchid>
   <shared_objects_file />
   <entries>
     <entry>
@@ -388,13 +388,13 @@
       <attributes_kjc />
     </entry>
     <entry>
-      <name>chain specific job</name>
+      <name>setup new chain</name>
       <description />
       <type>JOB</type>
       <attributes />
       <specification_method>filename</specification_method>
       <job_object_id />
-      <filename>${Internal.Entry.Current.Directory}/chain_specific_migrations.kjb</filename>
+      <filename>${Internal.Entry.Current.Directory}/setup_new_chain.kjb</filename>
       <jobname />
       <directory />
       <arg_from_previous>N</arg_from_previous>
@@ -420,12 +420,12 @@
       <parallel>N</parallel>
       <draw>Y</draw>
       <nr>0</nr>
-      <xloc>608</xloc>
-      <yloc>144</yloc>
+      <xloc>256</xloc>
+      <yloc>288</yloc>
       <attributes_kjc />
     </entry>
     <entry>
-      <name>environment specific mysql create all</name>
+      <name>pentaho mysql create all</name>
       <description />
       <type>SQL</type>
       <attributes />
@@ -438,7 +438,81 @@
       <parallel>N</parallel>
       <draw>Y</draw>
       <nr>0</nr>
-      <xloc>336</xloc>
+      <xloc>256</xloc>
+      <yloc>112</yloc>
+      <attributes_kjc />
+    </entry>
+    <entry>
+      <name>Populate dim dates</name>
+      <description />
+      <type>JOB</type>
+      <attributes />
+      <specification_method>filename</specification_method>
+      <job_object_id />
+      <filename>${Internal.Entry.Current.Directory}/onetimer/populate_dim_dates.kjb</filename>
+      <jobname />
+      <directory />
+      <arg_from_previous>N</arg_from_previous>
+      <params_from_previous>N</params_from_previous>
+      <exec_per_row>N</exec_per_row>
+      <set_logfile>N</set_logfile>
+      <logfile />
+      <logext />
+      <add_date>N</add_date>
+      <add_time>N</add_time>
+      <loglevel>Nothing</loglevel>
+      <slave_server_name />
+      <wait_until_finished>Y</wait_until_finished>
+      <follow_abort_remote>N</follow_abort_remote>
+      <expand_remote_job>N</expand_remote_job>
+      <create_parent_folder>N</create_parent_folder>
+      <pass_export>N</pass_export>
+      <run_configuration />
+      <parameters>
+        <pass_all_parameters>Y</pass_all_parameters>
+      </parameters>
+      <set_append_logfile>N</set_append_logfile>
+      <parallel>N</parallel>
+      <draw>Y</draw>
+      <nr>0</nr>
+      <xloc>496</xloc>
+      <yloc>112</yloc>
+      <attributes_kjc />
+    </entry>
+    <entry>
+      <name>Populate dim times</name>
+      <description />
+      <type>JOB</type>
+      <attributes />
+      <specification_method>filename</specification_method>
+      <job_object_id />
+      <filename>${Internal.Entry.Current.Directory}/onetimer/populate_dim_times.kjb</filename>
+      <jobname />
+      <directory />
+      <arg_from_previous>N</arg_from_previous>
+      <params_from_previous>N</params_from_previous>
+      <exec_per_row>N</exec_per_row>
+      <set_logfile>N</set_logfile>
+      <logfile />
+      <logext />
+      <add_date>N</add_date>
+      <add_time>N</add_time>
+      <loglevel>Nothing</loglevel>
+      <slave_server_name />
+      <wait_until_finished>Y</wait_until_finished>
+      <follow_abort_remote>N</follow_abort_remote>
+      <expand_remote_job>N</expand_remote_job>
+      <create_parent_folder>N</create_parent_folder>
+      <pass_export>N</pass_export>
+      <run_configuration />
+      <parameters>
+        <pass_all_parameters>Y</pass_all_parameters>
+      </parameters>
+      <set_append_logfile>N</set_append_logfile>
+      <parallel>N</parallel>
+      <draw>Y</draw>
+      <nr>0</nr>
+      <xloc>744</xloc>
       <yloc>112</yloc>
       <attributes_kjc />
     </entry>
@@ -446,7 +520,7 @@
   <hops>
     <hop>
       <from>Start</from>
-      <to>environment specific mysql create all</to>
+      <to>setup new chain</to>
       <from_nr>0</from_nr>
       <to_nr>0</to_nr>
       <enabled>Y</enabled>
@@ -454,8 +528,26 @@
       <unconditional>Y</unconditional>
     </hop>
     <hop>
-      <from>environment specific mysql create all</from>
-      <to>chain specific job</to>
+      <from>Start</from>
+      <to>pentaho mysql create all</to>
+      <from_nr>0</from_nr>
+      <to_nr>0</to_nr>
+      <enabled>Y</enabled>
+      <evaluation>Y</evaluation>
+      <unconditional>Y</unconditional>
+    </hop>
+    <hop>
+      <from>Populate dim dates</from>
+      <to>Populate dim times</to>
+      <from_nr>0</from_nr>
+      <to_nr>0</to_nr>
+      <enabled>Y</enabled>
+      <evaluation>Y</evaluation>
+      <unconditional>N</unconditional>
+    </hop>
+    <hop>
+      <from>pentaho mysql create all</from>
+      <to>Populate dim dates</to>
       <from_nr>0</from_nr>
       <to_nr>0</to_nr>
       <enabled>Y</enabled>

@@ -46,6 +46,12 @@
 
 			
 ## Setup a new env or sub env
+
+### Option 1
+    sh kitchen.sh -file=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/content-pdi/jobs/setup_new_sub_environment.kjb -level=Detailed -param:SUB_ENV=main -param:CHAIN_ID=202 -param:ENV_SUFFIX=_d10
+    
+###  Option 2
+
 	1. Add JDBC Connection setting in jdbc.properties for redshift analytics, mysql analytics & log 
 	2. run Table Migrations:
 	    MYSQL:
@@ -62,6 +68,11 @@
          sh kitchen.sh -file=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/content-pdi/jobs/onetimer/populate_dim_times.kjb -level=Detailed -param:SUB_ENV=main -param:CHAIN_ID=202 -param:ENV_SUFFIX=_d6
 
 ## Setup a new CHAIN_ID:
+
+### Option 1
+        sh kitchen.sh -file=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/content-pdi/jobs/setup_new_chain.kjb -level=Detailed -param:SUB_ENV=main -param:CHAIN_ID=202 -param:ENV_SUFFIX=_d10
+
+### Option 2 
 	1. run Table Migrations:
 	    MYSQL:
 		    1. Add a new Database
