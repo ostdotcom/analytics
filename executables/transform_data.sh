@@ -1,11 +1,27 @@
 #!/usr/bin/env bash
 
 # Following environment variables are required
+# ENVIRONMENT
 # SUB_ENVIRONMENT
 # KETTLE_CLIENT_PATH
 # ENV_SUFFIX
+# CONSISTENCY_LOGS_PATH
 
-email_addrs="${OS_EMAIL_SUBSCRIBERS:-aman@ost.com,bala@ost.com}";
+function endLines(){
+    echo ""
+    echo ""
+    echo "*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*"
+    echo "*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*"
+    echo "*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*"
+    echo ""
+    echo ""
+}
+
+email_addrs="${EMAIL_SUBSCRIBERS:-backend@ost.com}";
+email_subject_tag="Analytics:${ENV}:${SUB_ENV}";
+if [[ ! -z ${ENV_SUFFIX} ]]; then
+    email_subject_tag="${email_subject_tag}:${ENV_SUFFIX}";
+fi
 
 usage_str="Usage: ./transform_data.sh --chain-id [Number]";
 # Read parameters
@@ -42,8 +58,6 @@ if [[ -z $KETTLE_CLIENT_PATH ]]; then
     exit 1;
 fi
 
-email_subject_tag="Analytics:${ENV}:${SUB_ENV}";
-
 echo ""
 echo "ENVIRONMENT: ${ENVIRONMENT}"
 echo "SUB_ENVIRONMENT: ${SUB_ENVIRONMENT}"
@@ -52,7 +66,6 @@ echo "ENV_SUFFIX: ${ENV_SUFFIX}"
 echo ""
 
 SECONDS=0;
-
 # Start transformation
 task=load_all_cubes
 echo "Started data transformation for task: ${task} [$(date '+%Y-%m-%d %H:%M:%S')]";
@@ -63,23 +76,26 @@ if [[ $status != 0 ]]; then
     # Send error email to devs
     subject="Error while data transformation for job: ${task}";
     echo "${subject} [$(date '+%Y-%m-%d %H:%M:%S')]";
-    echo ""
-    echo ""
-    echo "*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*"
-    echo "*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*"
-    echo "*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*"
-    echo ""
-    echo ""
-    mail -s "${email_subject_tag} ${subject}" "${email_addrs}" < /dev/null > /dev/null 2>&1;
+    mail -s "${email_subject_tag} ${subject}" "${email_addrs}" < /dev/null
+    endLines
     exit 1;
 else
     echo "Ended data transformation for task: ${task} [$(date '+%Y-%m-%d %H:%M:%S')]";
+fi
+duration=$SECONDS;
+
+echo ""
+subject="Data transformation completed in $(($duration / 60)) minutes and $(($duration % 60)) seconds."
+echo "${subject} [$(date '+%Y-%m-%d %H:%M:%S')]";
+if [[ $duration > 60 ]]; then
+	mail -s "${email_subject_tag} ${subject}" "${email_addrs}" < /dev/null
 fi
 
 echo ""
 echo "*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*"
 echo ""
 
+SECONDS=0;
 # Verify transformation
 echo "Started data verification for task: ${task} [$(date '+%Y-%m-%d %H:%M:%S')]";
 task=incremental_consistency
@@ -87,25 +103,33 @@ task=incremental_consistency
 status=$?
 if [[ $status != 0 ]]; then
     # Send error email to devs
-    subject2="Error while data verification for job: ${task}";
-    mail -s "${email_subject_tag} ${subject2}" "${email_addrs}" < /dev/null > /dev/null 2>&1;
-
-    echo "${subject2} [$(date '+%Y-%m-%d %H:%M:%S')]";
+    subject="Error while data verification for job: ${task}";
+    mail -s "${email_subject_tag} ${subject}" "${email_addrs}"
+    echo "${subject} [$(date '+%Y-%m-%d %H:%M:%S')]";
+    endLines
     exit 1;
 else
     echo "Ended data verification for task: ${task} [$(date '+%Y-%m-%d %H:%M:%S')]";
 fi
 duration=$SECONDS;
 
-echo ""
-subject="${email_subject_tag} Data transformation completed in $(($duration / 60)) minutes and $(($duration % 60)) seconds."
-echo "***** ${subject} *****"
-mail -s "$subject" "$email_addrs" < /dev/null > /dev/null 2>&1;
+# Check verification status
+if [[ ! -z ${CONSISTENCY_LOGS_PATH} ]]; then
+    file=${CONSISTENCY_LOGS_PATH}/incremental_data_difference.log
+    inconsistent_records=`cat ${file} | wc -l`
+    if [[ ${inconsistent_records} > 0 ]]; then
+        # Send email
+        subject="Data inconsistency after transformation [$(date '+%Y-%m-%d %H:%M:%S')]"
+        echo "${subject} [$(date '+%Y-%m-%d %H:%M:%S')]";
+        mail -s "${email_subject_tag} ${subject}" "${email_addrs}" < ${file}
+    fi
+fi
 
 echo ""
-echo ""
-echo "*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*"
-echo "*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*"
-echo "*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*"
-echo ""
-echo ""
+subject="Data verification completed in $(($duration / 60)) minutes and $(($duration % 60)) seconds."
+echo "${subject} [$(date '+%Y-%m-%d %H:%M:%S')]";
+if [[ $duration > 60 ]]; then
+	mail -s "${email_subject_tag} ${subject}" "${email_addrs}" < /dev/null
+fi
+
+endLines
