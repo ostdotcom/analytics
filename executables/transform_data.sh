@@ -18,7 +18,7 @@ function endLines(){
 }
 
 email_addrs="${EMAIL_SUBSCRIBERS:-backend@ost.com}";
-email_subject_tag="Analytics:${ENV}:${SUB_ENV}";
+email_subject_tag="Analytics:${ENVIRONMENT}:${SUB_ENVIRONMENT}";
 if [[ ! -z ${ENV_SUFFIX} ]]; then
     email_subject_tag="${email_subject_tag}:${ENV_SUFFIX}";
 fi
@@ -119,7 +119,7 @@ if [[ ! -z ${CONSISTENCY_LOGS_PATH} ]]; then
     inconsistent_records=`cat ${file} | wc -l`
     if [[ ${inconsistent_records} > 0 ]]; then
         # Send email
-        subject="Data inconsistency after transformation [$(date '+%Y-%m-%d %H:%M:%S')]"
+        subject="Inconsistent date after transformation [$(date '+%Y-%m-%d %H:%M:%S')]"
         echo "${subject} [$(date '+%Y-%m-%d %H:%M:%S')]";
         mail -s "${email_subject_tag} ${subject}" "${email_addrs}" < ${file}
     fi
