@@ -1,16 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <transformation>
   <info>
-    <name>incremental_load_transactions_facts</name>
+    <name>Aux Token Transfer Facts Consistency</name>
     <description />
     <extended_description />
-    <trans_version />
+    <trans_version>1</trans_version>
     <trans_type>Normal</trans_type>
     <trans_status>0</trans_status>
     <directory>/</directory>
     <parameters>
       <parameter>
         <name>CHAIN_ID</name>
+        <default_value />
+        <description />
+      </parameter>
+      <parameter>
+        <name>CONSISTENCY_LOGS_PATH</name>
         <default_value />
         <description />
       </parameter>
@@ -121,7 +126,7 @@
         </field>
         <field>
           <id>LOG_FIELD</id>
-          <enabled>N</enabled>
+          <enabled>Y</enabled>
           <name>LOG_FIELD</name>
         </field>
         <field>
@@ -426,12 +431,12 @@
     <size_rowset>10000</size_rowset>
     <sleep_time_empty>50</sleep_time_empty>
     <sleep_time_full>50</sleep_time_full>
-    <unique_connections>Y</unique_connections>
+    <unique_connections>N</unique_connections>
     <feedback_shown>Y</feedback_shown>
     <feedback_size>50000</feedback_size>
     <using_thread_priorities>Y</using_thread_priorities>
     <shared_objects_file />
-    <capture_step_performance>Y</capture_step_performance>
+    <capture_step_performance>N</capture_step_performance>
     <step_performance_capturing_delay>1000</step_performance_capturing_delay>
     <step_performance_capturing_size_limit>100</step_performance_capturing_size_limit>
     <dependencies>
@@ -473,16 +478,8 @@
         <attribute>N</attribute>
       </attribute>
       <attribute>
-        <code>INITIAL_POOL_SIZE</code>
-        <attribute>10</attribute>
-      </attribute>
-      <attribute>
         <code>IS_CLUSTERED</code>
         <attribute>N</attribute>
-      </attribute>
-      <attribute>
-        <code>MAXIMUM_POOL_SIZE</code>
-        <attribute>20</attribute>
       </attribute>
       <attribute>
         <code>PORT_NUMBER</code>
@@ -510,15 +507,135 @@
       </attribute>
       <attribute>
         <code>USE_POOLING</code>
+        <attribute>N</attribute>
+      </attribute>
+    </attributes>
+  </connection>
+  <connection>
+    <name>analytics_redshift_connection</name>
+    <server />
+    <type>REDSHIFT</type>
+    <access>JNDI</access>
+    <database>analyticsRedshiftConnection${ENV_SUFFIX}</database>
+    <port>1521</port>
+    <username />
+    <password>Encrypted </password>
+    <servername />
+    <data_tablespace />
+    <index_tablespace />
+    <attributes>
+      <attribute>
+        <code>EXTRA_OPTION_REDSHIFT.tcpKeepAlive</code>
+        <attribute>true</attribute>
+      </attribute>
+      <attribute>
+        <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
+        <attribute>N</attribute>
+      </attribute>
+      <attribute>
+        <code>FORCE_IDENTIFIERS_TO_UPPERCASE</code>
+        <attribute>N</attribute>
+      </attribute>
+      <attribute>
+        <code>IS_CLUSTERED</code>
+        <attribute>N</attribute>
+      </attribute>
+      <attribute>
+        <code>PORT_NUMBER</code>
+        <attribute>1521</attribute>
+      </attribute>
+      <attribute>
+        <code>PRESERVE_RESERVED_WORD_CASE</code>
         <attribute>Y</attribute>
+      </attribute>
+      <attribute>
+        <code>QUOTE_ALL_FIELDS</code>
+        <attribute>N</attribute>
+      </attribute>
+      <attribute>
+        <code>SUPPORTS_BOOLEAN_DATA_TYPE</code>
+        <attribute>Y</attribute>
+      </attribute>
+      <attribute>
+        <code>SUPPORTS_TIMESTAMP_DATA_TYPE</code>
+        <attribute>Y</attribute>
+      </attribute>
+      <attribute>
+        <code>USE_POOLING</code>
+        <attribute>N</attribute>
       </attribute>
     </attributes>
   </connection>
   <order>
+    <hop>
+      <from>Merge Join</from>
+      <to>all_incremental_data_difference</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>Merge Join</from>
+      <to>Filter rows</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>Filter rows</from>
+      <to>if result is true do nothing</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>Filter rows</from>
+      <to>incremental_data_difference output</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>metrics from analytics db</from>
+      <to>Merge Join</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>metrics from Prestaging db</from>
+      <to>Merge Join</to>
+      <enabled>Y</enabled>
+    </hop>
   </order>
   <step>
-    <name>Load Token Transfer Facts</name>
-    <type>ExecSQL</type>
+    <name>Filter rows</name>
+    <type>FilterRows</type>
+    <description />
+    <distribute>Y</distribute>
+    <custom_distribution />
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name />
+    </partitioning>
+    <send_true_to>if result is true do nothing</send_true_to>
+    <send_false_to>incremental_data_difference output</send_false_to>
+    <compare>
+      <condition>
+        <negated>N</negated>
+        <leftvalue>value</leftvalue>
+        <function>=</function>
+        <rightvalue>value_1</rightvalue>
+      </condition>
+    </compare>
+    <attributes />
+    <cluster_schema />
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>656</xloc>
+      <yloc>320</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>Merge Join</name>
+    <type>MergeJoin</type>
     <description />
     <distribute>N</distribute>
     <custom_distribution />
@@ -527,71 +644,249 @@
       <method>none</method>
       <schema_name />
     </partitioning>
-    <connection>analytics_mysql_connection</connection>
+    <join_type>LEFT OUTER</join_type>
+    <step1>metrics from Prestaging db</step1>
+    <step2>metrics from analytics db</step2>
+    <keys_1>
+      <key>metric_name</key>
+    </keys_1>
+    <keys_2>
+      <key>metric_name</key>
+    </keys_2>
+    <attributes />
+    <cluster_schema />
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>320</xloc>
+      <yloc>320</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>all_incremental_data_difference</name>
+    <type>TextFileOutput</type>
+    <description />
+    <distribute>Y</distribute>
+    <custom_distribution />
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name />
+    </partitioning>
+    <separator>;</separator>
+    <enclosure>"</enclosure>
+    <enclosure_forced>N</enclosure_forced>
+    <enclosure_fix_disabled>N</enclosure_fix_disabled>
+    <header>Y</header>
+    <footer>N</footer>
+    <format>DOS</format>
+    <compression>None</compression>
+    <encoding />
+    <endedLine />
+    <fileNameInField>N</fileNameInField>
+    <fileNameField />
+    <create_parent_folder>Y</create_parent_folder>
+    <file>
+      <name>${CONSISTENCY_LOGS_PATH}/all_incremental_data_difference</name>
+      <servlet_output>N</servlet_output>
+      <do_not_open_new_file_init>N</do_not_open_new_file_init>
+      <extention>log</extention>
+      <append>N</append>
+      <split>N</split>
+      <haspartno>N</haspartno>
+      <add_date>N</add_date>
+      <add_time>N</add_time>
+      <SpecifyFormat>N</SpecifyFormat>
+      <date_time_format />
+      <add_to_result_filenames>Y</add_to_result_filenames>
+      <pad>N</pad>
+      <fast_dump>N</fast_dump>
+      <splitevery>0</splitevery>
+    </file>
+    <fields>
+    </fields>
+    <attributes />
+    <cluster_schema />
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>304</xloc>
+      <yloc>480</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>if result is true do nothing</name>
+    <type>Dummy</type>
+    <description />
+    <distribute>Y</distribute>
+    <custom_distribution />
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name />
+    </partitioning>
+    <attributes />
+    <cluster_schema />
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>672</xloc>
+      <yloc>512</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>incremental_data_difference output</name>
+    <type>TextFileOutput</type>
+    <description />
+    <distribute>Y</distribute>
+    <custom_distribution />
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name />
+    </partitioning>
+    <separator>;</separator>
+    <enclosure>"</enclosure>
+    <enclosure_forced>N</enclosure_forced>
+    <enclosure_fix_disabled>N</enclosure_fix_disabled>
+    <header>Y</header>
+    <footer>N</footer>
+    <format>DOS</format>
+    <compression>None</compression>
+    <encoding />
+    <endedLine />
+    <fileNameInField>N</fileNameInField>
+    <fileNameField />
+    <create_parent_folder>Y</create_parent_folder>
+    <file>
+      <name>${CONSISTENCY_LOGS_PATH}/incremental_data_difference</name>
+      <servlet_output>N</servlet_output>
+      <do_not_open_new_file_init>N</do_not_open_new_file_init>
+      <extention>log</extention>
+      <append>N</append>
+      <split>N</split>
+      <haspartno>N</haspartno>
+      <add_date>N</add_date>
+      <add_time>N</add_time>
+      <SpecifyFormat>N</SpecifyFormat>
+      <date_time_format />
+      <add_to_result_filenames>Y</add_to_result_filenames>
+      <pad>N</pad>
+      <fast_dump>N</fast_dump>
+      <splitevery>0</splitevery>
+    </file>
+    <fields>
+    </fields>
+    <attributes />
+    <cluster_schema />
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>1008</xloc>
+      <yloc>336</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>metrics from Prestaging db</name>
+    <type>TableInput</type>
+    <description />
+    <distribute>Y</distribute>
+    <custom_distribution />
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name />
+    </partitioning>
+    <connection>analytics_redshift_connection</connection>
+    <sql>SELECT *
+FROM (
+(
+SELECT COALESCE(SUM(gas_used),0) AS value,
+       'total_gas_used' AS metric_name
+FROM ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.aux_transactions_${CHAIN_ID}
+WHERE kind = 54
+AND   token_id IS NOT NULL
+AND   token_id > 0
+)
+UNION ALL
+(
+SELECT COUNT(DISTINCT tx_hash) AS value,
+       'total_distinct_transactions' AS metric_name
+FROM ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.aux_transactions_${CHAIN_ID}
+WHERE kind = 54
+AND   token_id IS NOT NULL
+AND   token_id > 0
+)
+UNION ALL
+(
+SELECT COALESCE(SUM(b.amount),0) AS value,
+       'total_volume' AS metric_name
+FROM ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.aux_transactions_${CHAIN_ID} AS a
+  LEFT OUTER JOIN ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.aux_transfers_${CHAIN_ID} AS b ON a.tx_hash = b.tx_hash
+WHERE a.kind = 54
+AND   a.token_id IS NOT NULL
+AND   a.token_id > 0
+)
+UNION ALL
+(
+SELECT COUNT(DISTINCT b.tx_hash || '-' || b.event_index) AS value,
+       'total_transfers' AS metric_name
+FROM ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.aux_transactions_${CHAIN_ID} AS a
+  LEFT OUTER JOIN ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.aux_transfers_${CHAIN_ID} AS b ON a.tx_hash = b.tx_hash
+WHERE a.kind = 54
+AND   a.token_id IS NOT NULL
+AND   a.token_id > 0
+
+)
+UNION ALL
+(
+SELECT COUNT(1) AS value,
+       'duplicate_transaction_count' AS metric_name
+FROM (SELECT tx_hash
+      FROM ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.aux_transactions_${CHAIN_ID}
+      GROUP BY 1
+      HAVING COUNT(1) > 1
+      )
+)
+UNION ALL
+(
+SELECT COUNT(1) AS value,
+       'duplicate_transfer_count' AS metric_name
+FROM (SELECT tx_hash,
+             event_index
+      FROM ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.aux_transfers_${CHAIN_ID}
+      GROUP BY 1,
+               2
+      HAVING COUNT(1) > 1)
+      
+)
+)
+ORDER BY 2;</sql>
+    <limit>0</limit>
+    <lookup />
     <execute_each_row>N</execute_each_row>
-    <single_statement>N</single_statement>
-    <replace_variables>Y</replace_variables>
-    <quoteString>N</quoteString>
-    <sql>drop table if exists temp_incremental_token_transfer_facts_${CHAIN_ID};
-
-create table temp_incremental_token_transfer_facts_${CHAIN_ID} as
-(select 
-		t.time_sk, 
-		d.date_sk, 
-		tok.token_sk, 
- 		IFNULL(mt.meta_type_sk, 0) as meta_type_sk, 
- 		IFNULL(mn.meta_name_sk, 0) as meta_name_sk, 
-		a.final_status,
-       total_transactions AS total_transactions,
-       total_transfers AS total_transfers,
-       total_volume AS total_volume,
-       total_gas_used AS total_gas_used	
-FROM incremental_aggregated_transfers_details_${CHAIN_ID} as a
-left join dim_dates as d
-on a.rounded_date_timestamp = d.timestamp
-left join dim_meta_names_${CHAIN_ID} as mn
-on a.meta_name = mn.meta_name
-and a.token_id = mn.token_id
-left join dim_meta_types as mt
-on a.meta_type = mt.meta_type
-left join dim_times as t
-on a.rounded_time_timestamp = t.timestamp
-left join dim_tokens_${CHAIN_ID} as tok
-on a.token_id = tok.token_id)
-;
-
-
-drop table if exists temp_incremental_token_transfer_facts_details_${CHAIN_ID};
-
-create table temp_incremental_token_transfer_facts_details_${CHAIN_ID} as
-select IFNULL(min(date_sk), 2000000000) as min_date_sk from temp_incremental_token_transfer_facts_${CHAIN_ID};
-
-DELETE
-FROM token_transfer_facts_${CHAIN_ID}
-WHERE (date_sk >(SELECT min_date_sk
-                 FROM temp_incremental_token_transfer_facts_details_${CHAIN_ID}))
-OR    (date_sk = (SELECT min_date_sk
-                  FROM temp_incremental_token_transfer_facts_details_${CHAIN_ID}) AND time_sk >= (SELECT MIN(time_sk) AS min_time_sk
-                                                                                                  FROM temp_incremental_token_transfer_facts_${CHAIN_ID}
-                                                                                                  WHERE date_sk = (SELECT min_date_sk
-                                                                                                                   FROM temp_incremental_token_transfer_facts_details_${CHAIN_ID})));
-
-
-
-INSERT into token_transfer_facts_${CHAIN_ID}(time_sk, date_sk, token_sk, meta_type_sk, meta_name_sk, status, total_transactions, total_transfers, total_volume, total_gas_used)
-(select * from temp_incremental_token_transfer_facts_${CHAIN_ID} order by date_sk desc , time_sk desc, token_sk);
-
-
-drop table temp_incremental_token_transfer_facts_${CHAIN_ID};
-drop table temp_incremental_token_transfer_facts_details_${CHAIN_ID};
-</sql>
-    <set_params>N</set_params>
-    <insert_field />
-    <update_field />
-    <delete_field />
-    <read_field />
-    <arguments>
-    </arguments>
+    <variables_active>Y</variables_active>
+    <lazy_conversion_active>N</lazy_conversion_active>
     <attributes />
     <cluster_schema />
     <remotesteps>
@@ -602,7 +897,78 @@ drop table temp_incremental_token_transfer_facts_details_${CHAIN_ID};
     </remotesteps>
     <GUI>
       <xloc>80</xloc>
-      <yloc>176</yloc>
+      <yloc>144</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>metrics from analytics db</name>
+    <type>TableInput</type>
+    <description />
+    <distribute>Y</distribute>
+    <custom_distribution />
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name />
+    </partitioning>
+    <connection>analytics_mysql_connection</connection>
+    <sql>
+SELECT *
+FROM (
+(
+SELECT COALESCE(SUM(total_gas_used),0) AS value,
+       'total_gas_used' AS metric_name
+FROM aux_token_transfer_facts_${CHAIN_ID}
+)
+UNION ALL
+(
+SELECT COALESCE(SUM(total_transactions),0) AS value,
+       'total_distinct_transactions' AS metric_name
+FROM aux_token_transfer_facts_${CHAIN_ID}
+)
+UNION ALL
+(
+SELECT COALESCE(SUM(total_volume),0) AS value,
+       'total_volume' AS metric_name
+FROM aux_token_transfer_facts_${CHAIN_ID}
+)
+UNION ALL
+(
+SELECT COALESCE(SUM(total_transfers),0) AS value,
+       'total_transfers' AS metric_name
+FROM aux_token_transfer_facts_${CHAIN_ID}
+)
+UNION ALL
+(
+SELECT 0 AS value,
+       'duplicate_transaction_count' AS metric_name
+)
+UNION ALL
+(
+SELECT 0 AS value,
+       'duplicate_transfer_count' AS metric_name
+)
+) as a
+ORDER BY 2;
+
+</sql>
+    <limit>0</limit>
+    <lookup />
+    <execute_each_row>N</execute_each_row>
+    <variables_active>Y</variables_active>
+    <lazy_conversion_active>N</lazy_conversion_active>
+    <attributes />
+    <cluster_schema />
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>336</xloc>
+      <yloc>80</yloc>
       <draw>Y</draw>
     </GUI>
   </step>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <transformation>
   <info>
-    <name>incremental_load_dim_meta_names</name>
+    <name>incremental_load_aux_transactions_data_to_mysql</name>
     <description />
     <extended_description />
     <trans_version />
@@ -431,8 +431,8 @@
     <feedback_size>50000</feedback_size>
     <using_thread_priorities>Y</using_thread_priorities>
     <shared_objects_file />
-    <capture_step_performance>Y</capture_step_performance>
-    <step_performance_capturing_delay>1000</step_performance_capturing_delay>
+    <capture_step_performance>N</capture_step_performance>
+    <step_performance_capturing_delay>100</step_performance_capturing_delay>
     <step_performance_capturing_size_limit>100</step_performance_capturing_size_limit>
     <dependencies>
     </dependencies>
@@ -506,15 +506,70 @@
       </attribute>
     </attributes>
   </connection>
+  <connection>
+    <name>analytics_redshift_connection</name>
+    <server />
+    <type>REDSHIFT</type>
+    <access>JNDI</access>
+    <database>analyticsRedshiftConnection${ENV_SUFFIX}</database>
+    <port>1521</port>
+    <username />
+    <password>Encrypted </password>
+    <servername />
+    <data_tablespace />
+    <index_tablespace />
+    <attributes>
+      <attribute>
+        <code>EXTRA_OPTION_REDSHIFT.tcpKeepAlive</code>
+        <attribute>true</attribute>
+      </attribute>
+      <attribute>
+        <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
+        <attribute>N</attribute>
+      </attribute>
+      <attribute>
+        <code>FORCE_IDENTIFIERS_TO_UPPERCASE</code>
+        <attribute>N</attribute>
+      </attribute>
+      <attribute>
+        <code>IS_CLUSTERED</code>
+        <attribute>N</attribute>
+      </attribute>
+      <attribute>
+        <code>PORT_NUMBER</code>
+        <attribute>1521</attribute>
+      </attribute>
+      <attribute>
+        <code>PRESERVE_RESERVED_WORD_CASE</code>
+        <attribute>Y</attribute>
+      </attribute>
+      <attribute>
+        <code>QUOTE_ALL_FIELDS</code>
+        <attribute>N</attribute>
+      </attribute>
+      <attribute>
+        <code>SUPPORTS_BOOLEAN_DATA_TYPE</code>
+        <attribute>Y</attribute>
+      </attribute>
+      <attribute>
+        <code>SUPPORTS_TIMESTAMP_DATA_TYPE</code>
+        <attribute>Y</attribute>
+      </attribute>
+      <attribute>
+        <code>USE_POOLING</code>
+        <attribute>N</attribute>
+      </attribute>
+    </attributes>
+  </connection>
   <order>
     <hop>
-      <from>Meta Name Input</from>
-      <to>insert meta name</to>
+      <from>Get aggregate rows</from>
+      <to>Mysql Table output</to>
       <enabled>Y</enabled>
     </hop>
   </order>
   <step>
-    <name>Meta Name Input</name>
+    <name>Get aggregate rows</name>
     <type>TableInput</type>
     <description />
     <distribute>Y</distribute>
@@ -524,15 +579,22 @@
       <method>none</method>
       <schema_name />
     </partitioning>
-    <connection>analytics_mysql_connection</connection>
-    <sql>select tmn.meta_name as meta_name, tmn.token_id as token_id from 
-( select distinct meta_name, token_id from incremental_aggregated_aux_transfers_details_${CHAIN_ID}) as tmn 
-left outer join dim_meta_names_${CHAIN_ID} as dmn
-on tmn.meta_name = dmn.meta_name
-and tmn.token_id = dmn.token_id
-where dmn.token_id is null
-and  tmn.token_id is not null
-and tmn.meta_name is not null;</sql>
+    <connection>analytics_redshift_connection</connection>
+    <sql>SELECT rounded_time_timestamp,
+       rounded_date_timestamp,
+       token_id,
+       meta_type,
+       meta_name,
+       final_status AS final_status,
+       total_transactions::DECIMAL(30,0) AS total_transactions,
+       total_transfers::DECIMAL(30,0) AS total_transfers,
+       total_volume::DECIMAL(30,0) AS total_volume,
+       total_gas_used::DECIMAL(30,0) AS total_gas_used	
+FROM ${TEMP_PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.temp_aggregated_aux_transfers_details_${CHAIN_ID}
+ORDER BY rounded_date_timestamp,
+         token_id,
+         final_status,
+         rounded_time_timestamp;</sql>
     <limit>0</limit>
     <lookup />
     <execute_each_row>N</execute_each_row>
@@ -547,27 +609,27 @@ and tmn.meta_name is not null;</sql>
       </output>
     </remotesteps>
     <GUI>
-      <xloc>240</xloc>
-      <yloc>176</yloc>
+      <xloc>288</xloc>
+      <yloc>192</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
   <step>
-    <name>insert meta name</name>
+    <name>Mysql Table output</name>
     <type>TableOutput</type>
     <description />
     <distribute>Y</distribute>
     <custom_distribution />
-    <copies>2</copies>
+    <copies>1</copies>
     <partitioning>
       <method>none</method>
       <schema_name />
     </partitioning>
     <connection>analytics_mysql_connection</connection>
     <schema />
-    <table>dim_meta_names_${CHAIN_ID}</table>
+    <table>incremental_aggregated_aux_transfers_details_${CHAIN_ID}</table>
     <commit>1000</commit>
-    <truncate>N</truncate>
+    <truncate>Y</truncate>
     <ignore_errors>N</ignore_errors>
     <use_batch>Y</use_batch>
     <specify_fields>N</specify_fields>
@@ -591,8 +653,8 @@ and tmn.meta_name is not null;</sql>
       </output>
     </remotesteps>
     <GUI>
-      <xloc>448</xloc>
-      <yloc>176</yloc>
+      <xloc>512</xloc>
+      <yloc>240</yloc>
       <draw>Y</draw>
     </GUI>
   </step>

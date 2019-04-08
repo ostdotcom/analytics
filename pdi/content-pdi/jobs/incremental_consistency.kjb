@@ -330,13 +330,13 @@
       <attributes_kjc />
     </entry>
     <entry>
-      <name>Token Transfer Fact Consistency</name>
+      <name>Aux Token Transfer Fact Consistency</name>
       <description />
       <type>TRANS</type>
       <attributes />
       <specification_method>filename</specification_method>
       <trans_object_id />
-      <filename>${Internal.Job.Filename.Directory}/../transformations/consistency_lookup/token_transfer_facts_consistency.ktr</filename>
+      <filename>${Internal.Job.Filename.Directory}/../transformations/consistency_lookup/aux_token_transfer_facts_consistency.ktr</filename>
       <transname />
       <arg_from_previous>N</arg_from_previous>
       <params_from_previous>N</params_from_previous>
@@ -371,7 +371,7 @@
   <hops>
     <hop>
       <from>Start</from>
-      <to>Token Transfer Fact Consistency</to>
+      <to>Aux Token Transfer Fact Consistency</to>
       <from_nr>0</from_nr>
       <to_nr>0</to_nr>
       <enabled>Y</enabled>

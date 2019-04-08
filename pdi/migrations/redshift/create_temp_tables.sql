@@ -21,7 +21,7 @@ INSERT INTO temp_pentaho_processing_info_${CHAIN_ID}
 )
 VALUES
 (
-  'last_processed_transaction_insert_timestamp',
+  'last_processed_aux_transaction_insert_timestamp',
   0
 );
 
@@ -37,4 +37,4 @@ VALUES
   0
 );  
 
---commit;
+commit;

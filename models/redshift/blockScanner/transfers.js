@@ -23,7 +23,7 @@ class Transfers extends Base {
 
     getTableNameWithSchema() {
         const oThis = this;
-        return constants.PRESTAGING_SCHEMA_NAME + '.transfers_' + oThis.chainId;
+        return constants.PRESTAGING_SCHEMA_NAME + '.aux_transfers_' + oThis.chainId;
     };
 
     getTablePrimaryKey() {
@@ -32,7 +32,7 @@ class Transfers extends Base {
 
     getTempTableNameWithSchema() {
         const oThis = this;
-        return constants.PRESTAGING_SCHEMA_NAME + '.temp_transfers_' + oThis.chainId;
+        return constants.PRESTAGING_SCHEMA_NAME + '.temp_aux_transfers_' + oThis.chainId;
     };
 
     handleBlockError(params) {

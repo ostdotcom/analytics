@@ -52,9 +52,9 @@ copy  $[TRANSACTION_DDB_TABLENAME] from 'dynamodb://$[TRANSACTION_DDB_TABLENAME]
 commit;
 
 
-truncate transactions_$[CHAIN_ID];
+truncate aux_transactions_$[CHAIN_ID];
 
-insert into transactions_$[CHAIN_ID](
+insert into aux_transactions_$[CHAIN_ID](
 tx_uuid,
 tx_hash,
 gas_used,
@@ -124,9 +124,9 @@ COMMIT;
    readratio 80;
 commit;
 
-truncate transfers_$[CHAIN_ID];
+truncate aux_transfers_$[CHAIN_ID];
 
-insert into transfers_$[CHAIN_ID](
+insert into aux_transfers_$[CHAIN_ID](
 tx_hash,
 event_index,
 block_number,
@@ -149,7 +149,7 @@ commit;
 
 
 
-UPDATE   data_processing_info_$[CHAIN_ID] SET value = $[MAX_BLOCK_NUMBER] where property = 'last_processed_block';
+UPDATE   data_processing_info_$[CHAIN_ID] SET value = $[MAX_BLOCK_NUMBER] where property = 'last_processed_aux_block';
 commit;
 
 

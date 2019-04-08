@@ -473,16 +473,8 @@
         <attribute>N</attribute>
       </attribute>
       <attribute>
-        <code>INITIAL_POOL_SIZE</code>
-        <attribute>10</attribute>
-      </attribute>
-      <attribute>
         <code>IS_CLUSTERED</code>
         <attribute>N</attribute>
-      </attribute>
-      <attribute>
-        <code>MAXIMUM_POOL_SIZE</code>
-        <attribute>20</attribute>
       </attribute>
       <attribute>
         <code>PORT_NUMBER</code>
@@ -510,7 +502,7 @@
       </attribute>
       <attribute>
         <code>USE_POOLING</code>
-        <attribute>Y</attribute>
+        <attribute>N</attribute>
       </attribute>
     </attributes>
   </connection>
@@ -540,16 +532,8 @@
         <attribute>N</attribute>
       </attribute>
       <attribute>
-        <code>INITIAL_POOL_SIZE</code>
-        <attribute>5</attribute>
-      </attribute>
-      <attribute>
         <code>IS_CLUSTERED</code>
         <attribute>N</attribute>
-      </attribute>
-      <attribute>
-        <code>MAXIMUM_POOL_SIZE</code>
-        <attribute>10</attribute>
       </attribute>
       <attribute>
         <code>PORT_NUMBER</code>
@@ -573,7 +557,7 @@
       </attribute>
       <attribute>
         <code>USE_POOLING</code>
-        <attribute>Y</attribute>
+        <attribute>N</attribute>
       </attribute>
     </attributes>
   </connection>
@@ -641,9 +625,9 @@ FROM (SELECT EXTRACT(epoch FROM GETDATE ()) AS ct));</sql>
     <replace_variables>Y</replace_variables>
     <quoteString>N</quoteString>
     <sql>
-DELETE from transaction_by_name_graph where chain_id=${CHAIN_ID};
+DELETE from aux_transaction_by_name_graph where chain_id=${CHAIN_ID};
 
-insert into transaction_by_name_graph(chain_id, token_id, `timestamp`, meta_name, graph_duration_type, total_transactions, total_transfers, total_volume)
+insert into aux_transaction_by_name_graph(chain_id, token_id, `timestamp`, meta_name, graph_duration_type, total_transactions, total_transfers, total_volume)
 (SELECT ${CHAIN_ID} as chain_id, 
 	 dtkn.token_id,
 	(dd.timestamp + dt.timestamp) as final_timestamp,
@@ -652,7 +636,7 @@ insert into transaction_by_name_graph(chain_id, token_id, `timestamp`, meta_name
 sum(total_transactions) as total_transactions, 
 sum(total_transfers) as total_transfers, 
 sum(total_volume) as total_volume
-FROM token_transfer_facts_${CHAIN_ID} AS ttf
+FROM aux_token_transfer_facts_${CHAIN_ID} AS ttf
   JOIN dim_tokens_${CHAIN_ID} dtkn ON ttf.token_sk = dtkn.token_sk
   JOIN dim_times dt ON ttf.time_sk = dt.time_sk
   JOIN dim_dates dd ON ttf.date_sk = dd.date_sk
@@ -665,7 +649,7 @@ group by 1,2,3,4,5
 
 
 
-insert into transaction_by_name_graph(chain_id, token_id, `timestamp`, meta_name, graph_duration_type, total_transactions, total_transfers, total_volume)
+insert into aux_transaction_by_name_graph(chain_id, token_id, `timestamp`, meta_name, graph_duration_type, total_transactions, total_transfers, total_volume)
 (SELECT ${CHAIN_ID} as chain_id, 
 	 dtkn.token_id,
 	dd.timestamp as final_timestamp,
@@ -674,7 +658,7 @@ insert into transaction_by_name_graph(chain_id, token_id, `timestamp`, meta_name
 sum(total_transactions) as total_transactions, 
 sum(total_transfers) as total_transfers, 
 sum(total_volume) as total_volume
-FROM token_transfer_facts_${CHAIN_ID} AS ttf
+FROM aux_token_transfer_facts_${CHAIN_ID} AS ttf
   JOIN dim_tokens_${CHAIN_ID} dtkn ON ttf.token_sk = dtkn.token_sk
   JOIN dim_dates dd ON ttf.date_sk = dd.date_sk
     left join dim_meta_names_${CHAIN_ID} as dmn on (dmn.meta_name_sk = ttf.meta_name_sk and ttf.meta_name_sk >0)	
@@ -684,7 +668,7 @@ group by 1,2,3,4,5
 );
 
 
-insert into transaction_by_name_graph(chain_id, token_id, `timestamp`, meta_name, graph_duration_type, total_transactions, total_transfers, total_volume)
+insert into aux_transaction_by_name_graph(chain_id, token_id, `timestamp`, meta_name, graph_duration_type, total_transactions, total_transfers, total_volume)
 (SELECT ${CHAIN_ID} as chain_id, 
 	 dtkn.token_id,
 	dd.timestamp as final_timestamp,
@@ -693,7 +677,7 @@ insert into transaction_by_name_graph(chain_id, token_id, `timestamp`, meta_name
 sum(total_transactions) as total_transactions, 
 sum(total_transfers) as total_transfers, 
 sum(total_volume) as total_volume
-FROM token_transfer_facts_${CHAIN_ID} AS ttf
+FROM aux_token_transfer_facts_${CHAIN_ID} AS ttf
   JOIN dim_tokens_${CHAIN_ID} dtkn ON ttf.token_sk = dtkn.token_sk
   JOIN dim_dates dd ON ttf.date_sk = dd.date_sk
   left join dim_meta_names_${CHAIN_ID} as dmn on (dmn.meta_name_sk = ttf.meta_name_sk and ttf.meta_name_sk >0)
@@ -702,7 +686,7 @@ and status = 'success'
 group by 1,2,3,4,5
 );
 
-insert into transaction_by_name_graph(chain_id, token_id, `timestamp`, meta_name, graph_duration_type, total_transactions, total_transfers, total_volume)
+insert into aux_transaction_by_name_graph(chain_id, token_id, `timestamp`, meta_name, graph_duration_type, total_transactions, total_transfers, total_volume)
 (SELECT ${CHAIN_ID} as chain_id, 
 	 dtkn.token_id,
 	UNIX_TIMESTAMP(DATE_FORMAT(FROM_UNIXTIME(min(dd.timestamp)),'%Y-%m-01 00:00:00')) as final_timestamp,
@@ -711,7 +695,7 @@ insert into transaction_by_name_graph(chain_id, token_id, `timestamp`, meta_name
 sum(total_transactions) as total_transactions, 
 sum(total_transfers) as total_transfers, 
 sum(total_volume) as total_volume
-FROM token_transfer_facts_${CHAIN_ID} AS ttf
+FROM aux_token_transfer_facts_${CHAIN_ID} AS ttf
   JOIN dim_tokens_${CHAIN_ID} dtkn ON ttf.token_sk = dtkn.token_sk
   JOIN dim_dates dd ON ttf.date_sk = dd.date_sk
   left join dim_meta_names_${CHAIN_ID} as dmn on (dmn.meta_name_sk = ttf.meta_name_sk and ttf.meta_name_sk >0)	
@@ -777,9 +761,9 @@ group by 1,2,4,5
     <single_statement>N</single_statement>
     <replace_variables>Y</replace_variables>
     <quoteString>N</quoteString>
-    <sql>DELETE from transaction_by_type_graph where chain_id=${CHAIN_ID};
+    <sql>DELETE from aux_transaction_by_type_graph where chain_id=${CHAIN_ID};
 
-insert into transaction_by_type_graph(chain_id, token_id, `timestamp`, meta_type, graph_duration_type, total_transactions, total_transfers, total_volume)
+insert into aux_transaction_by_type_graph(chain_id, token_id, `timestamp`, meta_type, graph_duration_type, total_transactions, total_transfers, total_volume)
 (SELECT ${CHAIN_ID} as chain_id, 
 	 dtkn.token_id,
 	(dd.timestamp + dt.timestamp) as final_timestamp,
@@ -788,7 +772,7 @@ insert into transaction_by_type_graph(chain_id, token_id, `timestamp`, meta_type
 sum(total_transactions) as total_transactions, 
 sum(total_transfers) as total_transfers, 
 sum(total_volume) as total_volume
-FROM token_transfer_facts_${CHAIN_ID} AS ttf
+FROM aux_token_transfer_facts_${CHAIN_ID} AS ttf
   JOIN dim_tokens_${CHAIN_ID} dtkn ON ttf.token_sk = dtkn.token_sk
   JOIN dim_times dt ON ttf.time_sk = dt.time_sk
   JOIN dim_dates dd ON ttf.date_sk = dd.date_sk
@@ -799,7 +783,7 @@ and status = 'success'
 group by 1,2,3,4,5
 );
 
-insert into transaction_by_type_graph(chain_id, token_id, `timestamp`, meta_type, graph_duration_type, total_transactions, total_transfers, total_volume)
+insert into aux_transaction_by_type_graph(chain_id, token_id, `timestamp`, meta_type, graph_duration_type, total_transactions, total_transfers, total_volume)
 (SELECT ${CHAIN_ID} as chain_id, 
 	 dtkn.token_id,
 	dd.timestamp as final_timestamp,
@@ -808,7 +792,7 @@ insert into transaction_by_type_graph(chain_id, token_id, `timestamp`, meta_type
 sum(total_transactions) as total_transactions, 
 sum(total_transfers) as total_transfers, 
 sum(total_volume) as total_volume
-FROM token_transfer_facts_${CHAIN_ID} AS ttf
+FROM aux_token_transfer_facts_${CHAIN_ID} AS ttf
   JOIN dim_tokens_${CHAIN_ID} dtkn ON ttf.token_sk = dtkn.token_sk
   JOIN dim_dates dd ON ttf.date_sk = dd.date_sk
   left join dim_meta_types as dmt on (dmt.meta_type_sk = ttf.meta_type_sk) and (dmt.meta_type_sk >0)	
@@ -817,7 +801,7 @@ and status = 'success'
 group by 1,2,3,4,5
 );
 
-insert into transaction_by_type_graph(chain_id, token_id, `timestamp`, meta_type, graph_duration_type, total_transactions, total_transfers, total_volume)
+insert into aux_transaction_by_type_graph(chain_id, token_id, `timestamp`, meta_type, graph_duration_type, total_transactions, total_transfers, total_volume)
 (SELECT ${CHAIN_ID} as chain_id, 
 	 dtkn.token_id,
 	dd.timestamp as final_timestamp,
@@ -826,7 +810,7 @@ insert into transaction_by_type_graph(chain_id, token_id, `timestamp`, meta_type
 sum(total_transactions) as total_transactions, 
 sum(total_transfers) as total_transfers, 
 sum(total_volume) as total_volume
-FROM token_transfer_facts_${CHAIN_ID} AS ttf
+FROM aux_token_transfer_facts_${CHAIN_ID} AS ttf
   JOIN dim_tokens_${CHAIN_ID} dtkn ON ttf.token_sk = dtkn.token_sk
   JOIN dim_dates dd ON ttf.date_sk = dd.date_sk
   left join dim_meta_types as dmt on (dmt.meta_type_sk = ttf.meta_type_sk) and (dmt.meta_type_sk >0)	
@@ -835,7 +819,7 @@ and status = 'success'
 group by 1,2,3,4,5
 );
 
-insert into transaction_by_type_graph(chain_id, token_id, `timestamp`, meta_type, graph_duration_type, total_transactions, total_transfers, total_volume)
+insert into aux_transaction_by_type_graph(chain_id, token_id, `timestamp`, meta_type, graph_duration_type, total_transactions, total_transfers, total_volume)
 (SELECT ${CHAIN_ID} as chain_id, 
 	 dtkn.token_id,
 	UNIX_TIMESTAMP(DATE_FORMAT(FROM_UNIXTIME(min(dd.timestamp)),'%Y-%m-01 00:00:00')) as final_timestamp,
@@ -844,7 +828,7 @@ insert into transaction_by_type_graph(chain_id, token_id, `timestamp`, meta_type
 sum(total_transactions) as total_transactions, 
 sum(total_transfers) as total_transfers, 
 sum(total_volume) as total_volume
-FROM token_transfer_facts_${CHAIN_ID} AS ttf
+FROM aux_token_transfer_facts_${CHAIN_ID} AS ttf
   JOIN dim_tokens_${CHAIN_ID} dtkn ON ttf.token_sk = dtkn.token_sk
   JOIN dim_dates dd ON ttf.date_sk = dd.date_sk
   left join dim_meta_types as dmt on (dmt.meta_type_sk = ttf.meta_type_sk) and (dmt.meta_type_sk >0)

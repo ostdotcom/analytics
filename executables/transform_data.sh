@@ -67,7 +67,7 @@ echo ""
 
 SECONDS=0;
 # Start transformation
-task=load_all_cubes
+task=load_aux_token_transfer_cube
 echo "Started data transformation for task: ${task} [$(date '+%Y-%m-%d %H:%M:%S')]";
 job_dir="pdi/content-pdi/jobs"
 /bin/bash ${KETTLE_CLIENT_PATH}/kitchen.sh -file ${job_dir}/${task}.kjb -level=Debug -param:CHAIN_ID=${CHAIN_ID} -param:SUB_ENV=${SUB_ENVIRONMENT} -param:ENV_SUFFIX=${ENV_SUFFIX};

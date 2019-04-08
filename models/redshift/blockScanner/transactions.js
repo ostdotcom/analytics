@@ -26,7 +26,7 @@ class Transactions extends Base {
 
     getTableNameWithSchema() {
         const oThis = this;
-        return constants.PRESTAGING_SCHEMA_NAME + '.transactions_' + oThis.chainId;
+        return constants.PRESTAGING_SCHEMA_NAME + '.aux_transactions_' + oThis.chainId;
     };
 
     getTablePrimaryKey() {
@@ -35,7 +35,7 @@ class Transactions extends Base {
 
     getTempTableNameWithSchema() {
         const oThis = this;
-        return constants.PRESTAGING_SCHEMA_NAME + '.temp_transactions_' + oThis.chainId;
+        return constants.PRESTAGING_SCHEMA_NAME + '.temp_aux_transactions_' + oThis.chainId;
     };
 
     // handleBlockError(params) {
