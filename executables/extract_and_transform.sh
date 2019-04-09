@@ -49,7 +49,7 @@ done
 # Extract data
 echo "******************************** DATA Extraction Started [$(date '+%Y-%m-%d %H:%M:%S')] ********************************"
 SECONDS=0;
-/bin/node executables/extract_data.js --blockScanner true --token true --chainId ${CHAIN_ID} >> log/extract_data.log 2>&1
+/bin/node executables/extract_data.js --blockScanner true --token true --chainId ${CHAIN_ID} >> log/extract_data_${CHAIN_ID}.log 2>&1
 if [[ $? != 0 ]]; then
     echo ""
     echo ""
@@ -66,7 +66,7 @@ echo ""
 # Transform data
 echo "******************************** DATA Transformation Started [$(date '+%Y-%m-%d %H:%M:%S')] ********************************"
 SECONDS=0;
-/bin/bash executables/transform_data.sh --chain-id ${CHAIN_ID} >> log/transform_data.log 2>&1
+/bin/bash executables/transform_data.sh --chain-id ${CHAIN_ID} >> log/transform_data_${CHAIN_ID}.log 2>&1
 if [[ $? != 0 ]]; then
     echo ""
     echo ""
