@@ -35,6 +35,7 @@ class Token {
         oThis.redshiftClient = new RedshiftClient(Constants.PRESTAGING_REDSHIFT_CLIENT);
         oThis.chainId = params.chainId;
         oThis.applicationMailer = new ApplicationMailer();
+        oThis.redshiftClient = new RedshiftClient();
     }
 
     /**
@@ -155,7 +156,7 @@ class Token {
         for (let modelToPerform of
             [{localPath: "/tokens", model: tokenModel}]) {
 
-            let r = await oThis.uploadToS3(`${oThis.s3UploadPath}${modelToPerform.localPath}/`,
+            let r = await S3Write.uploadToS3(`${oThis.s3UploadPath}${modelToPerform.localPath}/`,
                 `${oThis.localDirFullFilePath}${modelToPerform.localPath}`);
 
             if (r.data.hasFiles) {

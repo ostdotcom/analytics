@@ -36,6 +36,7 @@ class ExtractData {
         oThis.blockScanner = new BlockScanner(oThis.chainId);
         oThis.redshiftClient = new RedshiftClient(Constant.PRESTAGING_REDSHIFT_CLIENT);
         oThis.ProcessLocker = new ProcessLockerKlass();
+        oThis.redshiftClient = new RedshiftClient();
 
     }
 

@@ -5,6 +5,7 @@ const rootPrefix = '../../..'
     , Base = require("./base")
     , logger = require(rootPrefix + '/helpers/custom_console_logger.js')
     , Util = require('util')
+    , RedshiftClient = require(rootPrefix + "/lib/redshift")
 ;
 
 class Transfers extends Base {
@@ -41,10 +42,10 @@ class Transfers extends Base {
 
         const oThis = this,
             deleteDuplicateQuery = Util.format("DELETE from %s WHERE concat(tx_hash, concat(\'-\', event_index)) IN(SELECT concat(tx_hash, concat(\'-\', event_index)) from %s where block_number >= $1 and block_number <= $2);",
-                oThis.getTempTableNameWithSchema(), oThis.getTableNameWithSchema());
+                oThis.getTempTableNameWithSchema(), oThis.getTableNameWithSchema()),
+            redshiftClient = new RedshiftClient();
 
-        oThis.initRedshift();
-        return oThis.redshiftClient.parameterizedQuery(deleteDuplicateQuery, [params.minBlock, params.maxBlock]).then((res) => {
+        return redshiftClient.parameterizedQuery(deleteDuplicateQuery, [params.minBlock, params.maxBlock]).then((res) => {
             logger.warn("duplicate transfers are deleted");
             oThis.applicationMailer.perform({subject :"duplicate transfers are deleted",  body:  oThis.object});
 			      return oThis.insertToMainTable();

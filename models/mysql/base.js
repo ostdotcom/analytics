@@ -8,10 +8,16 @@ const rootPrefix = '../..',
     mysqlWrapper = require(rootPrefix + '/lib/mysqlWrapper'),
     constants = require(rootPrefix + '/configs/constants'),
     Util = require('util'),
+    shell = require("shelljs"),
     logger = require(rootPrefix + '/lib/logger/customConsoleLogger'),
     responseHelper = require(rootPrefix + '/lib/formatter/response'),
     ApplicationMailer = require(rootPrefix + '/lib/applicationMailer'),
-    ValidateAndSanitize = require(rootPrefix + '/lib/validateAndSanatize');
+    ValidateAndSanitize = require(rootPrefix + '/lib/validateAndSanatize'),
+    dataProcessingInfoGC = require(rootPrefix + "/lib/globalConstants/redshift/dataProcessingInfo"),
+    localWrite = require(rootPrefix + "/lib/localWrite"),
+    dateUtil = require(rootPrefix + "/lib/dateUtil"),
+    DownloadToTemp = require(rootPrefix + "/lib/downloadToTemp"),
+    RedshiftClient = require(rootPrefix + "/lib/redshift");
 
 /**
  * Class ModelBase
@@ -35,6 +41,7 @@ class ModelBase extends MysqlQueryBuilders {
         oThis.applicationMailer = new ApplicationMailer();
         oThis.validateAndSanitize = new ValidateAndSanitize({mapping: oThis.constructor.mapping,
             fieldsToBeMoveToAnalytics: oThis.constructor.fieldsToBeMoveToAnalytics });
+        oThis.redshiftClient = new RedshiftClient();
     }
 
     /**
@@ -165,43 +172,28 @@ class ModelBase extends MysqlQueryBuilders {
      * Copy data from s3 and insert into temp table and modify updated records
      *
      */
-    copyFromS3(fullFilePath) {
+    async copyFromS3(fullFilePath) {
 
         const oThis = this
-            , s3BucketPath = 's3://' + constants.S3_BUCKET_NAME + '/'
+        ;
 
+        let downloadToTemp = await new DownloadToTemp({tempTableName: oThis.getTempTableName(), columnList: oThis.getColumnList}).copyFromS3ToTemp(fullFilePath);
 
-            , copyTable = Util.format('copy %s (%s) from \'%s\' iam_role \'%s\' delimiter \'|\';', oThis.getTempTableName(), oThis.getColumnList, s3BucketPath + fullFilePath, oThis.getIamRole())
+        const deleteDuplicateIds = Util.format('DELETE from %s WHERE %s IN (SELECT %s from %s);', oThis.getTableNameWithSchema(), oThis.getTablePrimaryKey(), oThis.getTablePrimaryKey(), oThis.getTempTableName())
+            , insertRemainingEntries = Util.format('INSERT into %s (%s) (select %s from %s);', oThis.getTableNameWithSchema(), oThis.getColumnList,oThis.getColumnList, oThis.getTempTableName())
             , commit = 'COMMIT;'
         ;
 
-        const deleteDuplicateIds = Util.format('DELETE from %s WHERE %s IN (SELECT %s from %s);', oThis.getTableNameWithSchema(), oThis.getTablePrimaryKey(), oThis.getTablePrimaryKey(), oThis.getTempTableName());
-
-
-        const insertRemainingEntries = Util.format('INSERT into %s (%s) (select %s from %s);', oThis.getTableNameWithSchema(), oThis.getColumnList,oThis.getColumnList, oThis.getTempTableName())
-            , truncateTempTable = Util.format('TRUNCATE TABLE %s;', oThis.getTempTableName())
-        ;
-        logger.log(s3BucketPath + fullFilePath);
-
-        logger.log("Temp table delete if exists", truncateTempTable);
-        return oThis.query(truncateTempTable)
+        logger.info("Deletion of duplicate Ids started", deleteDuplicateIds);
+        return oThis.redshiftClient.query(deleteDuplicateIds)
             .then(function () {
-                logger.log("Copying of table started", copyTable);
-                return oThis.query(copyTable);
+                logger.info("Insertion of remaining entries started", insertRemainingEntries);
+                return oThis.redshiftClient.query(insertRemainingEntries);
             }).then(function () {
-                logger.log("Commit started", commit);
-                return oThis.query(commit);
+                logger.info("Commit started", commit);
+                return oThis.redshiftClient.query(commit);
             }).then(function () {
-                logger.log("Deletion of duplicate Ids started", deleteDuplicateIds);
-                return oThis.query(deleteDuplicateIds);
-            }).then(function () {
-                logger.log("Insertion of remaining entries started", insertRemainingEntries);
-                return oThis.query(insertRemainingEntries);
-            }).then(function () {
-                logger.log("Dropping temp table", truncateTempTable);
-                return oThis.query(truncateTempTable);
-            }).then(function () {
-                logger.log('Copy from S3 complete')
+                logger.info('Copy from S3 complete')
             }).catch(function (err) {
                 logger.error("S3 copy hampered", err);
                 throw new Error("S3 copy hampered" + err);
@@ -229,6 +221,98 @@ class ModelBase extends MysqlQueryBuilders {
             } catch (err) {
                 reject(err);
             }
+        });
+
+    }
+
+    /**
+     * Fetch records and write those records into Local File
+     *
+     */
+    async _fetchDetailsAndWriteIntoLocalFile(localDirFullFilePath) {
+        const oThis = this;
+        let offset = 0;
+        let Records;
+        let totalRecordProcessed = 0;
+
+        let folderPath= localDirFullFilePath + oThis.getFilePath;
+        let localWriteObj = new localWrite({separator: "|"});
+        let arrayOfList = [];
+        let fileName = '';
+        let lastUpdatedAtValue = await oThis._getLastUpdatedAtValue();
+
+        while(true){
+            Records = await new oThis.constructor({}).select("*").where(['updated_at > ?', lastUpdatedAtValue]).order_by("id").limit(50).offset(offset).fire();
+            if(Records.length > 0 && offset == 0){
+                shell.mkdir("-p", folderPath);
+            }
+
+            if(totalRecordProcessed > 500 || offset == 0){
+                totalRecordProcessed = 0;
+                fileName = folderPath + "/" + Date.now() + '.csv';
+            }
+
+            totalRecordProcessed += Records.length;
+
+            arrayOfList = oThis.formatData(Records);
+
+            if (arrayOfList.length === 0 ) {
+                return Promise.resolve(responseHelper.successWithData({hasTokens: (offset != 0)}));
+            }
+
+            await localWriteObj.writeArray(arrayOfList, fileName);
+
+            if (arrayOfList.length < 50 ) {
+                return Promise.resolve(responseHelper.successWithData({hasTokens: true}));
+            }
+
+            offset += 50;
+        }
+
+    }
+
+    /**
+     * Get last updated at value from data_processing_info_{chain_id}
+     *
+     * @return {Promise}
+     *
+     */
+    async _getLastUpdatedAtValue() {
+        const oThis = this;
+        return await oThis.redshiftClient.parameterizedQuery("select * from " + dataProcessingInfoGC.getTableNameWithSchema + "_" + oThis.chainId + " "+"where property= $1", [oThis.getDataProcessingPropertyName]).then((res) => {
+            logger.log(res.rows);
+            return (res.rows[0].value);
+        });
+    }
+
+    /**
+     * Update last updated at value of the data_processing_info_{chain_id} table
+     *
+     * @return {Promise}
+     *
+     */
+    async updateDataProcessingInfoTable() {
+        const oThis = this;
+        let LastUpdatedAtValue = await oThis.getLastUpdatedAtValueFromTable();
+
+        return await oThis.redshiftClient.parameterizedQuery("update " + dataProcessingInfoGC.getTableNameWithSchema + "_" + oThis.chainId +  " set value=$1 " +
+            "where property=$2", [LastUpdatedAtValue, oThis.getDataProcessingPropertyName]).then((res) => {
+            logger.log("token_last_updated_at value of the data_processing_info table updated successfully");
+        });
+    }
+
+    /**
+     * Get max updated_at column value from the table of redshift
+     *
+     * @return {Promise}
+     *
+     */
+    async getLastUpdatedAtValueFromTable(){
+        const oThis = this;
+        return await oThis.redshiftClient.query("select max(updated_at) from " + new oThis.constructor({}).getTableNameWithSchema()).then((res) => {
+            logger.log(res.rows);
+            let LastUpdatedAtValue = dateUtil.convertDateToString(res.rows[0].max);
+            return (LastUpdatedAtValue);
         });
 
     }
@@ -280,13 +364,22 @@ class ModelBase extends MysqlQueryBuilders {
     };
 
     /**
-     * Get Iam role
+     * Get file path
      *
      * @returns {String}
      */
-    getIamRole() {
-        return constants.S3_IAM_ROLE
-    };
+    get getFilePath() {
+        throw 'getFilePath not implemented'
+    }
+
+    /**
+     * Get data processing property name
+     *
+     * @returns {String}
+     */
+    get getDataProcessingPropertyName() {
+        throw 'getDataProcessingPropertyName not implemented'
+    }
 
 }
 

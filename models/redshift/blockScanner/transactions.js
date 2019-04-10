@@ -7,6 +7,7 @@ const rootPrefix = '../../..'
     , ApplicationMailer = require(rootPrefix + '/lib/applicationMailer')
     , Util = require('util')
     , responseHelper = require(rootPrefix + '/lib/formatter/response')
+    , RedshiftClient = require(rootPrefix + "/lib/redshift")
 ;
 
 
@@ -56,11 +57,11 @@ class Transactions extends Base {
 
 		const oThis = this,
 			deleteDuplicateQuery = Util.format("DELETE from %s WHERE tx_hash IN(SELECT tx_hash from %s where block_number >= $1 and block_number <= $2);",
-				oThis.getTempTableNameWithSchema(), oThis.getTableNameWithSchema());
+				oThis.getTempTableNameWithSchema(), oThis.getTableNameWithSchema()),
+            redshiftClient = new RedshiftClient()
+        ;
 
-		oThis.initRedshift();
-
-		return oThis.redshiftClient.parameterizedQuery(deleteDuplicateQuery, [params.minBlock, params.maxBlock]).then((res) => {
+		return redshiftClient.parameterizedQuery(deleteDuplicateQuery, [params.minBlock, params.maxBlock]).then((res) => {
 		    logger.warn("duplicate transactions are deleted");
 			oThis.applicationMailer.perform( {subject :"duplicate transactions are deleted",  body:  oThis.object});
 				return oThis.insertToMainTable();

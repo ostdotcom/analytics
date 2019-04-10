@@ -43,7 +43,8 @@ class BlockScannerService {
             transfers: {localPath: "/transfers", model: TransfersModel}
         };
 
-        oThis.modelNamesInOrder = ['transfers', 'transactions']
+        oThis.modelNamesInOrder = ['transfers', 'transactions'];
+        oThis.redshiftClient = new RedshiftClient();
     }
 
 

@@ -7,7 +7,8 @@
 const rootPrefix = '../..',
     ModelBase = require(rootPrefix + '/models/mysql/base'),
     Constants = require(rootPrefix + '/configs/constants'),
-    tokensGC = require(rootPrefix + '/lib/globalConstants/redshift/tokens');
+    tokensGC = require(rootPrefix + '/lib/globalConstants/redshift/tokens'),
+    dataProcessingInfoGC = require(rootPrefix + "/lib/globalConstants/redshift/dataProcessingInfo");
 
 // Declare variables.
 const dbName = 'kit_saas_' + Constants.SUB_ENVIRONMENT + '_' + Constants.SAAS_MYSQL_DATABASE_ENVIRONMENT;
@@ -57,6 +58,15 @@ class Token extends ModelBase {
     };
 
     /**
+     * Get data processing property name
+     *
+     * @returns {String}
+     */
+    get getDataProcessingPropertyName(){
+        return dataProcessingInfoGC.tokenLastUpdatedAtProperty;
+    }
+
+    /**
      * Get table primary key
      *
      * @returns {String}
@@ -85,13 +95,13 @@ class Token extends ModelBase {
     };
 
     /**
-     * Get Iam role
+     * Get file path for the token service
      *
      * @returns {String}
      */
-    getIamRole() {
-        return Constants.S3_IAM_ROLE
-    };
+    get getFilePath() {
+        return "/tokens";
+    }
 
 }
 

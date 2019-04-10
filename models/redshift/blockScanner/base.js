@@ -158,10 +158,6 @@ class Base {
         throw 'getTempTableNameWithSchema not implemented'
     };
 
-    getIamRole() {
-        return constants.S3_IAM_ROLE
-    };
-
     handleBlockError(){
         throw 'handleBlockError not implemented'
     }
