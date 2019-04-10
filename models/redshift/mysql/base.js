@@ -2,7 +2,7 @@
 /**
  * @file - Base file for all the MySQL Models
  */
-const rootPrefix = '../..',
+const rootPrefix = '../../..',
     Redshift = require('node-redshift'),
     MysqlQueryBuilders = require(rootPrefix + '/lib/queryBuilders/mysql'),
     mysqlWrapper = require(rootPrefix + '/lib/mysqlWrapper'),

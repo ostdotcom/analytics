@@ -2,10 +2,10 @@
 /**
  * This is model for Token table.
  *
- * @module /models/mysql/token
+ * @module /models/redshift/mysql/token
  */
-const rootPrefix = '../..',
-    ModelBase = require(rootPrefix + '/models/mysql/base'),
+const rootPrefix = '../../..',
+    ModelBase = require(rootPrefix + '/models/redshift/mysql/base'),
     Constants = require(rootPrefix + '/configs/constants'),
     tokensGC = require(rootPrefix + '/lib/globalConstants/redshift/tokens'),
     dataProcessingInfoGC = require(rootPrefix + "/lib/globalConstants/redshift/dataProcessingInfo");

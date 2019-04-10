@@ -16,7 +16,7 @@ const rootPrefix = '..',
     S3Write = require(rootPrefix + "/lib/S3_write"),
     dateUtil = require(rootPrefix + "/lib/dateUtil"),
     logger = require(rootPrefix + "/helpers/custom_console_logger"),
-    tokenModel = require(rootPrefix + "/models/mysql/token");
+    tokenModel = require(rootPrefix + "/models/redshift/mysql/token");
 
 /**
  * Class token to get the records from the tokens table and process that records.
