@@ -18,15 +18,18 @@ program
     .option('--blockScanner <blockScanner>', 'Extract data from block scanner')
     .option('--startBlock <startBlock>', 'start block number')
     .option('--endBlock <endBlock>', 'end block number')
-    .option('--token <token>', 'Extract token data')
+    .option('--mysql <mysql>', 'Extract token data')
+    .option('--tables <tables>', 'Extract tables data')
     .parse(process.argv);
 
 /**
  *
  * Class for data extraction
  * @class
- *
+ * table name in cron should be comma separated value without space
+ * node executables/extract_data.js --mysql true --tables Token,ChainAddresses     --chainId 202
  */
+
 class ExtractData {
 
     constructor() {
@@ -55,8 +58,8 @@ class ExtractData {
 
         try {
 
-            if (program.token !== 'false' && program.token != undefined) {
-                await oThis.extractTokens();
+            if (program.mysql !== 'false' && program.mysql != undefined) {
+                await oThis.extractMysqlData();
             }
 
             if (program.blockScanner !== 'false' && program.blockScanner != undefined){
@@ -73,20 +76,32 @@ class ExtractData {
     }
 
 
-    async extractTokens() {
+    async extractMysqlData() {
         const oThis = this;
         let startTime = Date.now();
         logger.log("processing started at", startTime);
+        let promiseArray = [];
+        let mysqlService;
 
 
-        let mysqlService = new MysqlService({chainId: oThis.chainId, model: "token"});
-        await mysqlService.process();
+        for (let table of program.tables.split(",")){
+            mysqlService = new MysqlService({chainId: oThis.chainId, model: table});
+            promiseArray.push(mysqlService.process());
+        }
 
-        let endTime = Date.now();
-        logger.log("processing finished at", endTime);
+        Promise.all(promiseArray).then(()=>{
+            let endTime = Date.now();
+            logger.log("processing finished at", endTime);
+            logger.log("Total time to process in milliseconds", (endTime - startTime));
+            return Promise.resolve({});
+        }).catch((e)=>{return Promise.reject(e);});
 
-        logger.log("Total time to process in milliseconds", (endTime - startTime));
-    }
+
+
+        // let mysqlService = new MysqlService({chainId: oThis.chainId, model: "token"});
+        // await mysqlService.process();
+
+            }
 
     /**
      * Method to call block-scanner service by passing start block, end block and chainId

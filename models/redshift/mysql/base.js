@@ -157,7 +157,25 @@ class ModelBase extends MysqlQueryBuilders {
      *
      */
     async getLastUpdatedAtValue() {
-        throw 'getLastUpdatedAtValue not implemented';
+        const oThis = this;
+        return await oThis.redshiftClient.parameterizedQuery("select * from " + dataProcessingInfoGC.getTableNameWithSchema + " "+"where property= $1", [oThis.getDataProcessingPropertyName]).then((res) => {
+            return (res.rows[0].value);
+        });
+    }
+
+
+    /**
+     * fetches data from mysql table
+     *
+     * @return {Promise}
+     *
+     */
+    async fetchData(params){
+        const oThis = this;
+        let lastUpdatedAt = await oThis.getLastUpdatedAtValue();
+        return new oThis.constructor({}).select("*").where(['updated_at > ?', lastUpdatedAt]).
+        where(['id > ?', params.lastProcessedId]).order_by("id").
+        limit(params.recordsToFetchOnce).fire();
     }
 
 
@@ -186,6 +204,18 @@ class ModelBase extends MysqlQueryBuilders {
         return oThis.constructor.fieldsToBeMoveToAnalytics.join(", ");
     }
 
+
+    /**
+     * Get s3 file path
+     *
+     * @returns {String}
+     */
+    getS3FilePath() {
+        return `s3://${ Constants.S3_BUCKET_NAME}/`
+    };
+
+
+
     /**
      * Get table name with schema
      *
@@ -213,14 +243,7 @@ class ModelBase extends MysqlQueryBuilders {
         throw 'getTempTableName not implemented'
     };
 
-    /**
-     * Get s3 file path
-     *
-     * @returns {String}
-     */
-    getS3FilePath() {
-        return `s3://${ Constants.S3_BUCKET_NAME}/`
-    };
+
 
     /**
      * Get file path
@@ -238,10 +261,6 @@ class ModelBase extends MysqlQueryBuilders {
      */
     get getDataProcessingPropertyName() {
         throw 'getDataProcessingPropertyName not implemented';
-    }
-
-    fetchData(){
-        throw 'fetchData not implemented';
     }
 
 

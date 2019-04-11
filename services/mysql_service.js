@@ -16,11 +16,12 @@ const rootPrefix = '..',
     S3Write = require(rootPrefix + "/lib/S3_write"),
     dateUtil = require(rootPrefix + "/lib/dateUtil"),
     logger = require(rootPrefix + "/helpers/custom_console_logger"),
-    // tokenModel = require(rootPrefix + "/models/redshift/mysql/token"),
-    // tokenModel = require(rootPrefix + "/models/redshift/mysql/token"),
-    // tokenModel = require(rootPrefix + "/models/redshift/mysql/token"),
-    // tokenModel = require(rootPrefix + "/models/redshift/mysql/token"),
-    // tokenModel = require(rootPrefix + "/models/redshift/mysql/token"),
+    Token = require(rootPrefix + "/models/redshift/mysql/token"),
+    TokenAddresses = require(rootPrefix + "/models/redshift/mysql/tokenAddresses"),
+    Workflows = require(rootPrefix + "/models/redshift/mysql/workflows"),
+    WorkflowSteps = require(rootPrefix + "/models/redshift/mysql/workflowSteps"),
+    StakerWhitelistedAddresses = require(rootPrefix + "/models/redshift/mysql/stakerWhitelistedAddresses"),
+    ChainAddresses = require(rootPrefix + "/models/redshift/mysql/chainAddresses"),
     DownloadToTemp = require(rootPrefix + '/lib/downloadToTemp');
 
 /**
@@ -38,7 +39,7 @@ class MysqlService {
     constructor(params) {
         const oThis = this;
 
-        oThis.Model = require(rootPrefix + "/models/redshift/mysql/" + params.model);
+        oThis.Model = eval(params.model);
         oThis.chainId = params.chainId;
         oThis.applicationMailer = new ApplicationMailer();
         oThis.redshiftClient = new RedshiftClient();
@@ -63,6 +64,7 @@ class MysqlService {
             await oThis.uploadLocalFilesToS3();
             await oThis.model.insertToMainFromTemp();
             await oThis.model.updateDataProcessingInfoTable(currentDate);
+            return Promise.resolve(responseHelper.successWithData({}));
         } catch (e) {
             logger.error("token service terminated due to exception-", e);
             let rH = responseHelper.error({

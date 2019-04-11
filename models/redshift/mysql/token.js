@@ -91,27 +91,7 @@ class Token extends ModelBase {
         return Constants.PRESTAGING_SCHEMA_NAME + '.temp_tokens_'+ oThis.chainId;
     };
 
-    /**
-     * Get last updated at value from data_processing_info_{chain_id}
-     *
-     * @return {Promise}
-     *
-     */
-    async getLastUpdatedAtValue() {
-        const oThis = this;
-        return await oThis.redshiftClient.parameterizedQuery("select * from " + dataProcessingInfoGC.getTableNameWithSchema + " "+"where property= $1", [oThis.getDataProcessingPropertyName]).then((res) => {
-            return (res.rows[0].value);
-        });
-    }
 
-
-    async fetchData(params){
-        const oThis = this;
-        let lastUpdatedAt = await oThis.getLastUpdatedAtValue();
-        return new oThis.constructor({}).select("*").where(['updated_at > ?', lastUpdatedAt]).
-        where(['id > ?', params.lastProcessedId]).order_by("id").
-        limit(params.recordsToFetchOnce).fire();
-    }
 
 }
 
