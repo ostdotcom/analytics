@@ -74,7 +74,7 @@ class StakerWhitelistedAddresses extends ModelBase {
      *
      * @returns {String}
      */
-    getTempTableName() {
+    getTempTableNameWithSchema() {
         return Constants.PRESTAGING_SCHEMA_NAME + '.temp_staker_whitelisted_addresses';
     };
 

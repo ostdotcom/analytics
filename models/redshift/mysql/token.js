@@ -85,7 +85,7 @@ class Token extends ModelBase {
      *
      * @returns {String}
      */
-    getTempTableName() {
+    getTempTableNameWithSchema() {
         const oThis = this;
         return Constants.PRESTAGING_SCHEMA_NAME + '.temp_tokens_'+ oThis.chainId;
     };

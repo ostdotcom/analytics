@@ -74,7 +74,7 @@ class ChainAddresses extends ModelBase {
      *
      * @returns {String}
      */
-    getTempTableName() {
+    getTempTableNameWithSchema() {
         return Constants.PRESTAGING_SCHEMA_NAME + '.temp_chain_addresses';
     };
 

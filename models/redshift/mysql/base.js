@@ -177,10 +177,10 @@ class ModelBase extends MysqlQueryBuilders {
         const oThis = this
         ;
 
-        let downloadToTemp = await new DownloadToTemp({tempTableName: oThis.getTempTableName(), columnList: oThis.getColumnList}).copyFromS3ToTemp(fullFilePath);
+        let downloadToTemp = await new DownloadToTemp({tempTableName: oThis.getTempTableNameWithSchema(), columnList: oThis.getColumnList}).copyFromS3ToTemp(fullFilePath);
 
-        const deleteDuplicateIds = Util.format('DELETE from %s WHERE %s IN (SELECT %s from %s);', oThis.getTableNameWithSchema(), oThis.getTablePrimaryKey(), oThis.getTablePrimaryKey(), oThis.getTempTableName())
-            , insertRemainingEntries = Util.format('INSERT into %s (%s) (select %s from %s);', oThis.getTableNameWithSchema(), oThis.getColumnList,oThis.getColumnList, oThis.getTempTableName())
+        const deleteDuplicateIds = Util.format('DELETE from %s WHERE %s IN (SELECT %s from %s);', oThis.getTableNameWithSchema(), oThis.getTablePrimaryKey(), oThis.getTablePrimaryKey(), oThis.getTempTableNameWithSchema())
+            , insertRemainingEntries = Util.format('INSERT into %s (%s) (select %s from %s);', oThis.getTableNameWithSchema(), oThis.getColumnList,oThis.getColumnList, oThis.getTempTableNameWithSchema())
             , commit = 'COMMIT;'
         ;
 
@@ -304,7 +304,7 @@ class ModelBase extends MysqlQueryBuilders {
      *
      * @returns {String}
      */
-    getTempTableName() {
+    getTempTableNameWithSchema() {
         throw 'getTempTableName not implemented'
     };
 

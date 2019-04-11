@@ -74,7 +74,7 @@ class WorkflowSteps extends ModelBase {
      *
      * @returns {String}
      */
-    getTempTableName() {
+    getTempTableNameWithSchema() {
         return Constants.PRESTAGING_SCHEMA_NAME + '.temp_workflow_steps';
     };
 
