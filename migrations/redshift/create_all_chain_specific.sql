@@ -158,4 +158,4 @@ INSERT INTO data_processing_info_${CHAIN_ID}
 
 INSERT INTO data_processing_info_${CHAIN_ID}
 (  property,  value)VALUES( 'token_last_updated_at', '1970-01-01 00:00:00');
- COMMIT;
+--  COMMIT;

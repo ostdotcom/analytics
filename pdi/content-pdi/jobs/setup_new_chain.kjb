@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <job>
   <name>setup new chain</name>
-  <description />
-  <extended_description />
-  <job_version />
+  <description/>
+  <extended_description/>
+  <job_version/>
   <job_status>0</job_status>
   <directory>/</directory>
   <created_user>-</created_user>
@@ -13,32 +13,32 @@
   <parameters>
     <parameter>
       <name>CHAIN_ID</name>
-      <default_value />
-      <description />
+      <default_value/>
+      <description/>
     </parameter>
     <parameter>
       <name>ENV_SUFFIX</name>
-      <default_value />
-      <description />
+      <default_value/>
+      <description/>
     </parameter>
     <parameter>
       <name>SUB_ENV</name>
-      <default_value />
-      <description />
+      <default_value/>
+      <description/>
     </parameter>
   </parameters>
   <connection>
     <name>analytics_mysql_connection</name>
-    <server />
+    <server/>
     <type>MYSQL</type>
     <access>JNDI</access>
     <database>analyticsMysqlConnection_${SUB_ENV}${ENV_SUFFIX}</database>
     <port>1521</port>
-    <username />
+    <username/>
     <password>Encrypted </password>
-    <servername />
-    <data_tablespace />
-    <index_tablespace />
+    <servername/>
+    <data_tablespace/>
+    <index_tablespace/>
     <attributes>
       <attribute>
         <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
@@ -92,16 +92,16 @@
   </connection>
   <connection>
     <name>analytics_redshift_connection</name>
-    <server />
+    <server/>
     <type>REDSHIFT</type>
     <access>JNDI</access>
     <database>analyticsRedshiftConnection${ENV_SUFFIX}</database>
     <port>1521</port>
-    <username />
+    <username/>
     <password>Encrypted </password>
-    <servername />
-    <data_tablespace />
-    <index_tablespace />
+    <servername/>
+    <data_tablespace/>
+    <index_tablespace/>
     <attributes>
       <attribute>
         <code>EXTRA_OPTION_REDSHIFT.tcpKeepAlive</code>
@@ -156,11 +156,11 @@
   <slaveservers>
     </slaveservers>
   <job-log-table>
-    <connection />
-    <schema />
+    <connection/>
+    <schema/>
     <table>${KETTLE_JOB_LOG_TABLE}_${CHAIN_ID}</table>
-    <size_limit_lines />
-    <interval />
+    <size_limit_lines/>
+    <interval/>
     <timeout_days>${JOB_LOGS_RECORD_TIMEOUT}</timeout_days>
     <field>
       <id>ID_JOB</id>
@@ -269,10 +269,10 @@
     </field>
   </job-log-table>
   <jobentry-log-table>
-    <connection />
-    <schema />
-    <table />
-    <timeout_days />
+    <connection/>
+    <schema/>
+    <table/>
+    <timeout_days/>
     <field>
       <id>ID_BATCH</id>
       <enabled>Y</enabled>
@@ -360,10 +360,10 @@
     </field>
   </jobentry-log-table>
   <channel-log-table>
-    <connection />
-    <schema />
-    <table />
-    <timeout_days />
+    <connection/>
+    <schema/>
+    <table/>
+    <timeout_days/>
     <field>
       <id>ID_BATCH</id>
       <enabled>Y</enabled>
@@ -426,13 +426,13 @@
     </field>
   </channel-log-table>
   <pass_batchid>Y</pass_batchid>
-  <shared_objects_file />
+  <shared_objects_file/>
   <entries>
     <entry>
       <name>Start</name>
-      <description />
+      <description/>
       <type>SPECIAL</type>
-      <attributes />
+      <attributes/>
       <start>Y</start>
       <dummy>N</dummy>
       <repeat>N</repeat>
@@ -448,17 +448,17 @@
       <nr>0</nr>
       <xloc>288</xloc>
       <yloc>192</yloc>
-      <attributes_kjc />
+      <attributes_kjc/>
     </entry>
     <entry>
-      <name>Prestaging redshift</name>
-      <description />
+      <name>Prestaging Chain Specific redshift</name>
+      <description/>
       <type>SQL</type>
-      <attributes />
-      <sql />
+      <attributes/>
+      <sql/>
       <useVariableSubstitution>T</useVariableSubstitution>
       <sqlfromfile>T</sqlfromfile>
-      <sqlfilename>${Internal.Job.Filename.Directory}/../../../migrations/redshift.sql</sqlfilename>
+      <sqlfilename>${Internal.Job.Filename.Directory}/../../../migrations/redshift/create_all_chain_specific.sql</sqlfilename>
       <sendOneStatement>F</sendOneStatement>
       <connection>analytics_redshift_connection</connection>
       <parallel>N</parallel>
@@ -466,14 +466,14 @@
       <nr>0</nr>
       <xloc>576</xloc>
       <yloc>32</yloc>
-      <attributes_kjc />
+      <attributes_kjc/>
     </entry>
     <entry>
       <name>pentaho log table mysql </name>
-      <description />
+      <description/>
       <type>SQL</type>
-      <attributes />
-      <sql />
+      <attributes/>
+      <sql/>
       <useVariableSubstitution>T</useVariableSubstitution>
       <sqlfromfile>T</sqlfromfile>
       <sqlfilename>${Internal.Job.Filename.Directory}/../../migrations/mysql/create_log_tables.sql</sqlfilename>
@@ -484,14 +484,14 @@
       <nr>0</nr>
       <xloc>656</xloc>
       <yloc>304</yloc>
-      <attributes_kjc />
+      <attributes_kjc/>
     </entry>
     <entry>
       <name>pentaho temp table redshift</name>
-      <description />
+      <description/>
       <type>SQL</type>
-      <attributes />
-      <sql />
+      <attributes/>
+      <sql/>
       <useVariableSubstitution>T</useVariableSubstitution>
       <sqlfromfile>T</sqlfromfile>
       <sqlfilename>${Internal.Job.Filename.Directory}/../../migrations/redshift/create_temp_tables.sql</sqlfilename>
@@ -502,14 +502,14 @@
       <nr>0</nr>
       <xloc>880</xloc>
       <yloc>288</yloc>
-      <attributes_kjc />
+      <attributes_kjc/>
     </entry>
     <entry>
       <name>pentaho chain specific mysql</name>
-      <description />
+      <description/>
       <type>SQL</type>
-      <attributes />
-      <sql />
+      <attributes/>
+      <sql/>
       <useVariableSubstitution>T</useVariableSubstitution>
       <sqlfromfile>T</sqlfromfile>
       <sqlfilename>${Internal.Job.Filename.Directory}/../../migrations/mysql/create_all_chain_specific.sql</sqlfilename>
@@ -520,13 +520,13 @@
       <nr>0</nr>
       <xloc>416</xloc>
       <yloc>272</yloc>
-      <attributes_kjc />
+      <attributes_kjc/>
     </entry>
   </entries>
   <hops>
     <hop>
       <from>Start</from>
-      <to>Prestaging redshift</to>
+      <to>Prestaging Chain Specific redshift</to>
       <from_nr>0</from_nr>
       <to_nr>0</to_nr>
       <enabled>Y</enabled>
@@ -563,5 +563,5 @@
   </hops>
   <notepads>
   </notepads>
-  <attributes />
+  <attributes/>
 </job>

@@ -37,4 +37,4 @@ VALUES
   0
 );  
 
-commit;
+-- commit;

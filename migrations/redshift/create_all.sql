@@ -1,3 +1,26 @@
+-- If want to run from sql workbench uncomment variables and replace curly bracket by square bracket
+-- WbVarDef ENV_SUFFIX=_d7;
+-- WbVarDef SUB_ENV=main;
+-- WbVarDef PRESTAGING_REDSHIFT_SCHEMA_PREFIX=ost_warehouse;
+-- WbVarDef CHAIN_ID=202;
+
+
+--   GRANT ALL
+--   ON ALL TABLES IN SCHEMA ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}
+--   TO analytics_user;
+--   GRANT ALL
+--   ON SCHEMA ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}
+--   TO analytics_user;
+--   COMMIT;
+--
+
+
+
+
+
+create schema if not exists ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX};
+set search_path= ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX};
+
 DROP TABLE IF EXISTS temp_workflows;
 CREATE TABLE temp_workflows
 (
@@ -131,4 +154,4 @@ CREATE TABLE staker_whitelisted_addresses
   created_at                timestamp NOT NULL,
   updated_at                timestamp NOT NULL
 );
-COMMIT;
+-- COMMIT;

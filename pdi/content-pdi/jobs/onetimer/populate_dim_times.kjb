@@ -2,8 +2,8 @@
 <job>
   <name>populate dim times</name>
   <description>One Timer to populate time dimension</description>
-  <extended_description />
-  <job_version />
+  <extended_description/>
+  <job_version/>
   <job_status>0</job_status>
   <directory>/</directory>
   <created_user>-</created_user>
@@ -13,104 +13,33 @@
   <parameters>
     <parameter>
       <name>CHAIN_ID</name>
-      <default_value />
-      <description />
+      <default_value/>
+      <description/>
     </parameter>
     <parameter>
       <name>ENV_SUFFIX</name>
-      <default_value />
-      <description />
+      <default_value/>
+      <description/>
     </parameter>
     <parameter>
       <name>SUB_ENV</name>
-      <default_value />
-      <description />
+      <default_value/>
+      <description/>
     </parameter>
   </parameters>
   <connection>
-    <name>analytics_log_connection</name>
-    <server />
-    <type>MYSQL</type>
-    <access>JNDI</access>
-    <database>analyticsLogsConnection_${SUB_ENV}${ENV_SUFFIX}</database>
-    <port>1521</port>
-    <username />
-    <password>Encrypted </password>
-    <servername />
-    <data_tablespace />
-    <index_tablespace />
-    <attributes>
-      <attribute>
-        <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
-        <attribute>N</attribute>
-      </attribute>
-      <attribute>
-        <code>FORCE_IDENTIFIERS_TO_UPPERCASE</code>
-        <attribute>N</attribute>
-      </attribute>
-      <attribute>
-        <code>INITIAL_POOL_SIZE</code>
-        <attribute>3</attribute>
-      </attribute>
-      <attribute>
-        <code>IS_CLUSTERED</code>
-        <attribute>N</attribute>
-      </attribute>
-      <attribute>
-        <code>MAXIMUM_POOL_SIZE</code>
-        <attribute>8</attribute>
-      </attribute>
-      <attribute>
-        <code>PORT_NUMBER</code>
-        <attribute>1521</attribute>
-      </attribute>
-      <attribute>
-        <code>PRESERVE_RESERVED_WORD_CASE</code>
-        <attribute>Y</attribute>
-      </attribute>
-      <attribute>
-        <code>QUOTE_ALL_FIELDS</code>
-        <attribute>N</attribute>
-      </attribute>
-      <attribute>
-        <code>STREAM_RESULTS</code>
-        <attribute>Y</attribute>
-      </attribute>
-      <attribute>
-        <code>SUPPORTS_BOOLEAN_DATA_TYPE</code>
-        <attribute>Y</attribute>
-      </attribute>
-      <attribute>
-        <code>SUPPORTS_TIMESTAMP_DATA_TYPE</code>
-        <attribute>Y</attribute>
-      </attribute>
-      <attribute>
-        <code>USE_POOLING</code>
-        <attribute>Y</attribute>
-      </attribute>
-    </attributes>
-  </connection>
-  <connection>
     <name>analytics_mysql_connection</name>
-    <server />
+    <server/>
     <type>MYSQL</type>
     <access>JNDI</access>
     <database>analyticsMysqlConnection_${SUB_ENV}${ENV_SUFFIX}</database>
     <port>1521</port>
-    <username />
+    <username/>
     <password>Encrypted </password>
-    <servername />
-    <data_tablespace />
-    <index_tablespace />
+    <servername/>
+    <data_tablespace/>
+    <index_tablespace/>
     <attributes>
-      <attribute>
-        <code>EXTRA_OPTION_MYSQL.rewriteBatchedStatements</code>
-        <attribute>true</attribute>
-      </attribute>
-      <attribute>
-        <code>EXTRA_OPTION_MYSQL.useCompression</code>
-        <attribute>true</attribute>
-      </attribute>
       <attribute>
         <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
         <attribute>N</attribute>
@@ -121,7 +50,7 @@
       </attribute>
       <attribute>
         <code>INITIAL_POOL_SIZE</code>
-        <attribute>5</attribute>
+        <attribute>10</attribute>
       </attribute>
       <attribute>
         <code>IS_CLUSTERED</code>
@@ -129,7 +58,7 @@
       </attribute>
       <attribute>
         <code>MAXIMUM_POOL_SIZE</code>
-        <attribute>10</attribute>
+        <attribute>20</attribute>
       </attribute>
       <attribute>
         <code>PORT_NUMBER</code>
@@ -164,11 +93,11 @@
   <slaveservers>
     </slaveservers>
   <job-log-table>
-    <connection />
-    <schema />
+    <connection/>
+    <schema/>
     <table>${KETTLE_JOB_LOG_TABLE}_${CHAIN_ID}</table>
-    <size_limit_lines />
-    <interval />
+    <size_limit_lines/>
+    <interval/>
     <timeout_days>${JOB_LOGS_RECORD_TIMEOUT}</timeout_days>
     <field>
       <id>ID_JOB</id>
@@ -277,10 +206,10 @@
     </field>
   </job-log-table>
   <jobentry-log-table>
-    <connection />
-    <schema />
-    <table />
-    <timeout_days />
+    <connection/>
+    <schema/>
+    <table/>
+    <timeout_days/>
     <field>
       <id>ID_BATCH</id>
       <enabled>Y</enabled>
@@ -368,10 +297,10 @@
     </field>
   </jobentry-log-table>
   <channel-log-table>
-    <connection />
-    <schema />
-    <table />
-    <timeout_days />
+    <connection/>
+    <schema/>
+    <table/>
+    <timeout_days/>
     <field>
       <id>ID_BATCH</id>
       <enabled>Y</enabled>
@@ -434,13 +363,13 @@
     </field>
   </channel-log-table>
   <pass_batchid>N</pass_batchid>
-  <shared_objects_file />
+  <shared_objects_file/>
   <entries>
     <entry>
       <name>Start</name>
-      <description />
+      <description/>
       <type>SPECIAL</type>
-      <attributes />
+      <attributes/>
       <start>Y</start>
       <dummy>N</dummy>
       <repeat>N</repeat>
@@ -456,14 +385,14 @@
       <nr>0</nr>
       <xloc>208</xloc>
       <yloc>144</yloc>
-      <attributes_kjc />
+      <attributes_kjc/>
     </entry>
     <entry>
       <name>populate times</name>
-      <description />
+      <description/>
       <type>SQL</type>
-      <attributes />
-      <sql />
+      <attributes/>
+      <sql/>
       <useVariableSubstitution>T</useVariableSubstitution>
       <sqlfromfile>T</sqlfromfile>
       <sqlfilename>${Internal.Job.Filename.Directory}/../../sql_scripts/onetimer/populate_dim_times.sql</sqlfilename>
@@ -474,7 +403,7 @@
       <nr>0</nr>
       <xloc>384</xloc>
       <yloc>144</yloc>
-      <attributes_kjc />
+      <attributes_kjc/>
     </entry>
   </entries>
   <hops>
@@ -490,5 +419,5 @@
   </hops>
   <notepads>
   </notepads>
-  <attributes />
+  <attributes/>
 </job>
