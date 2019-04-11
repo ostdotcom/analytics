@@ -43,6 +43,11 @@ class Token extends ModelBase {
         return tokensGC.mapping;
     }
 
+    /**
+     * Get fields to be move to analytics
+     *
+     * @return {Object}
+     */
     static get fieldsToBeMoveToAnalytics() {
         return tokensGC.fieldsToBeMoveToAnalytics;
     }
@@ -83,15 +88,6 @@ class Token extends ModelBase {
     getTempTableName() {
         const oThis = this;
         return Constants.PRESTAGING_SCHEMA_NAME + '.temp_tokens_'+ oThis.chainId;
-    };
-
-    /**
-     * Get s3 file path
-     *
-     * @returns {String}
-     */
-    getS3FilePath() {
-        return `s3://${ Constants.S3_BUCKET_NAME}/`
     };
 
     /**

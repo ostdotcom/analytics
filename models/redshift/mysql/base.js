@@ -314,7 +314,7 @@ class ModelBase extends MysqlQueryBuilders {
      * @returns {String}
      */
     getS3FilePath() {
-        throw 'getS3FilePath not implemented'
+        return `s3://${ Constants.S3_BUCKET_NAME}/`
     };
 
     /**
