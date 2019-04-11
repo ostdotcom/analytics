@@ -7,7 +7,8 @@
 const rootPrefix = '../../..',
     ModelBase = require(rootPrefix + '/models/redshift/mysql/base'),
     Constants = require(rootPrefix + '/configs/constants'),
-    TokenAddressesGC = require(rootPrefix + '/lib/globalConstants/redshift/tokenAddresses');
+    TokenAddressesGC = require(rootPrefix + '/lib/globalConstants/redshift/tokenAddresses'),
+    dataProcessingInfoGC = require(rootPrefix + "/lib/globalConstants/redshift/dataProcessingInfo");
 
 // Declare variables.
 const dbName = 'kit_saas_' + Constants.SUB_ENVIRONMENT + '_' + Constants.SAAS_MYSQL_DATABASE_ENVIRONMENT;
@@ -59,6 +60,15 @@ class TokenAddresses extends ModelBase {
     getTableNameWithSchema() {
         return Constants.PRESTAGING_SCHEMA_NAME + '.token_addresses';
     };
+
+    /**
+     * Get data processing property name
+     *
+     * @returns {String}
+     */
+    get getDataProcessingPropertyName(){
+        return dataProcessingInfoGC.tokenAddressesLastUpdatedAtProperty;
+    }
 
     /**
      * Get table primary key

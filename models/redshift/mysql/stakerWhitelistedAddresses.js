@@ -7,7 +7,8 @@
 const rootPrefix = '../../..',
     ModelBase = require(rootPrefix + '/models/redshift/mysql/base'),
     Constants = require(rootPrefix + '/configs/constants'),
-    StakerWhitelistedAddressesGC = require(rootPrefix + '/lib/globalConstants/redshift/stakerWhitelistedAddresses');
+    StakerWhitelistedAddressesGC = require(rootPrefix + '/lib/globalConstants/redshift/stakerWhitelistedAddresses'),
+    dataProcessingInfoGC = require(rootPrefix + "/lib/globalConstants/redshift/dataProcessingInfo");
 
 // Declare variables.
 const dbName = 'kit_saas_' + Constants.SUB_ENVIRONMENT + '_' + Constants.SAAS_MYSQL_DATABASE_ENVIRONMENT;
@@ -59,6 +60,15 @@ class StakerWhitelistedAddresses extends ModelBase {
     getTableNameWithSchema() {
         return Constants.PRESTAGING_SCHEMA_NAME + '.staker_whitelisted_addresses';
     };
+
+    /**
+     * Get data processing property name
+     *
+     * @returns {String}
+     */
+    get getDataProcessingPropertyName(){
+        return dataProcessingInfoGC.stakerWhitelistedAddressesLastUpdatedAtProperty;
+    }
 
     /**
      * Get table primary key

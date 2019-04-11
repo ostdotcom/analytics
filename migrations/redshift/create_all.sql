@@ -154,4 +154,27 @@ CREATE TABLE staker_whitelisted_addresses
   created_at                timestamp NOT NULL,
   updated_at                timestamp NOT NULL
 );
+
+-- dont run the below create table code when you are renaming the table name on production
+DROP TABLE IF EXISTS data_processing_info;
+CREATE TABLE data_processing_info
+(
+  property  varchar(255)   NOT NULL,
+  value     varchar(255)   NOT NULL
+);
+
+INSERT INTO data_processing_info
+(  property,  value)VALUES( 'workflow_last_updated_at', '1970-01-01 00:00:00');
+
+INSERT INTO data_processing_info
+(  property,  value)VALUES( 'workflow_steps_last_updated_at', '1970-01-01 00:00:00');
+
+INSERT INTO data_processing_info
+(  property,  value)VALUES( 'chain_addresses_last_updated_at', '1970-01-01 00:00:00');
+
+INSERT INTO data_processing_info
+(  property,  value)VALUES( 'token_addresses_last_updated_at', '1970-01-01 00:00:00');
+
+INSERT INTO data_processing_info
+(  property,  value)VALUES( 'staker_whitelisted_addresses_last_updated_at', '1970-01-01 00:00:00');
 -- COMMIT;

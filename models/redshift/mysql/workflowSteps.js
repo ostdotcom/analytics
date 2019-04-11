@@ -7,7 +7,8 @@
 const rootPrefix = '../../..',
     ModelBase = require(rootPrefix + '/models/redshift/mysql/base'),
     Constants = require(rootPrefix + '/configs/constants'),
-    WorkflowStepsGC = require(rootPrefix + '/lib/globalConstants/redshift/workflowSteps');
+    WorkflowStepsGC = require(rootPrefix + '/lib/globalConstants/redshift/workflowSteps'),
+    dataProcessingInfoGC = require(rootPrefix + "/lib/globalConstants/redshift/dataProcessingInfo");
 
 // Declare variables.
 const dbName = 'kit_saas_' + Constants.SUB_ENVIRONMENT + '_' + Constants.SAAS_MYSQL_DATABASE_ENVIRONMENT;
@@ -59,6 +60,15 @@ class WorkflowSteps extends ModelBase {
     getTableNameWithSchema() {
         return Constants.PRESTAGING_SCHEMA_NAME + '.workflow_steps';
     };
+
+    /**
+     * Get data processing property name
+     *
+     * @returns {String}
+     */
+    get getDataProcessingPropertyName(){
+        return dataProcessingInfoGC.workflowStepsLastUpdatedAtProperty;
+    }
 
     /**
      * Get table primary key

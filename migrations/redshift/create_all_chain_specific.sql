@@ -145,17 +145,12 @@ CREATE TABLE tokens_${CHAIN_ID}
   updated_at                timestamp NOT NULL
 )SORTKEY(token_id);
 
+INSERT INTO data_processing_info
+(  property,  value)VALUES( 'last_processed_block_aux_${CHAIN_ID}', '-1');
 
-DROP TABLE IF EXISTS  data_processing_info_${CHAIN_ID};
-CREATE TABLE data_processing_info_${CHAIN_ID}
-(
-  property  varchar(255)   NOT NULL,
-  value     varchar(255)   NOT NULL
-);
+INSERT INTO data_processing_info
+(  property,  value)VALUES( 'last_processed_block_origin_${CHAIN_ID}', '-1');
 
-INSERT INTO data_processing_info_${CHAIN_ID}
-(  property,  value)VALUES( 'last_processed_aux_block', '-1');
-
-INSERT INTO data_processing_info_${CHAIN_ID}
-(  property,  value)VALUES( 'token_last_updated_at', '1970-01-01 00:00:00');
+INSERT INTO data_processing_info
+(  property,  value)VALUES( 'token_last_updated_at_${CHAIN_ID}', '1970-01-01 00:00:00');
 --  COMMIT;
