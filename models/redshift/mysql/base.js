@@ -226,52 +226,6 @@ class ModelBase extends MysqlQueryBuilders {
     }
 
     /**
-     * Fetch records and write those records into Local File
-     *
-     */
-    async _fetchDetailsAndWriteIntoLocalFile(localDirFullFilePath) {
-        const oThis = this;
-        let offset = 0;
-        let Records;
-        let totalRecordProcessed = 0;
-
-        let folderPath= localDirFullFilePath + oThis.getFilePath;
-        let localWriteObj = new localWrite({separator: "|"});
-        let arrayOfList = [];
-        let fileName = '';
-        let lastUpdatedAtValue = await oThis._getLastUpdatedAtValue();
-
-        while(true){
-            Records = await new oThis.constructor({}).select("*").where(['updated_at > ?', lastUpdatedAtValue]).order_by("id").limit(50).offset(offset).fire();
-            if(Records.length > 0 && offset == 0){
-                shell.mkdir("-p", folderPath);
-            }
-
-            if(totalRecordProcessed > 500 || offset == 0){
-                totalRecordProcessed = 0;
-                fileName = folderPath + "/" + Date.now() + '.csv';
-            }
-
-            totalRecordProcessed += Records.length;
-
-            arrayOfList = oThis.formatData(Records);
-
-            if (arrayOfList.length === 0 ) {
-                return Promise.resolve(responseHelper.successWithData({hasTokens: (offset != 0)}));
-            }
-
-            await localWriteObj.writeArray(arrayOfList, fileName);
-
-            if (arrayOfList.length < 50 ) {
-                return Promise.resolve(responseHelper.successWithData({hasTokens: true}));
-            }
-
-            offset += 50;
-        }
-
-    }
-
-    /**
      * Get last updated at value from data_processing_info_{chain_id}
      *
      * @return {Promise}

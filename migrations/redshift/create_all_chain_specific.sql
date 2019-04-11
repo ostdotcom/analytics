@@ -14,8 +14,8 @@
 --   COMMIT;
 --
 
-  
-  
+
+
 
 
 create schema if not exists ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX};
@@ -28,24 +28,24 @@ set search_path= ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX};
 DROP TABLE IF EXISTS temp_aux_transactions_${CHAIN_ID};
 CREATE TABLE temp_aux_transactions_${CHAIN_ID}
 (
-  tx_uuid               VARCHAR(36), 
-  tx_hash               VARCHAR(66) NOT NULL, 
+  tx_uuid               VARCHAR(36),
+  tx_hash               VARCHAR(66) NOT NULL,
   gas_used              INT NOT NULL,
   gas_limit             INT NOT NULL,
   gas_price             BIGINT NOT NULL,
-  status                BOOL NOT NULL, 
-  status_internal       BOOL NOT NULL, 
-  block_number          BIGINT NOT NULL, 
-  block_timestamp       INT NOT NULL,  
-  from_address          VARCHAR(42) NOT NULL, 
+  status                BOOL NOT NULL,
+  status_internal       BOOL NOT NULL,
+  block_number          BIGINT NOT NULL,
+  block_timestamp       INT NOT NULL,
+  from_address          VARCHAR(42) NOT NULL,
   to_address            VARCHAR(42),
   contract_address      VARCHAR(42),
   total_token_transfers INT NOT NULL,
   value                 DECIMAL(30,0) NOT NULL,
-  meta_type             VARCHAR(255), 
-  meta_name             VARCHAR(255), 
-  token_id              INT, 
-  kind                  INT, 
+  meta_type             VARCHAR(255),
+  meta_name             VARCHAR(255),
+  token_id              INT,
+  kind                  INT,
   rule_id               INT
 )
   DISTKEY (tx_hash) SORTKEY (block_number, kind);
@@ -55,25 +55,25 @@ CREATE TABLE temp_aux_transactions_${CHAIN_ID}
 DROP TABLE IF EXISTS aux_transactions_${CHAIN_ID};
 CREATE TABLE aux_transactions_${CHAIN_ID}
 (
-  id                    BIGINT NOT NULL IDENTITY(1,1), 
-  tx_uuid               VARCHAR(36), 
+  id                    BIGINT NOT NULL IDENTITY(1,1),
+  tx_uuid               VARCHAR(36),
   tx_hash               VARCHAR(66) NOT NULL,
-  gas_used              INT NOT NULL, 
-  gas_limit             INT NOT NULL,  
-  gas_price             BIGINT NOT NULL,  
-  status                BOOL NOT NULL, 
-  status_internal       BOOL NOT NULL, 
-  block_number          BIGINT NOT NULL, 
-  block_timestamp       INT NOT NULL,  
-  from_address          VARCHAR(42) NOT NULL, 
-  to_address            VARCHAR(42), 
-  contract_address      VARCHAR(42), 
+  gas_used              INT NOT NULL,
+  gas_limit             INT NOT NULL,
+  gas_price             BIGINT NOT NULL,
+  status                BOOL NOT NULL,
+  status_internal       BOOL NOT NULL,
+  block_number          BIGINT NOT NULL,
+  block_timestamp       INT NOT NULL,
+  from_address          VARCHAR(42) NOT NULL,
+  to_address            VARCHAR(42),
+  contract_address      VARCHAR(42),
   total_token_transfers INT NOT NULL,
   value                 DECIMAL(30,0) NOT NULL,
-  meta_type             VARCHAR(255), 
-  meta_name             VARCHAR(255), 
-  token_id              INT, 
-  kind                  INT, 
+  meta_type             VARCHAR(255),
+  meta_name             VARCHAR(255),
+  token_id              INT,
+  kind                  INT,
   rule_id               INT,
   insertion_timestamp   INT NOT NULL
 )

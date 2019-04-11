@@ -61,7 +61,8 @@
 		    5. run create_log_tables.sql
 	    Redshift
 	        1. run create_temp_tables.sql
-	        2. run redshift.sql in analytics folder
+	        2. run create_all_chain_specific.sql in analytics folder
+	        3. run create_all.sql in analytics folder
     3. run onetimer/populate_dim_dates.kjb (chain id is needed for logging)   
         sh kitchen.sh -file=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/content-pdi/jobs/onetimer/populate_dim_dates.kjb -level=Detailed -param:SUB_ENV=main -param:CHAIN_ID=202 -param:ENV_SUFFIX=_d6 
     4. run onetimer/populate_dim_timess.kjb (chain id is needed for logging)
@@ -80,7 +81,8 @@
 			3. run create_log_tables.sql
 		Redshift
 			1. run create_temp_tables.sql
-			2. run redshift.sql in analytics folder
+			2. run create_all_chain_specific.sql in analytics folder
+			3. run create_all.sql in analytics folder
 
 ## TO Run A JOB:
 	export KETTLE_HOME=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/configs/development
