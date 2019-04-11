@@ -88,15 +88,6 @@ class WorkflowSteps extends ModelBase {
         return Constants.PRESTAGING_SCHEMA_NAME + '.temp_workflow_steps';
     };
 
-    /**
-     * Get file path for the workflowSteps service
-     *
-     * @returns {String}
-     */
-    get getFilePath() {
-        return "/workflow_steps";
-    }
-
 }
 
 module.exports = WorkflowSteps;

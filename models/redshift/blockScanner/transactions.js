@@ -7,7 +7,6 @@ const rootPrefix = '../../..'
     , ApplicationMailer = require(rootPrefix + '/lib/applicationMailer')
     , Util = require('util')
     , responseHelper = require(rootPrefix + '/lib/formatter/response')
-    , RedshiftClient = require(rootPrefix + "/lib/redshift")
 ;
 
 
@@ -27,7 +26,19 @@ class Transactions extends Base {
 
     getTableNameWithSchema() {
         const oThis = this;
-        return constants.PRESTAGING_SCHEMA_NAME + '.aux_transactions_' + oThis.chainId;
+            return constants.PRESTAGING_SCHEMA_NAME + "." + oThis.getTableName();
+    };
+
+    getTableName() {
+        const oThis = this;
+        if (oThis.chainType == "aux") {
+            return 'aux_transactions_' + oThis.chainId;
+        } else if (oThis.chainType == "origin") {
+            return 'origin_transactions';
+        } else {
+            throw 'Passed ChainType is incorrect.'
+        }
+
     };
 
     getTablePrimaryKey() {
@@ -36,7 +47,16 @@ class Transactions extends Base {
 
     getTempTableNameWithSchema() {
         const oThis = this;
-        return constants.PRESTAGING_SCHEMA_NAME + '.temp_aux_transactions_' + oThis.chainId;
+
+        if (oThis.chainType == "aux") {
+            return constants.PRESTAGING_SCHEMA_NAME + '.temp_aux_transactions_' + oThis.chainId;
+        } else if (oThis.chainType == "origin") {
+            return constants.PRESTAGING_SCHEMA_NAME + '.temp_origin_transactions';
+        } else {
+            throw 'Passed ChainType is incorrect.'
+        }
+
+
     };
 
     // handleBlockError(params) {
@@ -51,23 +71,21 @@ class Transactions extends Base {
     //     }));
     // }
 
-	handleBlockError(params) {
+    handleBlockError(params) {
 
-		logger.error("handle error for transactions");
+        logger.error("handle error for transactions");
 
 		const oThis = this,
 			deleteDuplicateQuery = Util.format("DELETE from %s WHERE tx_hash IN(SELECT tx_hash from %s where block_number >= $1 and block_number <= $2);",
-				oThis.getTempTableNameWithSchema(), oThis.getTableNameWithSchema()),
-            redshiftClient = new RedshiftClient()
+				oThis.getTempTableNameWithSchema(), oThis.getTableNameWithSchema())
         ;
 
-		return redshiftClient.parameterizedQuery(deleteDuplicateQuery, [params.minBlock, params.maxBlock]).then((res) => {
+		return oThis.redshiftClient.parameterizedQuery(deleteDuplicateQuery, [params.minBlock, params.maxBlock]).then((res) => {
 		    logger.warn("duplicate transactions are deleted");
 			oThis.applicationMailer.perform( {subject :"duplicate transactions are deleted",  body:  oThis.object});
 				return oThis.insertToMainTable();
 	});
 	}
-
 
 
 }

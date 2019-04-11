@@ -1,11 +1,11 @@
 const rootPrefix = "..",
-    RedshiftClient = require("node-redshift"),
+    RedshiftClient = require(rootPrefix + "/lib/redshift"),
     program = require("commander"),
     Constant = require(rootPrefix + "/configs/constants"),
     dataProcessingInfoGC = require(rootPrefix + "/lib/globalConstants/redshift/dataProcessingInfo"),
     cronConstants = require(rootPrefix + "/lib/globalConstants/cronConstants"),
     BlockScannerService = require(rootPrefix + "/services/block_scanner_service.js"),
-    TokenService = require(rootPrefix + "/services/token"),
+    MysqlService = require(rootPrefix + "/services/mysql_service"),
     BlockScanner = require(rootPrefix + "/lib/blockScanner"),
     ProcessLockerKlass = require(rootPrefix + '/lib/processLocker'),
     logger = require(rootPrefix + "/helpers/custom_console_logger");
@@ -34,8 +34,8 @@ class ExtractData {
         oThis.chainId = program.chainId;
 
         oThis.blockScanner = new BlockScanner(oThis.chainId);
-        oThis.redshiftClient = new RedshiftClient(Constant.PRESTAGING_REDSHIFT_CLIENT);
         oThis.ProcessLocker = new ProcessLockerKlass();
+        oThis.chainType = "aux";
         oThis.redshiftClient = new RedshiftClient();
 
     }
@@ -63,7 +63,7 @@ class ExtractData {
                 await oThis.extractBlockScannerData(await oThis.getStartBlock(), await oThis.getEndBlock());
             }
         } catch (e) {
-            logger.error("Terminating error due to exception");
+            logger.error("Terminating error due to exception", e);
             process.exit(1);
         }
         logger.log("ending the process with success");
@@ -79,8 +79,8 @@ class ExtractData {
         logger.log("processing started at", startTime);
 
 
-        let tokenService = new TokenService({chainId: oThis.chainId});
-        await tokenService.processTokens();
+        let mysqlService = new MysqlService({chainId: oThis.chainId, model: "token"});
+        await mysqlService.process();
 
         let endTime = Date.now();
         logger.log("processing finished at", endTime);
@@ -107,7 +107,9 @@ class ExtractData {
 
         isStartBlockGiven = !!program.startBlock;
 
-        let blockScannerService = new BlockScannerService(oThis.chainId, startBlock, endBlock, isStartBlockGiven);
+        let blockScannerService = new BlockScannerService(oThis.chainId, startBlock, endBlock, oThis.chainType, isStartBlockGiven);
+
+
 
         let lastProcessedBlock = await blockScannerService.process();
 

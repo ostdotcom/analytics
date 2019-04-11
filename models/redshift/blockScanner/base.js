@@ -1,11 +1,11 @@
 const rootPrefix = "../../.."
-    , Redshift = require('node-redshift')
+    , RedshiftClient = require(rootPrefix + '/lib/redshift')
     , responseHelper = require(rootPrefix + '/lib/formatter/response')
     , constants = require(rootPrefix + '/configs/constants')
     , Util = require('util')
     , logger = require(rootPrefix + '/helpers/custom_console_logger.js')
-    , ValidateAndSanitize = require(rootPrefix + '/lib/validateAndSanatize')
     , ApplicationMailer = require(rootPrefix + '/lib/applicationMailer')
+    , dataProcessingInfoGC = require(rootPrefix + "/lib/globalConstants/redshift/dataProcessingInfo")
 ;
 
 /**
@@ -16,62 +16,16 @@ class Base {
     constructor(params) {
         const oThis = this;
         oThis.chainId = params.config.chainId;
+        oThis.chainType = params.config.chainType;
         oThis.object = params.object || {};
         oThis.applicationMailer = new ApplicationMailer();
-        oThis.validateAndSanitize = new ValidateAndSanitize({mapping: oThis.constructor.mapping,
-            fieldsToBeMoveToAnalytics: oThis.constructor.fieldsToBeMoveToAnalytics })
+        oThis.redshiftClient = new RedshiftClient();
     }
-
-    formatBlockScannerDataToArray() {
-        const oThis = this;
-        let r = oThis.validateAndSanitize.perform({ object: oThis.object });
-        if (!r.success) return r;
-        let formattedMap = r.data;
-        return responseHelper.successWithData({
-            data: Array.from(formattedMap.data.values())
-        });
-    }
-
-
-
-    initRedshift() {
-        const oThis = this;
-        oThis.redshiftClient = new Redshift(constants.PRESTAGING_REDSHIFT_CLIENT);
-    }
-
-
-    copyFromS3(fullFilePath) {
-
-        const oThis = this
-            , s3BucketPath = 's3://' + constants.S3_BUCKET_NAME + '/'
-            , copyTable = Util.format('copy %s (%s) from \'%s\' iam_role \'%s\' delimiter \'|\';', oThis.getTempTableNameWithSchema(), oThis.getColumnList, s3BucketPath + fullFilePath, oThis.getIamRole())
-            , truncateTempTable = Util.format('TRUNCATE TABLE %s;', oThis.getTempTableNameWithSchema())
-        ;
-        logger.log(s3BucketPath + fullFilePath);
-
-        logger.log("Temp table delete if exists", truncateTempTable);
-        return oThis.query(truncateTempTable)
-            .then(function () {
-                logger.log("Copying of table started", copyTable);
-                return oThis.query(copyTable);
-            }).then(function () {
-                logger.log("copy to Temp table done");
-                return responseHelper.successWithData({});
-            }).catch((e)=>{
-                logger.error(e);
-                return responseHelper.error({
-                    internal_error_identifier: 'm_r_b_b_cfs',
-                    api_error_identifier: 'copy to temp table failed',
-                    debug_options: {}
-                });
-            });
-    };
 
 
     async query(commandString) {
         const oThis = this;
         logger.info("redshift query ::", commandString);
-        oThis.initRedshift();
         return new Promise(function (resolve, reject) {
             try {
                 oThis.redshiftClient.query(commandString, function (err, result) {
@@ -103,8 +57,9 @@ class Base {
         logger.log("insert to main table");
         const oThis = this;
         const insertRemainingEntries = Util.format('INSERT into %s (%s, insertion_timestamp) (select %s, %s from %s);', oThis.getTableNameWithSchema(), oThis.getColumnList, oThis.getColumnList, oThis.getTimeStampInSecs, oThis.getTempTableNameWithSchema())
-        return oThis.query(insertRemainingEntries).then((res) => {
+        return oThis.query(insertRemainingEntries).then(async (res) => {
             logger.log("data moved from temp to main table successfully");
+            await oThis.updateLastProcessedBlock();
             return Promise.resolve(res);
         }).catch((err)=>{
             return Promise.reject(err);
@@ -133,6 +88,24 @@ class Base {
                 internal_error_identifier: 'm_r_b_vttd',
                 api_error_identifier: 'validateTempTableData failed',
                 debug_options: {}
+            });
+        }
+    }
+
+
+    /**
+     * update last processed block
+     *
+     * * @return {promise}
+     *
+     */
+    async updateLastProcessedBlock() {
+        const oThis = this;
+        if (oThis.isStartBlockGiven == false) {
+            logger.step("Starting updateLastProcessedBlock");
+            return oThis.redshiftClient.parameterizedQuery("update " + dataProcessingInfoGC.getTableNameWithSchema + "_" + oThis.chainId + " set value=$1 " +
+                "where property=$2", [oThis.currentBatchEndBlock, dataProcessingInfoGC.lastProcessedBlockProperty]).then((res) => {
+                logger.log("last processed block updated successfully");
             });
         }
     }

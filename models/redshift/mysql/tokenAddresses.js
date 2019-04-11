@@ -88,15 +88,6 @@ class TokenAddresses extends ModelBase {
         return Constants.PRESTAGING_SCHEMA_NAME + '.temp_token_addresses';
     };
 
-    /**
-     * Get file path for the TokenAddresses service
-     *
-     * @returns {String}
-     */
-    get getFilePath() {
-        return "/token_addresses";
-    }
-
 }
 
 module.exports = TokenAddresses;

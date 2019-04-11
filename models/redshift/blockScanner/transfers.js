@@ -5,7 +5,6 @@ const rootPrefix = '../../..'
     , Base = require("./base")
     , logger = require(rootPrefix + '/helpers/custom_console_logger.js')
     , Util = require('util')
-    , RedshiftClient = require(rootPrefix + "/lib/redshift")
 ;
 
 class Transfers extends Base {
@@ -24,8 +23,23 @@ class Transfers extends Base {
 
     getTableNameWithSchema() {
         const oThis = this;
-        return constants.PRESTAGING_SCHEMA_NAME + '.aux_transfers_' + oThis.chainId;
+            return constants.PRESTAGING_SCHEMA_NAME + "." + oThis.getTableName();
     };
+
+
+    getTableName() {
+        const oThis = this;
+        if (oThis.chainType == "aux") {
+            return 'aux_transfers_' + oThis.chainId;
+        } else if (oThis.chainType == "origin") {
+            return 'origin_transfers';
+        } else {
+            throw 'Passed ChainType is incorrect.'
+        }
+
+    };
+
+
 
     getTablePrimaryKey() {
         return ['tx_hash', 'event_index'];
@@ -33,7 +47,17 @@ class Transfers extends Base {
 
     getTempTableNameWithSchema() {
         const oThis = this;
-        return constants.PRESTAGING_SCHEMA_NAME + '.temp_aux_transfers_' + oThis.chainId;
+
+        if(oThis.chainType == "aux"){
+            return constants.PRESTAGING_SCHEMA_NAME + '.temp_aux_transfers_' + oThis.chainId;
+        } else if(oThis.chainType == "origin"){
+            return constants.PRESTAGING_SCHEMA_NAME + '.temp_origin_transfers';
+        } else {
+            throw 'Passed ChainType is incorrect.'
+        }
+
+
+
     };
 
     handleBlockError(params) {
@@ -42,10 +66,10 @@ class Transfers extends Base {
 
         const oThis = this,
             deleteDuplicateQuery = Util.format("DELETE from %s WHERE concat(tx_hash, concat(\'-\', event_index)) IN(SELECT concat(tx_hash, concat(\'-\', event_index)) from %s where block_number >= $1 and block_number <= $2);",
-                oThis.getTempTableNameWithSchema(), oThis.getTableNameWithSchema()),
-            redshiftClient = new RedshiftClient();
+                oThis.getTempTableNameWithSchema(), oThis.getTableNameWithSchema());
 
-        return redshiftClient.parameterizedQuery(deleteDuplicateQuery, [params.minBlock, params.maxBlock]).then((res) => {
+
+        return oThis.redshiftClient.parameterizedQuery(deleteDuplicateQuery, [params.minBlock, params.maxBlock]).then((res) => {
             logger.warn("duplicate transfers are deleted");
             oThis.applicationMailer.perform({subject :"duplicate transfers are deleted",  body:  oThis.object});
 			      return oThis.insertToMainTable();

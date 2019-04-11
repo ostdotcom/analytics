@@ -68,7 +68,8 @@ class Token extends ModelBase {
      * @returns {String}
      */
     get getDataProcessingPropertyName(){
-        return dataProcessingInfoGC.tokenLastUpdatedAtProperty;
+        const oThis = this;
+        return dataProcessingInfoGC.tokenLastUpdatedAtProperty + "_" + oThis.chainId;
     }
 
     /**
@@ -91,12 +92,25 @@ class Token extends ModelBase {
     };
 
     /**
-     * Get file path for the token service
+     * Get last updated at value from data_processing_info_{chain_id}
      *
-     * @returns {String}
+     * @return {Promise}
+     *
      */
-    get getFilePath() {
-        return "/tokens";
+    async getLastUpdatedAtValue() {
+        const oThis = this;
+        return await oThis.redshiftClient.parameterizedQuery("select * from " + dataProcessingInfoGC.getTableNameWithSchema + " "+"where property= $1", [oThis.getDataProcessingPropertyName]).then((res) => {
+            return (res.rows[0].value);
+        });
+    }
+
+
+    async fetchData(params){
+        const oThis = this;
+        let lastUpdatedAt = await oThis.getLastUpdatedAtValue();
+        return new oThis.constructor({}).select("*").where(['updated_at > ?', lastUpdatedAt]).
+        where(['id > ?', params.lastProcessedId]).order_by("id").
+        limit(params.recordsToFetchOnce).fire();
     }
 
 }

@@ -88,14 +88,6 @@ class ChainAddresses extends ModelBase {
         return Constants.PRESTAGING_SCHEMA_NAME + '.temp_chain_addresses';
     };
 
-    /**
-     * Get file path for the ChainAddresses service
-     *
-     * @returns {String}
-     */
-    get getFilePath() {
-        return "/chain_addresses";
-    }
 
 }
 

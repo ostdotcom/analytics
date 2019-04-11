@@ -88,14 +88,6 @@ class StakerWhitelistedAddresses extends ModelBase {
         return Constants.PRESTAGING_SCHEMA_NAME + '.temp_staker_whitelisted_addresses';
     };
 
-    /**
-     * Get file path for the StakerWhitelistedAddresses service
-     *
-     * @returns {String}
-     */
-    get getFilePath() {
-        return "/staker_whitelisted_addresses";
-    }
 
 }
 

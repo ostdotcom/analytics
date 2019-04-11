@@ -89,95 +89,19 @@ class ModelBase extends MysqlQueryBuilders {
         });
     }
 
-    /**
-     * Format data
-     *
-     * @returns {Array[objects]}
-     */
-    formatData(arrayToFormat) {
+    getTableName(){
         const oThis = this;
-        let arrayOfObjects = [];
-        for (let object of arrayToFormat) {
-            // let model = new tokensModel({object: object, chainId: oThis.chainId});
-            let r =  oThis.validateAndSanitize.perform({ object: object });
-            if (!r.success) {
-                continue;
-            }
-            arrayOfObjects.push(Array.from(r.data.data.values()) );
-        }
-        return arrayOfObjects;
-    }
-
-    /**
-     * Validate and Format Mysql Data
-     *
-     * @return {object}
-     */
-    validateAndFormatMysqlData(object) {
-        const oThis = this;
-        let formattedMap = new Map();
-        for (let column of oThis.constructor.mapping) {
-            //eg. column[0] => token_id, column[1] => {name: 'id', isSerialized: false, required: true}
-            if (column[1]['required'] && !(column[1]['name'] in object)) {
-                let rh = responseHelper.error(
-                    {
-                        internal_error_identifier: 'm_m_b_vafmd',
-                        api_error_identifier: '',
-                        debug_options: oThis.object
-                    }
-                );
-                oThis.applicationMailer.perform({subject: 'validate mysql data failed', body: {error: rh}});
-                return rh;
-            }
-            let value = object[column[1]['name']];
-            // value = value.split("|").join("I");
-            if (column[1]['isSerialized'] == true && value) {
-                let fieldData = JSON.parse(value);
-                value = fieldData[column[1]['property']];
-            }
-            value = typeof value == 'undefined' ? object[column[1]['copyIfNotPresent']] : value;
-            formattedMap.set(column[0], value);
-        }
-        return responseHelper.successWithData({
-            data: formattedMap
-        });
-
-    }
-
-    /**
-     * Format mysql data to array
-     *
-     * @return {object}
-     */
-    formatMysqlDataToArray(object) {
-        const oThis = this;
-        let r = oThis.validateAndFormatMysqlData(object);
-        if (!r.success) return r;
-        let formattedMap = r.data;
-        return responseHelper.successWithData({
-            data: Array.from(formattedMap.data.values())
-        });
-    }
-
-    /**
-     * Initialize redshift
-     *
-     */
-    initRedshift(){
-        const oThis = this;
-        oThis.redshiftClient = new Redshift(constants.PRESTAGING_REDSHIFT_CLIENT);
+        return oThis.tableName;
     }
 
     /**
      * Copy data from s3 and insert into temp table and modify updated records
      *
      */
-    async copyFromS3(fullFilePath) {
+    async insertToMainFromTemp() {
 
         const oThis = this
         ;
-
-        let downloadToTemp = await new DownloadToTemp({tempTableName: oThis.getTempTableNameWithSchema(), columnList: oThis.getColumnList}).copyFromS3ToTemp(fullFilePath);
 
         const deleteDuplicateIds = Util.format('DELETE from %s WHERE %s IN (SELECT %s from %s);', oThis.getTableNameWithSchema(), oThis.getTablePrimaryKey(), oThis.getTablePrimaryKey(), oThis.getTempTableNameWithSchema())
             , insertRemainingEntries = Util.format('INSERT into %s (%s) (select %s from %s);', oThis.getTableNameWithSchema(), oThis.getColumnList,oThis.getColumnList, oThis.getTempTableNameWithSchema())
@@ -193,7 +117,8 @@ class ModelBase extends MysqlQueryBuilders {
                 logger.info("Commit started", commit);
                 return oThis.redshiftClient.query(commit);
             }).then(function () {
-                logger.info('Copy from S3 complete')
+                logger.info('Copy from temp table to main table complete.');
+                return responseHelper.successWithData({});
             }).catch(function (err) {
                 logger.error("S3 copy hampered", err);
                 throw new Error("S3 copy hampered" + err);
@@ -231,13 +156,10 @@ class ModelBase extends MysqlQueryBuilders {
      * @return {Promise}
      *
      */
-    async _getLastUpdatedAtValue() {
-        const oThis = this;
-        return await oThis.redshiftClient.parameterizedQuery("select * from " + dataProcessingInfoGC.getTableNameWithSchema + "_" + oThis.chainId + " "+"where property= $1", [oThis.getDataProcessingPropertyName]).then((res) => {
-            logger.log(res.rows);
-            return (res.rows[0].value);
-        });
+    async getLastUpdatedAtValue() {
+        throw 'getLastUpdatedAtValue not implemented';
     }
+
 
     /**
      * Update last updated at value of the data_processing_info_{chain_id} table
@@ -245,30 +167,13 @@ class ModelBase extends MysqlQueryBuilders {
      * @return {Promise}
      *
      */
-    async updateDataProcessingInfoTable() {
+    async updateDataProcessingInfoTable(currentDate) {
         const oThis = this;
-        let LastUpdatedAtValue = await oThis.getLastUpdatedAtValueFromTable();
-
-        return await oThis.redshiftClient.parameterizedQuery("update " + dataProcessingInfoGC.getTableNameWithSchema + "_" + oThis.chainId +  " set value=$1 " +
+        let LastUpdatedAtValue = dateUtil.convertDateToString(currentDate);
+        return await oThis.redshiftClient.parameterizedQuery("update " + dataProcessingInfoGC.getTableNameWithSchema +  " set value=$1 " +
             "where property=$2", [LastUpdatedAtValue, oThis.getDataProcessingPropertyName]).then((res) => {
-            logger.log("token_last_updated_at value of the data_processing_info table updated successfully");
+            logger.log( oThis.getDataProcessingPropertyName + " value of the data_processing_info table updated successfully");
         });
-    }
-
-    /**
-     * Get max updated_at column value from the table of redshift
-     *
-     * @return {Promise}
-     *
-     */
-    async getLastUpdatedAtValueFromTable(){
-        const oThis = this;
-        return await oThis.redshiftClient.query("select max(updated_at) from " + new oThis.constructor({}).getTableNameWithSchema()).then((res) => {
-            logger.log(res.rows);
-            let LastUpdatedAtValue = dateUtil.convertDateToString(res.rows[0].max);
-            return (LastUpdatedAtValue);
-        });
-
     }
 
     /**
@@ -332,8 +237,13 @@ class ModelBase extends MysqlQueryBuilders {
      * @returns {String}
      */
     get getDataProcessingPropertyName() {
-        throw 'getDataProcessingPropertyName not implemented'
+        throw 'getDataProcessingPropertyName not implemented';
     }
+
+    fetchData(){
+        throw 'fetchData not implemented';
+    }
+
 
 }
 

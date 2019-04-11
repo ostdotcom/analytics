@@ -1,5 +1,4 @@
 const rootPrefix = "..",
-    RedshiftClient = require("node-redshift"),
     Constants = require(rootPrefix + "/configs/constants"),
     ApplicationMailer = require(rootPrefix + '/lib/applicationMailer'),
     dataProcessingInfoGC = require(rootPrefix + "/lib/globalConstants/redshift/dataProcessingInfo"),
@@ -11,7 +10,8 @@ const rootPrefix = "..",
     S3Write = require(rootPrefix + "/lib/S3_write"),
     BlockScanner = require(rootPrefix + "/lib/blockScanner"),
     logger = require(rootPrefix + "/helpers/custom_console_logger"),
-    responseHelper = require(rootPrefix + '/lib/formatter/response')
+    responseHelper = require(rootPrefix + '/lib/formatter/response'),
+    DownloadToTemp = require(rootPrefix + '/lib/downloadToTemp')
 
 ;
 
@@ -29,22 +29,19 @@ class BlockScannerService {
      *
      * @constructor
      */
-    constructor(chainId, startBlock, endBlock, isStartBlockGiven) {
+    constructor(chainId, startBlock, endBlock, chainType, isStartBlockGiven) {
         const oThis = this;
         oThis.chainId = chainId;
         oThis.batchStartBlock = oThis.nextBlockToProcess = startBlock;
         oThis.endBlock = endBlock;
         oThis.isStartBlockGiven = isStartBlockGiven;
-        oThis.redshiftClient = new RedshiftClient(Constants.PRESTAGING_REDSHIFT_CLIENT);
         oThis.applicationMailer = new ApplicationMailer();
+        oThis.chainType = chainType;
 
-        oThis.operationIterator = {
-            transactions: {localPath: "/transactions", model: TransactionsModel},
-            transfers: {localPath: "/transfers", model: TransfersModel}
-        };
-
-        oThis.modelNamesInOrder = ['transfers', 'transactions'];
-        oThis.redshiftClient = new RedshiftClient();
+        oThis.ModelInstances =
+            [new TransfersModel({config: {chainId: oThis.chainId, chainType: oThis.chainType}}),
+                new TransactionsModel({config: {chainId: oThis.chainId, chainType: oThis.chainType}}),
+            ];
     }
 
 
@@ -61,11 +58,11 @@ class BlockScannerService {
 
         logger.step("BlockScanner Service Started");
 
-        while (oThis.batchStartBlock <= oThis.endBlock && (! cronConstants.getSigIntSignal )) {
+        while (oThis.batchStartBlock <= oThis.endBlock && (!cronConstants.getSigIntSignal)) {
             try {
                 res = await oThis.runBatchBlockScanning(batchNo);
                 batchNo++;
-                if(! res.success){
+                if (!res.success) {
                     return Promise.reject(res);
                 }
                 oThis.batchStartBlock = res.data.lastProcessedBlock + 1;
@@ -90,22 +87,23 @@ class BlockScannerService {
      */
     async runBatchBlockScanning(batchNo) {
         const oThis = this;
-        let promiseArray = [],
-            s3UploadPath = `${Constants.SUB_ENVIRONMENT}${Constants.ENV_SUFFIX}/${oThis.chainId}/${Date.now()}`,
-            localDirFullFilePath = `${Constants.LOCAL_DIR_FILE_PATH}/${s3UploadPath}`;
+        let promiseArray = [];
 
         logger.step("BlockScanner::runBatchBlockScanning Batch started- ", batchNo, " startBlock- " + oThis.batchStartBlock +
             "lastProcessBlock- " + oThis.batchEndBlock);
         oThis.currentBatchEndBlock = oThis.batchEndBlock;
 
 
-        oThis.blockScanner = new BlockScanner(oThis.chainId, localDirFullFilePath);
+        oThis.blockScanner = new BlockScanner(oThis.chainId, oThis.chainType);
 
-        //run block parsers in parallel
+        let s3UploadPath = oThis.blockScanner.getS3UploadPath(),
+            localDirFullFilePath = `${Constants.LOCAL_DIR_FILE_PATH}/${s3UploadPath}`;
+
+        // run block parsers in parallel
         for (let i = 0; i < blockScannerGC.noOfBlocksToProcessTogether; i++) {
             promiseArray.push(new Promise(function (resolve, reject) {
                 oThis.nextBlockToProcess = oThis.batchStartBlock + i;
-                oThis.processBlock(oThis.nextBlockToProcess, i).then((res)=>{
+                oThis.processBlock(oThis.nextBlockToProcess, i).then((res) => {
                     resolve(res);
                 })
                     .catch(function (err) {
@@ -121,23 +119,24 @@ class BlockScannerService {
                 res = await oThis.loadIntoTempTable(batchNo, s3UploadPath, localDirFullFilePath);
 
                 if (!res.success) {
-									oThis.applicationMailer.perform({subject: 'blockScanner:loadIntoTempTable failed', body: {error:res}});
+                    oThis.applicationMailer.perform({
+                        subject: 'blockScanner:loadIntoTempTable failed',
+                        body: {error: res}
+                    });
                     return Promise.resolve(res);
                 }
 
                 logger.log("Starting validateAndMoveFromTempToMain");
 
-                for (let operationModelName of oThis.modelNamesInOrder) {
-                    if (!res.data.modelsWithData[operationModelName]) {
+                for (let operationModelInstance of oThis.ModelInstances) {
+                    if (!res.data.modelsWithData[operationModelInstance.getTableName()]) {
                         continue;
                     }
 
                     try {
-                        let operationModel = new oThis.operationIterator[operationModelName].model({config: {chainId: oThis.chainId}});
-                        await operationModel.validateAndMoveFromTempToMain(oThis.batchStartBlock, oThis.currentBatchEndBlock);
+                        await operationModelInstance.validateAndMoveFromTempToMain(oThis.batchStartBlock, oThis.currentBatchEndBlock);
                     } catch (e) {
                         logger.error("error", e);
-
                         let error = responseHelper.error({
                             internal_error_identifier: 's_bss_rbbs_1',
                             api_error_identifier: 'validateAndMoveFromTempToMain failed',
@@ -148,8 +147,6 @@ class BlockScannerService {
                         return Promise.reject(error);
                     }
                 }
-
-                await oThis.updateLastProcessedBlock();
 
                 return Promise.resolve(responseHelper.successWithData({lastProcessedBlock: oThis.currentBatchEndBlock}));
 
@@ -166,7 +163,7 @@ class BlockScannerService {
     }
 
     /**
-     * upload to S3
+     * upload to S3 and load to temp table
      *
      * @param {string} s3UploadPath
      * * @param {string} localDirFullFilePath
@@ -175,29 +172,31 @@ class BlockScannerService {
      */
     async loadIntoTempTable(batchNo, s3UploadPath, localDirFullFilePath) {
         const oThis = this;
-        logger.log("BlockScanner::runBatchBlockScanning Batch-", batchNo, " all blocks parsed");
-
         let promiseArray = [],
             modelsWithData = {};
 
-        for (let modelName in oThis.operationIterator) {
-            let modelToPerform = oThis.operationIterator[modelName];
+        logger.log("BlockScanner::runBatchBlockScanning Batch-", batchNo, " all blocks parsed");
 
-            logger.log("Starting s3 folder upload for Batch- ", batchNo, "for model- ", modelName);
+        for (let operationModelInstance of oThis.ModelInstances) {
 
-                promiseArray.push( oThis.uploadToS3(`${s3UploadPath}${modelToPerform.localPath}/`,
-                `${localDirFullFilePath}${modelToPerform.localPath}`)
+            logger.log("Starting s3 folder upload for Batch- ", batchNo, "for model- ", operationModelInstance.getTableName());
+
+            promiseArray.push(S3Write.uploadToS3(`${s3UploadPath}/${operationModelInstance.getTableName()}/`,
+                `${localDirFullFilePath}/${operationModelInstance.getTableName()}`)
                 .then(async function (res) {
-                    logger.log("files uploaded to s3 for Batch- ", batchNo, "for model- ", modelName);
+                    logger.log("files uploaded to s3 for Batch- ", batchNo, "for model- ", operationModelInstance.getTableName());
 
                     if (!res.data.hasFiles) {
                         return Promise.resolve(res);
                     }
 
-                    let operationModel = new modelToPerform.model({config: {chainId: oThis.chainId}});
-                    modelsWithData[modelName] = true;
-                    let resp =  await operationModel.copyFromS3(
-                        `${s3UploadPath}${modelToPerform.localPath}/`);
+                    modelsWithData[operationModelInstance.getTableName()] = true;
+                    let downloadToTemp = new DownloadToTemp({
+                        tempTableName: operationModelInstance.getTempTableNameWithSchema(),
+                        columnList: operationModelInstance.getColumnList
+                    });
+                    let resp = await downloadToTemp.copyFromS3ToTemp(
+                        `${s3UploadPath}/${operationModelInstance.getTableName()}/`);
                     return Promise.resolve(resp);
                 })
                 .catch(function (err) {
@@ -207,7 +206,7 @@ class BlockScannerService {
                         api_error_identifier: 'block scanner failed',
                         debug_options: {error: err}
                     });
-                    oThis.applicationMailer.perform({subject: 'block scanner failed', body: {error:error}});
+                    oThis.applicationMailer.perform({subject: 'block scanner failed', body: {error: error}});
 
                     return Promise.resolve(error);
 
@@ -217,7 +216,6 @@ class BlockScannerService {
 
 
         return Promise.all(promiseArray).then(function (resArray) {
-
             for (let res of resArray) {
                 if (!res.success) {
                     return res;
@@ -225,34 +223,6 @@ class BlockScannerService {
             }
             return responseHelper.successWithData({modelsWithData: modelsWithData});
         });
-    }
-
-    /**
-     * upload to S3
-     *
-     * @param {string} s3UploadPath
-     * * @param {string} localDirFullFilePath
-     * * @return {Promise}
-     *
-     */
-    async uploadToS3(s3UploadPath, localDirFullFilePath) {
-
-        const oThis = this;
-
-        let s3Write = new S3Write({
-                "region": Constants.S3_REGION,
-                "accessKeyId": Constants.S3_ACCESS_KEY,
-                "secretAccessKey": Constants.S3_ACCESS_SECRET
-            },
-            {
-                s3_bucket_name: Constants.S3_BUCKET_NAME,
-                bucket_path: s3UploadPath,
-                dir_path: localDirFullFilePath
-            });
-
-        let res = await s3Write.uploadFiles();
-        oThis._deleteLocalDirectory(localDirFullFilePath);
-        return res;
     }
 
     /**
@@ -275,7 +245,7 @@ class BlockScannerService {
                             logger.info("successfully parsed for blockNumber ", blockNumber, " thread=> ", i);
                             return resolve(oThis.processBlock(++oThis.nextBlockToProcess, i))
                         } else {
-                            oThis.applicationMailer.perform({subject: 'block scanner failed', body: {error:res}});
+                            oThis.applicationMailer.perform({subject: 'block scanner failed', body: {error: res}});
                             return reject(res);
                         }
                     })
@@ -312,22 +282,6 @@ class BlockScannerService {
             (oThis.batchStartBlock + noOfBlocks - 1);
     }
 
-    /**
-     * update last processed block
-     *
-     * * @return {promise}
-     *
-     */
-    async updateLastProcessedBlock() {
-        const oThis = this;
-        if (oThis.isStartBlockGiven == false) {
-            logger.step("Starting updateLastProcessedBlock");
-            return oThis.redshiftClient.parameterizedQuery("update " + dataProcessingInfoGC.getTableNameWithSchema + "_" + oThis.chainId + " set value=$1 " +
-                "where property=$2", [oThis.currentBatchEndBlock, dataProcessingInfoGC.lastProcessedBlockProperty]).then((res) => {
-                logger.log("last processed block updated successfully");
-            });
-        }
-    }
 
     /**
      * Delete local directory
