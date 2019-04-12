@@ -29,7 +29,6 @@ program
  * table name in cron should be comma separated value without space
  * node executables/extract_data.js --mysql true --tables Token,ChainAddresses     --chainId 202
  */
-
 class ExtractData {
 
     constructor() {
@@ -79,17 +78,16 @@ class ExtractData {
     async extractMysqlData() {
         const oThis = this;
         let startTime = Date.now();
-        logger.log("processing started at", startTime);
         let promiseArray = [];
         let mysqlService;
 
 
         for (let table of program.tables.split(",")){
             mysqlService = new MysqlService({chainId: oThis.chainId, model: table});
-            promiseArray.push(mysqlService.process());
+            promiseArray.push( mysqlService.process());
         }
 
-        Promise.all(promiseArray).then(()=>{
+        return Promise.all(promiseArray).then((res)=>{
             let endTime = Date.now();
             logger.log("processing finished at", endTime);
             logger.log("Total time to process in milliseconds", (endTime - startTime));

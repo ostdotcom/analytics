@@ -64,7 +64,6 @@ class MysqlService {
             await oThis.uploadLocalFilesToS3();
             await oThis.model.insertToMainFromTemp();
             await oThis.model.updateDataProcessingInfoTable(currentDate);
-            return Promise.resolve(responseHelper.successWithData({}));
         } catch (e) {
             logger.error("token service terminated due to exception-", e);
             let rH = responseHelper.error({
@@ -79,6 +78,7 @@ class MysqlService {
             });
             return Promise.reject(rH);
         }
+        return Promise.resolve(responseHelper.successWithData({}));
     }
 
 
@@ -94,8 +94,8 @@ class MysqlService {
         let localWriteObj = new localWrite({separator: "|"});
         let arrayOfList = [];
         let fileName = '';
-        const recordsToFetchOnce = 50,
-            recordsToWriteOnce = 500;
+        const recordsToFetchOnce = 100,
+            recordsToWriteOnce = 1000;
 
         while (true) {
             records = await oThis.model.fetchData({
@@ -106,13 +106,11 @@ class MysqlService {
                 shell.mkdir("-p", oThis.localDirFullFilePath);
             }
 
-            if (totalRecordProcessed > recordsToWriteOnce || lastProcessedId == -1) {
+            totalRecordProcessed += records.length;
+            if (totalRecordProcessed >= recordsToWriteOnce || lastProcessedId == -1) {
                 totalRecordProcessed = 0;
                 fileName = oThis.localDirFullFilePath + "/" + Date.now() + '.csv';
             }
-
-            totalRecordProcessed += records.length;
-
             let r = oThis.formatData(records);
             if (!r.success) {
                 return Promise.reject(r);
