@@ -58,7 +58,8 @@ class ChainAddresses extends ModelBase {
      * @returns {String}
      */
     getTableNameWithSchema() {
-        return Constants.PRESTAGING_SCHEMA_NAME + '.chain_addresses';
+        const oThis = this;
+        return Constants.PRESTAGING_SCHEMA_NAME + '.chain_addresses' + oThis.tableNameSuffix;
     };
 
     /**
@@ -67,7 +68,8 @@ class ChainAddresses extends ModelBase {
      * @returns {String}
      */
     get getDataProcessingPropertyName(){
-        return dataProcessingInfoGC.chainAddressesLastUpdatedAtProperty;
+        const oThis = this;
+        return dataProcessingInfoGC.chainAddressesLastUpdatedAtProperty + oThis.tableNameSuffix;
     }
 
     /**
@@ -85,7 +87,8 @@ class ChainAddresses extends ModelBase {
      * @returns {String}
      */
     getTempTableNameWithSchema() {
-        return Constants.PRESTAGING_SCHEMA_NAME + '.temp_chain_addresses';
+        const oThis = this;
+        return Constants.PRESTAGING_SCHEMA_NAME + '.temp_chain_addresses' + oThis.tableNameSuffix;
     };
 
 

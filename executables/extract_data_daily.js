@@ -5,8 +5,7 @@ const rootPrefix = "..",
     MysqlService = require(rootPrefix + "/services/mysql_service"),
     GetBlockScannerData = require(rootPrefix + "/lib/getBlockScannerData"),
     ProcessLockerKlass = require(rootPrefix + '/lib/processLocker'),
-    logger = require(rootPrefix + "/helpers/custom_console_logger"),
-    ExtractBase = require(rootPrefix + "/executables/extract_base");
+    logger = require(rootPrefix + "/helpers/custom_console_logger");
 
 
 // commander
@@ -27,12 +26,11 @@ program
  * table name in cron should be comma separated value without space
  * node executables/extract_data.js --mysql true --tables Token,ChainAddresses,TokenAddresses,StakerWhitelistedAddresses,Workflows,WorkflowSteps     --chainId 202
  */
-class ExtractData extends ExtractBase{
+class ExtractDataDaily {
 
-    constructor(params) {
-        super(params);
+    constructor() {
         const oThis = this;
-        oThis.chainType = "aux";
+        oThis.chainType = "origin";
         oThis.chainId = program.chainId;
         oThis.startBlock = program.startBlock;
         oThis.endBlock = program.endBlock;
@@ -41,15 +39,20 @@ class ExtractData extends ExtractBase{
     }
 
 
+
+
+
     async extractMysqlData() {
         const oThis = this;
         let startTime = Date.now();
         let promiseArray = [];
         let mysqlService;
+        let tables =  program.tables ? program.tables.split(",") : ["Token", "TokenAddresses", "Workflows",
+            "WorkflowSteps", "StakerWhitelistedAddresses", "ChainAddresses"];
 
-        let tables =  program.tables ? program.tables.split(",") : ["Token"];
+
         for (let table of tables) {
-            mysqlService = new MysqlService({chainId: oThis.chainId, model: table});
+            mysqlService = new MysqlService({model: table});
             promiseArray.push(mysqlService.process());
         }
 
@@ -61,7 +64,16 @@ class ExtractData extends ExtractBase{
         }).catch((e) => {
             return Promise.reject(e);
         });
+
+
+        // let mysqlService = new MysqlService({chainId: oThis.chainId, model: "token"});
+        // await mysqlService.process();
+
     }
+
+
 }
-const extractData = new ExtractData();
-extractData.perform();
+
+
+const extractDataDaily = new ExtractDataDaily();
+extractDataDaily.perform();

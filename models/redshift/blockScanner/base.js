@@ -22,26 +22,6 @@ class Base {
         oThis.redshiftClient = new RedshiftClient();
     }
 
-
-    async query(commandString) {
-        const oThis = this;
-        logger.info("redshift query ::", commandString);
-        return new Promise(function (resolve, reject) {
-            try {
-                oThis.redshiftClient.query(commandString, function (err, result) {
-                    if (err) {
-                        reject("Error in query " + err + commandString);
-                    } else {
-                        resolve(result);
-                    }
-                })
-            } catch (err) {
-                reject(err);
-            }
-        });
-
-    }
-
     async validateAndMoveFromTempToMain(minBlockNumberForTempTable, maxAllowedEndblockInMain) {
 
         const oThis = this;
@@ -57,7 +37,7 @@ class Base {
         logger.log("insert to main table");
         const oThis = this;
         const insertRemainingEntries = Util.format('INSERT into %s (%s, insertion_timestamp) (select %s, %s from %s);', oThis.getTableNameWithSchema(), oThis.getColumnList, oThis.getColumnList, oThis.getTimeStampInSecs, oThis.getTempTableNameWithSchema())
-        return oThis.query(insertRemainingEntries).then(async (res) => {
+        return oThis.redshiftClient.query(insertRemainingEntries).then(async (res) => {
             logger.log("data moved from temp to main table successfully");
             await oThis.updateLastProcessedBlock();
             return Promise.resolve(res);
@@ -74,7 +54,7 @@ class Base {
     async validateTempTableData(minBlockNumberForTempTable, maxAllowedEndblockInMain) {
 
         const oThis = this,
-            maxBlockNumberFromMainQuery = await oThis.query(Util.format('select coalesce(max(block_number), -1) as max_block_number  from %s where block_number <= %s ', oThis.getTableNameWithSchema(), maxAllowedEndblockInMain));
+            maxBlockNumberFromMainQuery = await oThis.redshiftClient.query(Util.format('select coalesce(max(block_number), -1) as max_block_number  from %s where block_number <= %s ', oThis.getTableNameWithSchema(), maxAllowedEndblockInMain));
 
         let maxBlockNumberFromMain = parseInt(maxBlockNumberFromMainQuery.rows[0].max_block_number);
 

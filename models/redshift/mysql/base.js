@@ -37,11 +37,15 @@ class ModelBase extends MysqlQueryBuilders {
         const oThis = this;
         oThis.object = params.object || {};
         oThis.chainId = params.chainId;
+        oThis.tableNameSuffix = "";
         oThis.dbName = params.dbName;
         oThis.applicationMailer = new ApplicationMailer();
         oThis.validateAndSanitize = new ValidateAndSanitize({mapping: oThis.constructor.mapping,
             fieldsToBeMoveToAnalytics: oThis.constructor.fieldsToBeMoveToAnalytics });
         oThis.redshiftClient = new RedshiftClient();
+        if(oThis.chainId){
+            oThis.tableNameSuffix = `_${oThis.chainId}`
+        }
     }
 
     /**
@@ -173,9 +177,24 @@ class ModelBase extends MysqlQueryBuilders {
     async fetchData(params){
         const oThis = this;
         let lastUpdatedAt = await oThis.getLastUpdatedAtValue();
-        return new oThis.constructor({}).select("*").where(['updated_at > ?', lastUpdatedAt]).
+        return new oThis.constructor({}).select(oThis.columnsToFetchFromMysql()).where(['updated_at > ?', lastUpdatedAt]).
         where(['id > ?', params.lastProcessedId]).order_by("id").
         limit(params.recordsToFetchOnce).fire();
+    }
+
+    /**
+     * columns to be fetched from Mysql
+     *
+     * @return {string}
+     *
+     */
+    columnsToFetchFromMysql(){
+        const oThis = this;
+        let columns = [];
+        for (let column of oThis.constructor.mapping){
+            columns.push(column[0]);
+        }
+        return columns.join(", ");
     }
 
 

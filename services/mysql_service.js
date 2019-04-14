@@ -14,7 +14,6 @@ const rootPrefix = '..',
     ApplicationMailer = require(rootPrefix + '/lib/applicationMailer'),
     responseHelper = require(rootPrefix + '/lib/formatter/response'),
     S3Write = require(rootPrefix + "/lib/S3_write"),
-    dateUtil = require(rootPrefix + "/lib/dateUtil"),
     logger = require(rootPrefix + "/helpers/custom_console_logger"),
     Token = require(rootPrefix + "/models/redshift/mysql/token"),
     TokenAddresses = require(rootPrefix + "/models/redshift/mysql/tokenAddresses"),
@@ -40,7 +39,7 @@ class MysqlService {
         const oThis = this;
 
         oThis.Model = eval(params.model);
-        oThis.chainId = params.chainId;
+        oThis.chainId = params.chainId || 0;
         oThis.applicationMailer = new ApplicationMailer();
         oThis.redshiftClient = new RedshiftClient();
         oThis.model = new oThis.Model({chainId: oThis.chainId});
@@ -157,22 +156,6 @@ class MysqlService {
             return Promise.resolve(resp);
         }
         return Promise.resolve(responseHelper.successWithData({}));
-    }
-
-
-    /**
-     * Get token last updated at value from data_processing_info_{chain_id}
-     *
-     * @return {Promise}
-     *
-     */
-    async _getTokenLastUpdatedAtValue() {
-        const oThis = this;
-
-        return await oThis.redshiftClient.parameterizedQuery("select * from " + dataProcessingInfoGC.getTableNameWithSchema + "_" + oThis.chainId + " " + "where property= $1", [dataProcessingInfoGC.tokenLastUpdatedAtProperty]).then((res) => {
-            logger.log(res.rows);
-            return (res.rows[0].value);
-        });
     }
 
 

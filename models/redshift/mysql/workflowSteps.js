@@ -58,7 +58,8 @@ class WorkflowSteps extends ModelBase {
      * @returns {String}
      */
     getTableNameWithSchema() {
-        return Constants.PRESTAGING_SCHEMA_NAME + '.workflow_steps';
+        const oThis = this;
+        return Constants.PRESTAGING_SCHEMA_NAME + '.workflow_steps' + oThis.tableNameSuffix;
     };
 
     /**
@@ -67,7 +68,8 @@ class WorkflowSteps extends ModelBase {
      * @returns {String}
      */
     get getDataProcessingPropertyName(){
-        return dataProcessingInfoGC.workflowStepsLastUpdatedAtProperty;
+        const oThis = this;
+        return dataProcessingInfoGC.workflowStepsLastUpdatedAtProperty + oThis.tableNameSuffix;
     }
 
     /**
@@ -85,7 +87,8 @@ class WorkflowSteps extends ModelBase {
      * @returns {String}
      */
     getTempTableNameWithSchema() {
-        return Constants.PRESTAGING_SCHEMA_NAME + '.temp_workflow_steps';
+        const oThis = this;
+        return Constants.PRESTAGING_SCHEMA_NAME + '.temp_workflow_steps' + oThis.tableNameSuffix;
     };
 
 }

@@ -58,7 +58,8 @@ class Workflows extends ModelBase {
      * @returns {String}
      */
     getTableNameWithSchema() {
-        return Constants.PRESTAGING_SCHEMA_NAME + '.workflows';
+        const oThis = this;
+        return Constants.PRESTAGING_SCHEMA_NAME + '.workflows' + oThis.tableNameSuffix;
     };
 
     /**
@@ -67,7 +68,8 @@ class Workflows extends ModelBase {
      * @returns {String}
      */
     get getDataProcessingPropertyName(){
-        return dataProcessingInfoGC.workflowLastUpdatedAtProperty;
+        const oThis = this;
+        return dataProcessingInfoGC.workflowLastUpdatedAtProperty + oThis.tableNameSuffix;
     }
 
     /**
@@ -85,7 +87,8 @@ class Workflows extends ModelBase {
      * @returns {String}
      */
     getTempTableNameWithSchema() {
-        return Constants.PRESTAGING_SCHEMA_NAME + '.temp_workflows';
+        const oThis = this;
+        return Constants.PRESTAGING_SCHEMA_NAME + '.temp_workflows' + oThis.tableNameSuffix;
     };
 
 }

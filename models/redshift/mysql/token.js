@@ -59,7 +59,7 @@ class Token extends ModelBase {
      */
     getTableNameWithSchema() {
         const oThis = this;
-        return Constants.PRESTAGING_SCHEMA_NAME + '.tokens_'+ oThis.chainId;
+        return Constants.PRESTAGING_SCHEMA_NAME + '.tokens'+ oThis.tableNameSuffix;
     };
 
     /**
@@ -69,7 +69,7 @@ class Token extends ModelBase {
      */
     get getDataProcessingPropertyName(){
         const oThis = this;
-        return dataProcessingInfoGC.tokenLastUpdatedAtProperty + "_" + oThis.chainId;
+        return dataProcessingInfoGC.tokenLastUpdatedAtProperty + oThis.tableNameSuffix;
     }
 
     /**
@@ -88,7 +88,7 @@ class Token extends ModelBase {
      */
     getTempTableNameWithSchema() {
         const oThis = this;
-        return Constants.PRESTAGING_SCHEMA_NAME + '.temp_tokens_'+ oThis.chainId;
+        return Constants.PRESTAGING_SCHEMA_NAME + '.temp_tokens'+ oThis.tableNameSuffix;
     };
 
 

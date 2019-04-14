@@ -58,7 +58,8 @@ class StakerWhitelistedAddresses extends ModelBase {
      * @returns {String}
      */
     getTableNameWithSchema() {
-        return Constants.PRESTAGING_SCHEMA_NAME + '.staker_whitelisted_addresses';
+        const oThis = this;
+        return Constants.PRESTAGING_SCHEMA_NAME + '.staker_whitelisted_addresses' + oThis.tableNameSuffix;
     };
 
     /**
@@ -67,7 +68,8 @@ class StakerWhitelistedAddresses extends ModelBase {
      * @returns {String}
      */
     get getDataProcessingPropertyName(){
-        return dataProcessingInfoGC.stakerWhitelistedAddressesLastUpdatedAtProperty;
+        const oThis = this;
+        return dataProcessingInfoGC.stakerWhitelistedAddressesLastUpdatedAtProperty + oThis.tableNameSuffix;
     }
 
     /**
@@ -85,7 +87,8 @@ class StakerWhitelistedAddresses extends ModelBase {
      * @returns {String}
      */
     getTempTableNameWithSchema() {
-        return Constants.PRESTAGING_SCHEMA_NAME + '.temp_staker_whitelisted_addresses';
+        const oThis = this;
+        return Constants.PRESTAGING_SCHEMA_NAME + '.temp_staker_whitelisted_addresses' + oThis.tableNameSuffix;
     };
 
 

@@ -58,7 +58,8 @@ class TokenAddresses extends ModelBase {
      * @returns {String}
      */
     getTableNameWithSchema() {
-        return Constants.PRESTAGING_SCHEMA_NAME + '.token_addresses';
+        const oThis = this;
+        return Constants.PRESTAGING_SCHEMA_NAME + '.token_addresses'  + oThis.tableNameSuffix;
     };
 
     /**
@@ -67,7 +68,8 @@ class TokenAddresses extends ModelBase {
      * @returns {String}
      */
     get getDataProcessingPropertyName(){
-        return dataProcessingInfoGC.tokenAddressesLastUpdatedAtProperty;
+        const oThis = this;
+        return dataProcessingInfoGC.tokenAddressesLastUpdatedAtProperty + oThis.tableNameSuffix;
     }
 
     /**
@@ -85,7 +87,8 @@ class TokenAddresses extends ModelBase {
      * @returns {String}
      */
     getTempTableNameWithSchema() {
-        return Constants.PRESTAGING_SCHEMA_NAME + '.temp_token_addresses';
+        const oThis = this;
+        return Constants.PRESTAGING_SCHEMA_NAME + '.temp_token_addresses'+ oThis.tableNameSuffix;
     };
 
 }
