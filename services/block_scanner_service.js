@@ -1,7 +1,6 @@
 const rootPrefix = "..",
     Constants = require(rootPrefix + "/configs/constants"),
     ApplicationMailer = require(rootPrefix + '/lib/applicationMailer'),
-    dataProcessingInfoGC = require(rootPrefix + "/lib/globalConstants/redshift/dataProcessingInfo"),
     shell = require("shelljs"),
     blockScannerGC = require(rootPrefix + "/lib/globalConstants/blockScanner"),
     cronConstants = require(rootPrefix + "/lib/globalConstants/cronConstants"),

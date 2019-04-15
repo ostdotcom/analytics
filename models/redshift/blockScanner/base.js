@@ -1,7 +1,6 @@
 const rootPrefix = "../../.."
     , RedshiftClient = require(rootPrefix + '/lib/redshift')
     , responseHelper = require(rootPrefix + '/lib/formatter/response')
-    , constants = require(rootPrefix + '/configs/constants')
     , Util = require('util')
     , logger = require(rootPrefix + '/helpers/custom_console_logger.js')
     , ApplicationMailer = require(rootPrefix + '/lib/applicationMailer')
