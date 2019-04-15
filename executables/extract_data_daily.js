@@ -2,6 +2,7 @@ const rootPrefix = "..",
     program = require("commander"),
     MysqlService = require(rootPrefix + "/services/mysql_service"),
     logger = require(rootPrefix + "/helpers/custom_console_logger"),
+    GetBlockScannerData = require(rootPrefix + "/services/get_block_scanner_data_service"),
     ExtractBase = require(rootPrefix + "/executables/extract_base");
 
 
@@ -34,23 +35,23 @@ class ExtractDataDaily extends ExtractBase{
         oThis.endBlock = program.endBlock;
         oThis.mysqlParam = program.mysql;
         oThis.blockScannerParam = program.blockScanner;
+        oThis.tables =  program.tables ? program.tables.split(",") : ["Token", "TokenAddresses", "Workflows",
+            "WorkflowSteps", "StakerWhitelistedAddresses", "ChainAddresses"];
     }
 
-
-
-
+    perform(){
+        const oThis = this;
+        return super.perform('cron_extract_data_c_' + parseInt(oThis.chainId) + "_" + parseInt(oThis.startBlock) + "_" +
+            parseInt(oThis.endBlock) + "_" );
+    }
 
     async extractMysqlData() {
         const oThis = this;
         let startTime = Date.now();
         let promiseArray = [];
         let mysqlService;
-        let tables =  program.tables ? program.tables.split(",") : ["Token", "TokenAddresses", "Workflows",
-            "WorkflowSteps", "StakerWhitelistedAddresses", "ChainAddresses"];
-
-
-        for (let table of tables) {
-            mysqlService = new MysqlService({model: table});
+        for (let table of oThis.tables) {
+            mysqlService = new MysqlService({chainId: oThis.chainId, model: table, chainType: oThis.chainType});
             promiseArray.push(mysqlService.process());
         }
 
@@ -63,10 +64,23 @@ class ExtractDataDaily extends ExtractBase{
             return Promise.reject(e);
         });
 
+    }
 
-        // let mysqlService = new MysqlService({chainId: oThis.chainId, model: "token"});
-        // await mysqlService.process();
 
+    async fetchData(){
+        const oThis = this;
+        if (oThis.mysqlParam !== 'false' && oThis.mysqlParam != undefined) {
+            await oThis.extractMysqlData();
+        }
+
+        if (oThis.blockScannerParam !== 'false' && oThis.blockScannerParam != undefined) {
+
+            const getBlockScannerData = new GetBlockScannerData({
+                chainId: oThis.chainId,
+                chainType: oThis.chainType
+            });
+            await getBlockScannerData.perform(oThis.startBlock, oThis.endBlock);
+        }
     }
 
 

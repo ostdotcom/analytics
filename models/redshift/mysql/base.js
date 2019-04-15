@@ -3,20 +3,14 @@
  * @file - Base file for all the MySQL Models
  */
 const rootPrefix = '../../..',
-    Redshift = require('node-redshift'),
     MysqlQueryBuilders = require(rootPrefix + '/lib/queryBuilders/mysql'),
     mysqlWrapper = require(rootPrefix + '/lib/mysqlWrapper'),
-    constants = require(rootPrefix + '/configs/constants'),
     Util = require('util'),
-    shell = require("shelljs"),
     logger = require(rootPrefix + '/lib/logger/customConsoleLogger'),
     responseHelper = require(rootPrefix + '/lib/formatter/response'),
     ApplicationMailer = require(rootPrefix + '/lib/applicationMailer'),
-    ValidateAndSanitize = require(rootPrefix + '/lib/validateAndSanatize'),
     dataProcessingInfoGC = require(rootPrefix + "/lib/globalConstants/redshift/dataProcessingInfo"),
-    localWrite = require(rootPrefix + "/lib/localWrite"),
     dateUtil = require(rootPrefix + "/lib/dateUtil"),
-    DownloadToTemp = require(rootPrefix + "/lib/downloadToTemp"),
     RedshiftClient = require(rootPrefix + "/lib/redshift");
 
 /**
@@ -37,13 +31,12 @@ class ModelBase extends MysqlQueryBuilders {
         const oThis = this;
         oThis.object = params.object || {};
         oThis.chainId = params.chainId;
+        oThis.chainType = params.chainType;
         oThis.tableNameSuffix = "";
         oThis.dbName = params.dbName;
         oThis.applicationMailer = new ApplicationMailer();
-        oThis.validateAndSanitize = new ValidateAndSanitize({mapping: oThis.constructor.mapping,
-            fieldsToBeMoveToAnalytics: oThis.constructor.fieldsToBeMoveToAnalytics });
         oThis.redshiftClient = new RedshiftClient();
-        if(oThis.chainId){
+        if(oThis.chainType == "aux"){
             oThis.tableNameSuffix = `_${oThis.chainId}`
         }
     }
@@ -109,50 +102,23 @@ class ModelBase extends MysqlQueryBuilders {
 
         const deleteDuplicateIds = Util.format('DELETE from %s WHERE %s IN (SELECT %s from %s);', oThis.getTableNameWithSchema, oThis.getTablePrimaryKey, oThis.getTablePrimaryKey, oThis.getTempTableNameWithSchema)
             , insertRemainingEntries = Util.format('INSERT into %s (%s) (select %s from %s);', oThis.getTableNameWithSchema, oThis.getColumnList,oThis.getColumnList, oThis.getTempTableNameWithSchema)
-            , commit = 'COMMIT;'
         ;
 
-        logger.info("Deletion of duplicate Ids started", deleteDuplicateIds);
+        logger.info("Deletion of duplicate rows started", deleteDuplicateIds);
         return oThis.redshiftClient.query(deleteDuplicateIds)
             .then(function () {
-                logger.info("Insertion of remaining entries started", insertRemainingEntries);
+                logger.info("Insertion to main table started", insertRemainingEntries);
                 return oThis.redshiftClient.query(insertRemainingEntries);
-            }).then(function () {
-                logger.info("Commit started", commit);
-                return oThis.redshiftClient.query(commit);
             }).then(function () {
                 logger.info('Copy from temp table to main table complete.');
                 return responseHelper.successWithData({});
             }).catch(function (err) {
-                logger.error("S3 copy hampered", err);
-                throw new Error("S3 copy hampered" + err);
+                logger.error("Exception in insertToMainFromTemp", err);
+                //
+                throw new Error(" Exception in insertToMainFromTemp" + err);
             });
 
     };
-
-    /**
-     * Perform the redshift query
-     *
-     */
-    async query(commandString) {
-        const oThis = this
-        ;
-        logger.debug('Redshift query String', commandString);
-        return new Promise(function (resolve, reject) {
-            try {
-                oThis.redshiftClient.query(commandString, function (err, result) {
-                    if (err) {
-                        reject("Error in query " + err);
-                    } else {
-                        resolve(result);
-                    }
-                })
-            } catch (err) {
-                reject(err);
-            }
-        });
-
-    }
 
     /**
      * Get last updated at value from data_processing_info_{chain_id}
@@ -160,7 +126,7 @@ class ModelBase extends MysqlQueryBuilders {
      * @return {Promise}
      *
      */
-    async getLastUpdatedAtValue() {
+    async getLastCronRunTime() {
         const oThis = this;
         return await oThis.redshiftClient.parameterizedQuery("select * from " + dataProcessingInfoGC.getTableNameWithSchema + " where property= $1", [oThis.getDataProcessingPropertyName]).then((res) => {
             return (res.rows[0].value);
@@ -176,23 +142,19 @@ class ModelBase extends MysqlQueryBuilders {
      */
     async fetchData(params){
         const oThis = this;
-        let lastUpdatedAt = await oThis.getLastUpdatedAtValue();
-        return new oThis.constructor({}).select(oThis.columnsToFetchFromMysql()).where(['updated_at >= ? OR created_at >= ?', lastUpdatedAt, oThis.allowedCreatedTimestamp(lastUpdatedAt) ]).
-        where(['id > ?', params.lastProcessedId]).where(['created_at < ?', oThis.getCurrentDate()]).order_by("id").
-        limit(params.recordsToFetchOnce).fire();
+        let lastCronRunTime = await oThis.getLastCronRunTime();
+        let fetchDataQuery = oThis.constructor({}).select(oThis.columnsToFetchFromMysql()).
+        where(['updated_at >= ? OR created_at >= ?', lastCronRunTime, dateUtil.getBeginnigOfDayInUTC(lastCronRunTime) ]).
+        where(['created_at < ?', dateUtil.getBeginnigOfDayInUTC()]).
+        order_by("id").
+        limit(params.recordsToFetchOnce);
+
+        if (params.lastProcessedId !== undefined){
+            fetchDataQuery = fetchDataQuery.where(['id > ?', params.lastProcessedId])
+        }
+
+        return new fetchDataQuery.fire();
     }
-
-    allowedCreatedTimestamp(lastUpdatedAt){
-        let d = new Date(lastUpdatedAt);
-        return `${d.getUTCFullYear()}-${d.getUTCMonth()+1}-${d.getUTCDate()} 00:00:00`
-    }
-
-
-    getCurrentDate(){
-        let d = new Date();
-        return `${d.getUTCFullYear()}-${d.getUTCMonth()+1}-${d.getUTCDate()} 00:00:00`
-    }
-
     /**
      * columns to be fetched from Mysql
      *
@@ -215,11 +177,11 @@ class ModelBase extends MysqlQueryBuilders {
      * @return {Promise}
      *
      */
-    async updateDataProcessingInfoTable(currentDate) {
+    async updateDataProcessingInfoTable(cronStartTime) {
         const oThis = this;
-        let LastUpdatedAtValue = dateUtil.convertDateToString(currentDate);
+        let cronStartTimeStr = dateUtil.convertDateToString(cronStartTime, true);
         return await oThis.redshiftClient.parameterizedQuery("update " + dataProcessingInfoGC.getTableNameWithSchema +  " set value=$1 " +
-            "where property=$2", [LastUpdatedAtValue, oThis.getDataProcessingPropertyName]).then((res) => {
+            "where property=$2", [cronStartTimeStr, oThis.getDataProcessingPropertyName]).then((res) => {
             logger.log( oThis.getDataProcessingPropertyName + " value of the data_processing_info table updated successfully");
         });
     }

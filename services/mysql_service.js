@@ -9,19 +9,22 @@ const rootPrefix = '..',
     Constants = require(rootPrefix + '/configs/constants'),
     RedshiftClient = require(rootPrefix + '/lib/redshift'),
     shell = require("shelljs"),
-    dataProcessingInfoGC = require(rootPrefix + "/lib/globalConstants/redshift/dataProcessingInfo"),
     localWrite = require(rootPrefix + "/lib/localWrite"),
     ApplicationMailer = require(rootPrefix + '/lib/applicationMailer'),
     responseHelper = require(rootPrefix + '/lib/formatter/response'),
     S3Write = require(rootPrefix + "/lib/S3_write"),
     logger = require(rootPrefix + "/helpers/custom_console_logger"),
-    Token = require(rootPrefix + "/models/redshift/mysql/token"),
-    TokenAddresses = require(rootPrefix + "/models/redshift/mysql/tokenAddresses"),
-    Workflows = require(rootPrefix + "/models/redshift/mysql/workflows"),
-    WorkflowSteps = require(rootPrefix + "/models/redshift/mysql/workflowSteps"),
-    StakerWhitelistedAddresses = require(rootPrefix + "/models/redshift/mysql/stakerWhitelistedAddresses"),
-    ChainAddresses = require(rootPrefix + "/models/redshift/mysql/chainAddresses"),
-    DownloadToTemp = require(rootPrefix + '/lib/downloadToTemp');
+    ValidateAndSanitize = require(rootPrefix + '/lib/validateAndSanatize'),
+    DownloadToTemp = require(rootPrefix + '/lib/downloadToTemp'),
+    allModels= {};
+
+    allModels.Token = require(rootPrefix + "/models/redshift/mysql/token");
+    allModels.TokenAddresses = require(rootPrefix + "/models/redshift/mysql/tokenAddresses");
+    allModels.Workflows = require(rootPrefix + "/models/redshift/mysql/workflows");
+    allModels.WorkflowSteps = require(rootPrefix + "/models/redshift/mysql/workflowSteps");
+    allModels.StakerWhitelistedAddresses = require(rootPrefix + "/models/redshift/mysql/stakerWhitelistedAddresses");
+    allModels.ChainAddresses = require(rootPrefix + "/models/redshift/mysql/chainAddresses");
+
 
 /**
  * Class token to get the records from the tokens table and process that records.
@@ -38,11 +41,12 @@ class MysqlService {
     constructor(params) {
         const oThis = this;
 
-        oThis.Model = eval(params.model);
+        oThis.Model = allModels[params.model];
         oThis.chainId = params.chainId || 0;
+        oThis.chainType = params.chainType;
         oThis.applicationMailer = new ApplicationMailer();
         oThis.redshiftClient = new RedshiftClient();
-        oThis.model = new oThis.Model({chainId: oThis.chainId});
+        oThis.model = new oThis.Model({chainId: oThis.chainId, chainType: oThis.chainType});
         oThis.s3UploadPath = `${Constants.SUB_ENVIRONMENT}${Constants.ENV_SUFFIX}/${oThis.chainId}/${Date.now()}/${oThis.model.getTableName}`;
         oThis.localDirFullFilePath = `${Constants.LOCAL_DIR_FILE_PATH}/${oThis.s3UploadPath}`;
     }
@@ -56,13 +60,13 @@ class MysqlService {
      */
     async process() {
         const oThis = this;
-        let currentDate = new Date();
+        let cronStartTime = new Date();
 
         try {
             await oThis.fetchDetailsAndWriteIntoLocalFile();
             await oThis.uploadLocalFilesToS3();
             await oThis.model.insertToMainFromTemp();
-            await oThis.model.updateDataProcessingInfoTable(currentDate);
+            await oThis.model.updateDataProcessingInfoTable(cronStartTime);
         } catch (e) {
             logger.error("token service terminated due to exception-", e);
             let rH = responseHelper.error({
@@ -87,7 +91,7 @@ class MysqlService {
      */
     async fetchDetailsAndWriteIntoLocalFile() {
         const oThis = this;
-        let lastProcessedId = -1;
+        let lastProcessedId = undefined;
         let records;
         let totalRecordProcessed = 0;
         let localWriteObj = new localWrite({separator: "|"});
@@ -101,12 +105,12 @@ class MysqlService {
                 recordsToFetchOnce: recordsToFetchOnce,
                 lastProcessedId: lastProcessedId
             });
-            if (records.length > 0 && lastProcessedId == -1) {
+            if (records.length > 0 && lastProcessedId !== undefined) {
                 shell.mkdir("-p", oThis.localDirFullFilePath);
             }
 
             totalRecordProcessed += records.length;
-            if (totalRecordProcessed >= recordsToWriteOnce || lastProcessedId == -1) {
+            if (totalRecordProcessed >= recordsToWriteOnce || lastProcessedId === undefined) {
                 totalRecordProcessed = 0;
                 fileName = oThis.localDirFullFilePath + "/" + Date.now() + '.csv';
             }
@@ -114,15 +118,16 @@ class MysqlService {
             if (!r.success) {
                 return Promise.reject(r);
             }
-            let arrayOfList = r.data.arrayOfList;
+
+            arrayOfList = r.data.arrayOfList;
             if (arrayOfList.length === 0) {
-                return Promise.resolve(responseHelper.successWithData({hasTokens: (lastProcessedId != -1)}));
+                return Promise.resolve(responseHelper.successWithData({hasRows: (lastProcessedId !== undefined)}));
             }
 
             await localWriteObj.writeArray(arrayOfList, fileName);
 
             if (arrayOfList.length < recordsToFetchOnce) {
-                return Promise.resolve(responseHelper.successWithData({hasTokens: true}));
+                return Promise.resolve(responseHelper.successWithData({hasRows: true}));
             }
             lastProcessedId = parseInt(records[records.length - 1].id);
 
@@ -139,12 +144,9 @@ class MysqlService {
      */
     async uploadLocalFilesToS3() {
         const oThis = this;
-        let hasFilesInTheDirectory = false;
-
-
         let r = await S3Write.uploadToS3(`${oThis.s3UploadPath}`, `${oThis.localDirFullFilePath}`);
         if (!r.success) {
-            return r;
+            return Promise.reject(r);
         }
 
         if (r.data.hasFiles) {
@@ -159,10 +161,6 @@ class MysqlService {
     }
 
 
-
-
-
-
     /**
      * Format data
      *
@@ -172,10 +170,12 @@ class MysqlService {
         const oThis = this;
         let arrayOfObjects = [];
         for (let object of arrayToFormat) {
-            // let model = new tokensModel({object: object, chainId: oThis.chainId});
-            let r = oThis.model.validateAndSanitize.perform({object: object});
+           let validateAndSanitizeObj = new ValidateAndSanitize({mapping: oThis.model.constructor.mapping,
+                fieldsToBeMoveToAnalytics: oThis.model.constructor.fieldsToBeMoveToAnalytics });
+
+            let r =  validateAndSanitizeObj.perform({object: object});
             if (!r.success) {
-                return r;
+                return Promise.reject(r);
             }
             arrayOfObjects.push(Array.from(r.data.data.values()));
         }

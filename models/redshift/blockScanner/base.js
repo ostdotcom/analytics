@@ -83,8 +83,8 @@ class Base {
         const oThis = this;
         if (oThis.isStartBlockGiven == false) {
             logger.step("Starting updateLastProcessedBlock");
-            return oThis.redshiftClient.parameterizedQuery("update " + dataProcessingInfoGC.getTableNameWithSchema + "_" + oThis.chainId + " set value=$1 " +
-                "where property=$2", [oThis.currentBatchEndBlock, dataProcessingInfoGC.lastProcessedBlockProperty]).then((res) => {
+            return oThis.redshiftClient.parameterizedQuery("update " + dataProcessingInfoGC.getTableNameWithSchema + " set value=$1 " +
+                "where property=$2", [oThis.currentBatchEndBlock, oThis.getDataProcessingPropertyName]).then((res) => {
                 logger.log("last processed block updated successfully");
             });
         }
@@ -94,6 +94,18 @@ class Base {
         const oThis = this;
         return oThis.constructor.fieldsToBeMoveToAnalytics.join(", ");
     }
+
+    /**
+     * Get data processing property name
+     *
+     * @returns {String}
+     */
+    get getDataProcessingPropertyName() {
+        const oThis = this;
+        let suffix  = oThis.chainType == "aux" ? "_aux_" + oThis.chainId : "_origin";
+        return dataProcessingInfoGC.lastProcessedBlockProperty + suffix;
+    }
+
 
     get getTableNameWithSchema() {
         throw 'getTableNameWithSchema not implemented'

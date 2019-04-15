@@ -17,6 +17,7 @@
 
 
 
+begin;
 
 create schema if not exists ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX};
 set search_path= ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX};
@@ -46,7 +47,6 @@ CREATE TABLE temp_origin_transactions
   rule_id               INT
 )
   DISTKEY (tx_hash) SORTKEY (block_number, kind);
--- commit;
 
 
 DROP TABLE IF EXISTS origin_transactions;
@@ -75,7 +75,6 @@ CREATE TABLE origin_transactions
   insertion_timestamp   INT NOT NULL
 )
   DISTKEY (tx_hash) SORTKEY (block_number, kind);
--- commit;
 
 
 DROP TABLE IF EXISTS temp_origin_transfers;
@@ -109,139 +108,22 @@ CREATE TABLE origin_transfers
 DISTKEY (tx_hash) SORTKEY(block_number);
 
 
-DROP TABLE IF EXISTS temp_workflows;
-CREATE TABLE temp_workflows
+DROP TABLE IF EXISTS temp_tokens;
+CREATE TABLE temp_tokens
 (
-  id                        BIGINT NOT NULL,
-  kind                      INT NOT NULL,
+  token_id                  BIGINT NOT NULL,
   client_id                 INT,
-  unique_hash               VARCHAR(255),
-  status                    INT,
+  name                      VARCHAR(255) NOT NULL,
+  symbol                    VARCHAR(255) NOT NULL,
+  conversion_factor         decimal(15,6) NOT NULL,
+  number_of_decimal         int NOT NULL,
+  delayed_recovery_interval int NOT NULL,
+  status                    int NOT NULL,
+  client_id_was             INT,
+  debug                     VARCHAR(255),
   created_at                timestamp NOT NULL,
   updated_at                timestamp NOT NULL
-);
-
-DROP TABLE IF EXISTS workflows;
-CREATE TABLE workflows
-(
-  id                        BIGINT NOT NULL,
-  kind                      INT NOT NULL,
-  client_id                 INT,
-  unique_hash               VARCHAR(255),
-  status                    INT,
-  created_at                timestamp NOT NULL,
-  updated_at                timestamp NOT NULL
-);
-
-DROP TABLE IF EXISTS temp_workflow_steps;
-CREATE TABLE temp_workflow_steps
-(
-  id                        BIGINT NOT NULL,
-  workflow_id               BIGINT,
-  kind                      INT NOT NULL,
-  transaction_hash          VARCHAR(255),
-  status                    INT,
-  unique_hash               VARCHAR(255),
-  created_at                timestamp NOT NULL,
-  updated_at                timestamp NOT NULL
-);
-
-DROP TABLE IF EXISTS workflow_steps;
-CREATE TABLE workflow_steps
-(
-  id                        BIGINT NOT NULL,
-  workflow_id               BIGINT,
-  kind                      INT NOT NULL,
-  transaction_hash          VARCHAR(255),
-  status                    INT,
-  unique_hash               VARCHAR(255),
-  created_at                timestamp NOT NULL,
-  updated_at                timestamp NOT NULL
-);
-
-DROP TABLE IF EXISTS temp_chain_addresses;
-CREATE TABLE temp_chain_addresses
-(
-  id                        BIGINT NOT NULL,
-  associated_aux_chain_id   INT NOT NULL,
-  kind                      INT NOT NULL,
-  address                   VARCHAR(255) NOT NULL,
-  known_address_id          INT,
-  deployed_chain_id         INT,
-  deployed_chain_kind       INT,
-  status                    INT NOT NULL,
-  created_at                timestamp NOT NULL,
-  updated_at                timestamp NOT NULL
-);
-
-DROP TABLE IF EXISTS chain_addresses;
-CREATE TABLE chain_addresses
-(
-  id                        BIGINT NOT NULL,
-  associated_aux_chain_id   INT NOT NULL,
-  kind                      INT NOT NULL,
-  address                   VARCHAR(255) NOT NULL,
-  known_address_id          INT,
-  deployed_chain_id         INT,
-  deployed_chain_kind       INT,
-  status                    INT NOT NULL,
-  created_at                timestamp NOT NULL,
-  updated_at                timestamp NOT NULL
-);
-
-DROP TABLE IF EXISTS temp_token_addresses;
-CREATE TABLE temp_token_addresses
-(
-  id                        BIGINT NOT NULL,
-  token_id                  INT NOT NULL,
-  kind                      INT NOT NULL,
-  address                   VARCHAR(255) NOT NULL,
-  deployed_chain_id         INT,
-  deployed_chain_kind       INT,
-  status                    INT NOT NULL,
-  known_address_id          INT,
-  created_at                timestamp NOT NULL,
-  updated_at                timestamp NOT NULL
-);
-
-DROP TABLE IF EXISTS token_addresses;
-CREATE TABLE token_addresses
-(
-  id                        BIGINT NOT NULL,
-  token_id                  INT NOT NULL,
-  kind                      INT NOT NULL,
-  address                   VARCHAR(255) NOT NULL,
-  deployed_chain_id         INT,
-  deployed_chain_kind       INT,
-  status                    INT NOT NULL,
-  known_address_id          INT,
-  created_at                timestamp NOT NULL,
-  updated_at                timestamp NOT NULL
-);
-
-DROP TABLE IF EXISTS temp_staker_whitelisted_addresses;
-CREATE TABLE temp_staker_whitelisted_addresses
-(
-  id                        BIGINT NOT NULL,
-  token_id                  INT NOT NULL,
-  staker_address            VARCHAR(255) NOT NULL,
-  gateway_composer_address  VARCHAR(255) NOT NULL,
-  status                    INT NOT NULL,
-  created_at                timestamp NOT NULL,
-  updated_at                timestamp NOT NULL
-);
-
-DROP TABLE IF EXISTS staker_whitelisted_addresses;
-CREATE TABLE staker_whitelisted_addresses
-(
-  id                        BIGINT NOT NULL,
-  token_id                  INT NOT NULL,
-  staker_address            VARCHAR(255) NOT NULL,
-  gateway_composer_address  VARCHAR(255) NOT NULL,
-  status                    INT NOT NULL,
-  created_at                timestamp NOT NULL,
-  updated_at                timestamp NOT NULL
-);
+)SORTKEY(token_id);
 
 
 DROP TABLE IF EXISTS tokens;
@@ -262,23 +144,139 @@ CREATE TABLE tokens
 )SORTKEY(token_id);
 
 
-DROP TABLE IF EXISTS temp_tokens;
-CREATE TABLE temp_tokens
+DROP TABLE IF EXISTS temp_workflows;
+CREATE TABLE temp_workflows
 (
-  token_id                  BIGINT NOT NULL,
+  id                        BIGINT NOT NULL,
+  kind                      INT NOT NULL,
   client_id                 INT,
-  name                      VARCHAR(255) NOT NULL,
-  symbol                    VARCHAR(255) NOT NULL,
-  conversion_factor         decimal(15,6) NOT NULL,
-  number_of_decimal         int NOT NULL,
-  delayed_recovery_interval int NOT NULL,
-  status                    int NOT NULL,
-  client_id_was             INT,
-  debug                     VARCHAR(255),
+  unique_hash               VARCHAR(255),
+  status                    INT NOT NULL,
   created_at                timestamp NOT NULL,
   updated_at                timestamp NOT NULL
-)SORTKEY(token_id);
+)DISTKEY (id) SORTKEY(id);
 
+DROP TABLE IF EXISTS workflows;
+CREATE TABLE workflows
+(
+  id                        BIGINT NOT NULL,
+  kind                      INT NOT NULL,
+  client_id                 INT,
+  unique_hash               VARCHAR(255),
+  status                    INT NOT NULL,
+  created_at                timestamp NOT NULL,
+  updated_at                timestamp NOT NULL
+)DISTKEY (id) SORTKEY(id);
+
+DROP TABLE IF EXISTS temp_workflow_steps;
+CREATE TABLE temp_workflow_steps
+(
+  id                        BIGINT NOT NULL,
+  workflow_id               BIGINT NOT NULL,
+  kind                      INT NOT NULL,
+  transaction_hash          VARCHAR(66),
+  status                    INT,
+  unique_hash               VARCHAR(255),
+  created_at                timestamp NOT NULL,
+  updated_at                timestamp NOT NULL
+)DISTKEY (id) SORTKEY(transaction_hash);
+
+DROP TABLE IF EXISTS workflow_steps;
+CREATE TABLE workflow_steps
+(
+  id                        BIGINT NOT NULL,
+  workflow_id               BIGINT NOT NULL,
+  kind                      INT NOT NULL,
+  transaction_hash          VARCHAR(66),
+  status                    INT,
+  unique_hash               VARCHAR(255),
+  created_at                timestamp NOT NULL,
+  updated_at                timestamp NOT NULL
+)DISTKEY (id) SORTKEY(transaction_hash);
+
+DROP TABLE IF EXISTS temp_chain_addresses;
+CREATE TABLE temp_chain_addresses
+(
+  id                        BIGINT NOT NULL,
+  associated_aux_chain_id   INT NOT NULL,
+  kind                      INT NOT NULL,
+  address                   VARCHAR(42) NOT NULL,
+  known_address_id          INT,
+  deployed_chain_id         INT,
+  deployed_chain_kind       INT,
+  status                    INT NOT NULL,
+  created_at                timestamp NOT NULL,
+  updated_at                timestamp NOT NULL
+)DISTKEY (id) SORTKEY(address);
+
+DROP TABLE IF EXISTS chain_addresses;
+CREATE TABLE chain_addresses
+(
+  id                        BIGINT NOT NULL,
+  associated_aux_chain_id   INT NOT NULL,
+  kind                      INT NOT NULL,
+  address                   VARCHAR(42) NOT NULL,
+  known_address_id          INT,
+  deployed_chain_id         INT,
+  deployed_chain_kind       INT,
+  status                    INT NOT NULL,
+  created_at                timestamp NOT NULL,
+  updated_at                timestamp NOT NULL
+)DISTKEY (id) SORTKEY(address);
+
+DROP TABLE IF EXISTS temp_token_addresses;
+CREATE TABLE temp_token_addresses
+(
+  id                        BIGINT NOT NULL,
+  token_id                  INT NOT NULL,
+  kind                      INT NOT NULL,
+  address                   VARCHAR(42) NOT NULL,
+  deployed_chain_id         INT,
+  deployed_chain_kind       INT,
+  status                    INT NOT NULL,
+  known_address_id          INT,
+  created_at                timestamp NOT NULL,
+  updated_at                timestamp NOT NULL
+)DISTKEY (id) SORTKEY(address);
+
+DROP TABLE IF EXISTS token_addresses;
+CREATE TABLE token_addresses
+(
+  id                        BIGINT NOT NULL,
+  token_id                  INT NOT NULL,
+  kind                      INT NOT NULL,
+  address                   VARCHAR(42) NOT NULL,
+  deployed_chain_id         INT,
+  deployed_chain_kind       INT,
+  status                    INT NOT NULL,
+  known_address_id          INT,
+  created_at                timestamp NOT NULL,
+  updated_at                timestamp NOT NULL
+)DISTKEY (id) SORTKEY(address);
+
+DROP TABLE IF EXISTS temp_staker_whitelisted_addresses;
+CREATE TABLE temp_staker_whitelisted_addresses
+(
+  id                        BIGINT NOT NULL,
+  token_id                  INT NOT NULL,
+  staker_address            VARCHAR(42) NOT NULL,
+  gateway_composer_address  VARCHAR(42) NOT NULL,
+  status                    INT NOT NULL,
+  created_at                timestamp NOT NULL,
+  updated_at                timestamp NOT NULL
+)DISTKEY (id) SORTKEY(staker_address);
+
+DROP TABLE IF EXISTS staker_whitelisted_addresses;
+CREATE TABLE staker_whitelisted_addresses
+(
+  id                        BIGINT NOT NULL,
+  token_id                  INT NOT NULL,
+  staker_address            VARCHAR(42) NOT NULL,
+  gateway_composer_address  VARCHAR(42) NOT NULL,
+  status                    INT NOT NULL,
+  created_at                timestamp NOT NULL,
+  updated_at                timestamp NOT NULL
+)DISTKEY (id) SORTKEY(staker_address);
 
 
 -- dont run the below create table code when you are renaming the table name on production
@@ -288,6 +286,13 @@ CREATE TABLE data_processing_info
   property  varchar(255)   NOT NULL,
   value     varchar(255)   NOT NULL
 );
+
+INSERT INTO data_processing_info
+(  property,  value)VALUES( 'last_processed_block_origin', '-1');
+
+
+INSERT INTO data_processing_info
+(  property,  value)VALUES( 'token_last_updated_at', '1970-01-01 00:00:00');
 
 INSERT INTO data_processing_info
 (  property,  value)VALUES( 'workflow_last_updated_at', '1970-01-01 00:00:00');
@@ -304,7 +309,4 @@ INSERT INTO data_processing_info
 INSERT INTO data_processing_info
 (  property,  value)VALUES( 'staker_whitelisted_addresses_last_updated_at', '1970-01-01 00:00:00');
 
-
-INSERT INTO data_processing_info
-(  property,  value)VALUES( 'token_last_updated_at', '1970-01-01 00:00:00');
--- COMMIT;
+ COMMIT;

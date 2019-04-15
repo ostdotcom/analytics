@@ -3,11 +3,12 @@ const rootPrefix = "..",
     BlockScanner = require(rootPrefix + "/lib/blockScanner"),
     dataProcessingInfoGC = require(rootPrefix + "/lib/globalConstants/redshift/dataProcessingInfo"),
     BlockScannerService = require(rootPrefix + "/services/block_scanner_service"),
+    responseHelper = require(rootPrefix + '/lib/formatter/response'),
     logger = require(rootPrefix + "/helpers/custom_console_logger")
 ;
 
 
-class GetBlockScannerData {
+class GetBlockScannerDataService {
 
 
     constructor(params) {
@@ -25,6 +26,7 @@ class GetBlockScannerData {
         const oThis = this;
         oThis.isStartBlockGiven = !!startBlock;
         await oThis.extractBlockScannerData(startBlock, endBlock);
+        return Promise.resolve(responseHelper.successWithData({}));
     }
 
 
@@ -49,7 +51,6 @@ class GetBlockScannerData {
         logger.step("processing started at", startTime);
 
 
-
         let blockScannerService = new BlockScannerService(oThis.chainId, startBlock, endBlock, oThis.chainType, oThis.isStartBlockGiven);
 
         await blockScannerService.process();
@@ -58,6 +59,8 @@ class GetBlockScannerData {
         logger.win("processing finished at", endTime);
 
         logger.win("Total time to process in milliseconds", (endTime - startTime));
+
+        return Promise.resolve(responseHelper.successWithData({}));
     }
 
 
@@ -80,7 +83,7 @@ class GetBlockScannerData {
      */
     getStartBlockFromRedShift() {
         const oThis = this;
-        return oThis.redshiftClient.parameterizedQuery("select * from " + dataProcessingInfoGC.getTableNameWithSchema + "_" + oThis.chainId + " where property =$1", [dataProcessingInfoGC.lastProcessedBlockProperty]).then((res) => {
+        return oThis.redshiftClient.parameterizedQuery("select * from " + dataProcessingInfoGC.getTableNameWithSchema + " where property =$1", [dataProcessingInfoGC.lastProcessedBlockProperty]).then((res) => {
             return parseInt(res.rows[0].value) + 1;
         });
     }
@@ -106,7 +109,6 @@ class GetBlockScannerData {
      */
     async getEndBlockFromBlockScanner() {
 
-
         const oThis = this,
             finalizedBlockResp = await oThis.blockScanner.getChainCronData();
 
@@ -115,4 +117,4 @@ class GetBlockScannerData {
 
 }
 
-module.exports = GetBlockScannerData;
+module.exports = GetBlockScannerDataService;

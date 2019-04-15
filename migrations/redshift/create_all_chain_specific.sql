@@ -16,7 +16,7 @@
 
 
 
-
+begin;
 
 create schema if not exists ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX};
 set search_path= ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX};
@@ -46,7 +46,6 @@ CREATE TABLE temp_aux_transactions_${CHAIN_ID}
   rule_id               INT
 )
   DISTKEY (tx_hash) SORTKEY (block_number, kind);
--- commit;
 
 
 DROP TABLE IF EXISTS aux_transactions_${CHAIN_ID};
@@ -75,7 +74,6 @@ CREATE TABLE aux_transactions_${CHAIN_ID}
   insertion_timestamp   INT NOT NULL
 )
   DISTKEY (tx_hash) SORTKEY (block_number, kind);
--- commit;
 
 
 DROP TABLE IF EXISTS temp_aux_transfers_${CHAIN_ID};
@@ -146,8 +144,6 @@ INSERT INTO data_processing_info
 (  property,  value)VALUES( 'last_processed_block_aux_${CHAIN_ID}', '-1');
 
 INSERT INTO data_processing_info
-(  property,  value)VALUES( 'last_processed_block_origin_${CHAIN_ID}', '-1');
-
-INSERT INTO data_processing_info
 (  property,  value)VALUES( 'token_last_updated_at_${CHAIN_ID}', '1970-01-01 00:00:00');
---  COMMIT;
+
+COMMIT;
