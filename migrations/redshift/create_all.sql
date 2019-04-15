@@ -21,6 +21,94 @@
 create schema if not exists ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX};
 set search_path= ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX};
 
+
+DROP TABLE IF EXISTS temp_origin_transactions;
+CREATE TABLE temp_origin_transactions
+(
+  tx_uuid               VARCHAR(36),
+  tx_hash               VARCHAR(66) NOT NULL,
+  gas_used              INT NOT NULL,
+  gas_limit             INT NOT NULL,
+  gas_price             BIGINT NOT NULL,
+  status                BOOL NOT NULL,
+  status_internal       BOOL NOT NULL,
+  block_number          BIGINT NOT NULL,
+  block_timestamp       INT NOT NULL,
+  from_address          VARCHAR(42) NOT NULL,
+  to_address            VARCHAR(42),
+  contract_address      VARCHAR(42),
+  total_token_transfers INT NOT NULL,
+  value                 DECIMAL(30,0) NOT NULL,
+  meta_type             VARCHAR(255),
+  meta_name             VARCHAR(255),
+  token_id              INT,
+  kind                  INT,
+  rule_id               INT
+)
+  DISTKEY (tx_hash) SORTKEY (block_number, kind);
+-- commit;
+
+
+DROP TABLE IF EXISTS origin_transactions;
+CREATE TABLE origin_transactions
+(
+  id                    BIGINT NOT NULL IDENTITY(1,1),
+  tx_uuid               VARCHAR(36),
+  tx_hash               VARCHAR(66) NOT NULL,
+  gas_used              INT NOT NULL,
+  gas_limit             INT NOT NULL,
+  gas_price             BIGINT NOT NULL,
+  status                BOOL NOT NULL,
+  status_internal       BOOL NOT NULL,
+  block_number          BIGINT NOT NULL,
+  block_timestamp       INT NOT NULL,
+  from_address          VARCHAR(42) NOT NULL,
+  to_address            VARCHAR(42),
+  contract_address      VARCHAR(42),
+  total_token_transfers INT NOT NULL,
+  value                 DECIMAL(30,0) NOT NULL,
+  meta_type             VARCHAR(255),
+  meta_name             VARCHAR(255),
+  token_id              INT,
+  kind                  INT,
+  rule_id               INT,
+  insertion_timestamp   INT NOT NULL
+)
+  DISTKEY (tx_hash) SORTKEY (block_number, kind);
+-- commit;
+
+
+DROP TABLE IF EXISTS temp_origin_transfers;
+CREATE TABLE temp_origin_transfers
+(
+  tx_hash          VARCHAR(255) NOT NULL,
+  event_index      INT          NOT NULL,
+  block_number     BIGINT       NOT NULL,
+  from_address     VARCHAR(255) NOT NULL,
+  to_address       VARCHAR(255) NOT NULL,
+  contract_address VARCHAR(255) NOT NULL,
+  amount           DECIMAL(30,0) NOT NULL
+)
+  DISTKEY (tx_hash) SORTKEY(block_number);
+
+
+
+DROP TABLE IF EXISTS origin_transfers;
+CREATE TABLE origin_transfers
+(
+  id                    BIGINT NOT NULL IDENTITY(1,1),
+  tx_hash          VARCHAR(255) NOT NULL,
+  event_index      INT          NOT NULL,
+  block_number     BIGINT       NOT NULL,
+  from_address     VARCHAR(255) NOT NULL,
+  to_address       VARCHAR(255) NOT NULL,
+  contract_address VARCHAR(255) NOT NULL,
+  amount           DECIMAL(30,0) NOT NULL,
+  insertion_timestamp             INT NOT NULL
+)
+DISTKEY (tx_hash) SORTKEY(block_number);
+
+
 DROP TABLE IF EXISTS temp_workflows;
 CREATE TABLE temp_workflows
 (

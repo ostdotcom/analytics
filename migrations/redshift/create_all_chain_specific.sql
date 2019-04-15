@@ -22,9 +22,6 @@ create schema if not exists ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV
 set search_path= ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX};
 
 
-
-
-
 DROP TABLE IF EXISTS temp_aux_transactions_${CHAIN_ID};
 CREATE TABLE temp_aux_transactions_${CHAIN_ID}
 (
