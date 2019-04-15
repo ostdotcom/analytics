@@ -93,7 +93,7 @@ class ModelBase extends MysqlQueryBuilders {
         });
     }
 
-    getTableName(){
+    get getTableName(){
         const oThis = this;
         return oThis.tableName;
     }
@@ -107,8 +107,8 @@ class ModelBase extends MysqlQueryBuilders {
         const oThis = this
         ;
 
-        const deleteDuplicateIds = Util.format('DELETE from %s WHERE %s IN (SELECT %s from %s);', oThis.getTableNameWithSchema(), oThis.getTablePrimaryKey(), oThis.getTablePrimaryKey(), oThis.getTempTableNameWithSchema())
-            , insertRemainingEntries = Util.format('INSERT into %s (%s) (select %s from %s);', oThis.getTableNameWithSchema(), oThis.getColumnList,oThis.getColumnList, oThis.getTempTableNameWithSchema())
+        const deleteDuplicateIds = Util.format('DELETE from %s WHERE %s IN (SELECT %s from %s);', oThis.getTableNameWithSchema, oThis.getTablePrimaryKey, oThis.getTablePrimaryKey, oThis.getTempTableNameWithSchema)
+            , insertRemainingEntries = Util.format('INSERT into %s (%s) (select %s from %s);', oThis.getTableNameWithSchema, oThis.getColumnList,oThis.getColumnList, oThis.getTempTableNameWithSchema)
             , commit = 'COMMIT;'
         ;
 
@@ -234,24 +234,12 @@ class ModelBase extends MysqlQueryBuilders {
         return oThis.constructor.fieldsToBeMoveToAnalytics.join(", ");
     }
 
-
-    /**
-     * Get s3 file path
-     *
-     * @returns {String}
-     */
-    getS3FilePath() {
-        return `s3://${ Constants.S3_BUCKET_NAME}/`
-    };
-
-
-
     /**
      * Get table name with schema
      *
      * @returns {String}
      */
-    getTableNameWithSchema() {
+    get getTableNameWithSchema() {
         throw 'getTableNameWithSchema not implemented'
     };
 
@@ -260,7 +248,7 @@ class ModelBase extends MysqlQueryBuilders {
      *
      * @returns {String}
      */
-    getTablePrimaryKey() {
+    get getTablePrimaryKey() {
         throw 'getTablePrimaryKey not implemented'
     };
 
@@ -269,20 +257,9 @@ class ModelBase extends MysqlQueryBuilders {
      *
      * @returns {String}
      */
-    getTempTableNameWithSchema() {
+    get getTempTableNameWithSchema() {
         throw 'getTempTableName not implemented'
     };
-
-
-
-    /**
-     * Get file path
-     *
-     * @returns {String}
-     */
-    get getFilePath() {
-        throw 'getFilePath not implemented'
-    }
 
     /**
      * Get data processing property name

@@ -96,7 +96,7 @@ class BlockScannerService {
 
         oThis.blockScanner = new BlockScanner(oThis.chainId, oThis.chainType);
 
-        let s3UploadPath = oThis.blockScanner.getS3UploadPath(),
+        let s3UploadPath = oThis.blockScanner.getS3UploadPath,
             localDirFullFilePath = `${Constants.LOCAL_DIR_FILE_PATH}/${s3UploadPath}`;
 
         // run block parsers in parallel
@@ -129,7 +129,7 @@ class BlockScannerService {
                 logger.log("Starting validateAndMoveFromTempToMain");
 
                 for (let operationModelInstance of oThis.ModelInstances) {
-                    if (!res.data.modelsWithData[operationModelInstance.getTableName()]) {
+                    if (!res.data.modelsWithData[operationModelInstance.getTableName]) {
                         continue;
                     }
 
@@ -179,24 +179,24 @@ class BlockScannerService {
 
         for (let operationModelInstance of oThis.ModelInstances) {
 
-            logger.log("Starting s3 folder upload for Batch- ", batchNo, "for model- ", operationModelInstance.getTableName());
+            logger.log("Starting s3 folder upload for Batch- ", batchNo, "for model- ", operationModelInstance.getTableName);
 
-            promiseArray.push(S3Write.uploadToS3(`${s3UploadPath}/${operationModelInstance.getTableName()}/`,
-                `${localDirFullFilePath}/${operationModelInstance.getTableName()}`)
+            promiseArray.push(S3Write.uploadToS3(`${s3UploadPath}/${operationModelInstance.getTableName}/`,
+                `${localDirFullFilePath}/${operationModelInstance.getTableName}`)
                 .then(async function (res) {
-                    logger.log("files uploaded to s3 for Batch- ", batchNo, "for model- ", operationModelInstance.getTableName());
+                    logger.log("files uploaded to s3 for Batch- ", batchNo, "for model- ", operationModelInstance.getTableName);
 
                     if (!res.data.hasFiles) {
                         return Promise.resolve(res);
                     }
 
-                    modelsWithData[operationModelInstance.getTableName()] = true;
+                    modelsWithData[operationModelInstance.getTableName] = true;
                     let downloadToTemp = new DownloadToTemp({
-                        tempTableName: operationModelInstance.getTempTableNameWithSchema(),
+                        tempTableName: operationModelInstance.getTempTableNameWithSchema,
                         columnList: operationModelInstance.getColumnList
                     });
                     let resp = await downloadToTemp.copyFromS3ToTemp(
-                        `${s3UploadPath}/${operationModelInstance.getTableName()}/`);
+                        `${s3UploadPath}/${operationModelInstance.getTableName}/`);
                     return Promise.resolve(resp);
                 })
                 .catch(function (err) {

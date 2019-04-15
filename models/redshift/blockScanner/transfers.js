@@ -21,13 +21,13 @@ class Transfers extends Base {
         return transfersGC.fieldsToBeMoveToAnalytics;
     }
 
-    getTableNameWithSchema() {
+    get getTableNameWithSchema() {
         const oThis = this;
-            return constants.PRESTAGING_SCHEMA_NAME + "." + oThis.getTableName();
+            return constants.PRESTAGING_SCHEMA_NAME + "." + oThis.getTableName;
     };
 
 
-    getTableName() {
+    get getTableName() {
         const oThis = this;
         if (oThis.chainType == "aux") {
             return 'aux_transfers_' + oThis.chainId;
@@ -41,11 +41,11 @@ class Transfers extends Base {
 
 
 
-    getTablePrimaryKey() {
+    get getTablePrimaryKey() {
         return ['tx_hash', 'event_index'];
     };
 
-    getTempTableNameWithSchema() {
+    get getTempTableNameWithSchema() {
         const oThis = this;
 
         if(oThis.chainType == "aux"){
@@ -66,7 +66,7 @@ class Transfers extends Base {
 
         const oThis = this,
             deleteDuplicateQuery = Util.format("DELETE from %s WHERE concat(tx_hash, concat(\'-\', event_index)) IN(SELECT concat(tx_hash, concat(\'-\', event_index)) from %s where block_number >= $1 and block_number <= $2);",
-                oThis.getTempTableNameWithSchema(), oThis.getTableNameWithSchema());
+                oThis.getTempTableNameWithSchema, oThis.getTableNameWithSchema);
 
 
         return oThis.redshiftClient.parameterizedQuery(deleteDuplicateQuery, [params.minBlock, params.maxBlock]).then((res) => {

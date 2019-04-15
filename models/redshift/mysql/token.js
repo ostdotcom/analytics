@@ -57,7 +57,7 @@ class Token extends ModelBase {
      *
      * @returns {String}
      */
-    getTableNameWithSchema() {
+    get getTableNameWithSchema() {
         const oThis = this;
         return Constants.PRESTAGING_SCHEMA_NAME + '.tokens'+ oThis.tableNameSuffix;
     };
@@ -77,7 +77,7 @@ class Token extends ModelBase {
      *
      * @returns {String}
      */
-    getTablePrimaryKey() {
+    get getTablePrimaryKey() {
         return 'token_id'
     };
 
@@ -86,7 +86,7 @@ class Token extends ModelBase {
      *
      * @returns {String}
      */
-    getTempTableNameWithSchema() {
+    get getTempTableNameWithSchema() {
         const oThis = this;
         return Constants.PRESTAGING_SCHEMA_NAME + '.temp_tokens'+ oThis.tableNameSuffix;
     };

@@ -57,7 +57,7 @@ class Workflows extends ModelBase {
      *
      * @returns {String}
      */
-    getTableNameWithSchema() {
+    get getTableNameWithSchema() {
         const oThis = this;
         return Constants.PRESTAGING_SCHEMA_NAME + '.workflows' + oThis.tableNameSuffix;
     };
@@ -77,7 +77,7 @@ class Workflows extends ModelBase {
      *
      * @returns {String}
      */
-    getTablePrimaryKey() {
+    get getTablePrimaryKey() {
         return 'id'
     };
 
@@ -86,7 +86,7 @@ class Workflows extends ModelBase {
      *
      * @returns {String}
      */
-    getTempTableNameWithSchema() {
+    get getTempTableNameWithSchema() {
         const oThis = this;
         return Constants.PRESTAGING_SCHEMA_NAME + '.temp_workflows' + oThis.tableNameSuffix;
     };
