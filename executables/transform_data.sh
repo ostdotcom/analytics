@@ -73,10 +73,8 @@ job_dir="pdi/content-pdi/jobs"
 /bin/bash ${KETTLE_CLIENT_PATH}/kitchen.sh -file ${job_dir}/${task}.kjb -level=Debug -param:CHAIN_ID=${CHAIN_ID} -param:SUB_ENV=${SUB_ENVIRONMENT} -param:ENV_SUFFIX=${ENV_SUFFIX};
 status=$?
 if [[ $status != 0 ]]; then
-    # Send error email to devs
     subject="Error while data transformation for job: ${task}";
     echo "${subject} [$(date '+%Y-%m-%d %H:%M:%S')]";
-    mail -s "${email_subject_tag} ${subject}" "${email_addrs}" < /dev/null
     endLines
     exit 1;
 else
@@ -87,9 +85,6 @@ duration=$SECONDS;
 echo ""
 subject="Data transformation completed in $(($duration / 60)) minutes and $(($duration % 60)) seconds."
 echo "${subject} [$(date '+%Y-%m-%d %H:%M:%S')]";
-if [[ $duration > 60 ]]; then
-	mail -s "${email_subject_tag} ${subject}" "${email_addrs}" < /dev/null
-fi
 
 echo ""
 echo "*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*"
@@ -102,9 +97,7 @@ task=incremental_consistency
 /bin/bash ${KETTLE_CLIENT_PATH}/kitchen.sh -file ${job_dir}/${task}.kjb -level=Debug -param:CHAIN_ID=${CHAIN_ID} -param:SUB_ENV=${SUB_ENVIRONMENT} -param:ENV_SUFFIX=${ENV_SUFFIX} -param:CONSISTENCY_LOGS_PATH=${CONSISTENCY_LOGS_PATH};
 status=$?
 if [[ $status != 0 ]]; then
-    # Send error email to devs
     subject="Error while data verification for job: ${task}";
-    mail -s "${email_subject_tag} ${subject}" "${email_addrs}"
     echo "${subject} [$(date '+%Y-%m-%d %H:%M:%S')]";
     endLines
     exit 1;
@@ -121,15 +114,12 @@ if [[ ! -z ${CONSISTENCY_LOGS_PATH} ]]; then
         # Send email
         subject="Inconsistent date after transformation [$(date '+%Y-%m-%d %H:%M:%S')]"
         echo "${subject} [$(date '+%Y-%m-%d %H:%M:%S')]";
-        mail -s "${email_subject_tag} ${subject}" "${email_addrs}" < ${file}
+        cat ${file} | mail -s "${email_subject_tag} ${subject}" "${email_addrs}"
     fi
 fi
 
 echo ""
 subject="Data verification completed in $(($duration / 60)) minutes and $(($duration % 60)) seconds."
 echo "${subject} [$(date '+%Y-%m-%d %H:%M:%S')]";
-if [[ $duration > 60 ]]; then
-	mail -s "${email_subject_tag} ${subject}" "${email_addrs}" < /dev/null
-fi
 
 endLines
