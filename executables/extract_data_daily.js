@@ -1,11 +1,8 @@
 const rootPrefix = "..",
     program = require("commander"),
-    Constant = require(rootPrefix + "/configs/constants"),
-    cronConstants = require(rootPrefix + "/lib/globalConstants/cronConstants"),
     MysqlService = require(rootPrefix + "/services/mysql_service"),
-    GetBlockScannerData = require(rootPrefix + "/lib/getBlockScannerData"),
-    ProcessLockerKlass = require(rootPrefix + '/lib/processLocker'),
-    logger = require(rootPrefix + "/helpers/custom_console_logger");
+    logger = require(rootPrefix + "/helpers/custom_console_logger"),
+    ExtractBase = require(rootPrefix + "/executables/extract_base");
 
 
 // commander
@@ -26,9 +23,10 @@ program
  * table name in cron should be comma separated value without space
  * node executables/extract_data.js --mysql true --tables Token,ChainAddresses,TokenAddresses,StakerWhitelistedAddresses,Workflows,WorkflowSteps     --chainId 202
  */
-class ExtractDataDaily {
+class ExtractDataDaily extends ExtractBase{
 
     constructor() {
+        super();
         const oThis = this;
         oThis.chainType = "origin";
         oThis.chainId = program.chainId;

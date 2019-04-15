@@ -155,6 +155,44 @@ CREATE TABLE staker_whitelisted_addresses
   updated_at                timestamp NOT NULL
 );
 
+
+DROP TABLE IF EXISTS tokens;
+CREATE TABLE tokens
+(
+  token_id                  BIGINT NOT NULL,
+  client_id                 INT,
+  name                      VARCHAR(255) NOT NULL,
+  symbol                    VARCHAR(255) NOT NULL,
+  conversion_factor         decimal(15,6) NOT NULL,
+  number_of_decimal         int NOT NULL,
+  delayed_recovery_interval int NOT NULL,
+  status                    int NOT NULL,
+  client_id_was             INT,
+  debug                     VARCHAR(255),
+  created_at                timestamp NOT NULL,
+  updated_at                timestamp NOT NULL
+)SORTKEY(token_id);
+
+
+DROP TABLE IF EXISTS temp_tokens;
+CREATE TABLE temp_tokens
+(
+  token_id                  BIGINT NOT NULL,
+  client_id                 INT,
+  name                      VARCHAR(255) NOT NULL,
+  symbol                    VARCHAR(255) NOT NULL,
+  conversion_factor         decimal(15,6) NOT NULL,
+  number_of_decimal         int NOT NULL,
+  delayed_recovery_interval int NOT NULL,
+  status                    int NOT NULL,
+  client_id_was             INT,
+  debug                     VARCHAR(255),
+  created_at                timestamp NOT NULL,
+  updated_at                timestamp NOT NULL
+)SORTKEY(token_id);
+
+
+
 -- dont run the below create table code when you are renaming the table name on production
 DROP TABLE IF EXISTS data_processing_info;
 CREATE TABLE data_processing_info
@@ -177,4 +215,8 @@ INSERT INTO data_processing_info
 
 INSERT INTO data_processing_info
 (  property,  value)VALUES( 'staker_whitelisted_addresses_last_updated_at', '1970-01-01 00:00:00');
+
+
+INSERT INTO data_processing_info
+(  property,  value)VALUES( 'token_last_updated_at', '1970-01-01 00:00:00');
 -- COMMIT;

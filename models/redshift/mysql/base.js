@@ -162,7 +162,7 @@ class ModelBase extends MysqlQueryBuilders {
      */
     async getLastUpdatedAtValue() {
         const oThis = this;
-        return await oThis.redshiftClient.parameterizedQuery("select * from " + dataProcessingInfoGC.getTableNameWithSchema + " "+"where property= $1", [oThis.getDataProcessingPropertyName]).then((res) => {
+        return await oThis.redshiftClient.parameterizedQuery("select * from " + dataProcessingInfoGC.getTableNameWithSchema + " where property= $1", [oThis.getDataProcessingPropertyName]).then((res) => {
             return (res.rows[0].value);
         });
     }
@@ -177,9 +177,20 @@ class ModelBase extends MysqlQueryBuilders {
     async fetchData(params){
         const oThis = this;
         let lastUpdatedAt = await oThis.getLastUpdatedAtValue();
-        return new oThis.constructor({}).select(oThis.columnsToFetchFromMysql()).where(['updated_at > ?', lastUpdatedAt]).
-        where(['id > ?', params.lastProcessedId]).order_by("id").
+        return new oThis.constructor({}).select(oThis.columnsToFetchFromMysql()).where(['updated_at >= ? OR created_at >= ?', lastUpdatedAt, oThis.allowedCreatedTimestamp(lastUpdatedAt) ]).
+        where(['id > ?', params.lastProcessedId]).where(['created_at < ?', oThis.getCurrentDate()]).order_by("id").
         limit(params.recordsToFetchOnce).fire();
+    }
+
+    allowedCreatedTimestamp(lastUpdatedAt){
+        let d = new Date(lastUpdatedAt);
+        return `${d.getUTCFullYear()}-${d.getUTCMonth()+1}-${d.getUTCDate()} 00:00:00`
+    }
+
+
+    getCurrentDate(){
+        let d = new Date();
+        return `${d.getUTCFullYear()}-${d.getUTCMonth()+1}-${d.getUTCDate()} 00:00:00`
     }
 
     /**
@@ -192,9 +203,9 @@ class ModelBase extends MysqlQueryBuilders {
         const oThis = this;
         let columns = [];
         for (let column of oThis.constructor.mapping){
-            columns.push(column[0]);
+            columns.push(column[1].name);
         }
-        return columns.join(", ");
+        return columns;
     }
 
 
