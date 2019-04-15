@@ -6,6 +6,7 @@ const rootPrefix = '../../..'
     , logger = require(rootPrefix + '/helpers/custom_console_logger.js')
     , ApplicationMailer = require(rootPrefix + '/lib/applicationMailer')
     , Util = require('util')
+    , blockScannerGC = require(rootPrefix + "/lib/globalConstants/blockScanner")
     , responseHelper = require(rootPrefix + '/lib/formatter/response')
 ;
 
@@ -31,9 +32,9 @@ class Transactions extends Base {
 
     get getTableName() {
         const oThis = this;
-        if (oThis.chainType == "aux") {
+        if (oThis.chainType == blockScannerGC.auxChainType) {
             return 'aux_transactions_' + oThis.chainId;
-        } else if (oThis.chainType == "origin") {
+        } else if (oThis.chainType == blockScannerGC.originChainType) {
             return 'origin_transactions';
         } else {
             throw 'Passed ChainType is incorrect.'
@@ -48,9 +49,9 @@ class Transactions extends Base {
     get getTempTableNameWithSchema() {
         const oThis = this;
 
-        if (oThis.chainType == "aux") {
+        if (oThis.chainType == blockScannerGC.auxChainType) {
             return constants.PRESTAGING_SCHEMA_NAME + '.temp_aux_transactions_' + oThis.chainId;
-        } else if (oThis.chainType == "origin") {
+        } else if (oThis.chainType == blockScannerGC.originChainType) {
             return constants.PRESTAGING_SCHEMA_NAME + '.temp_origin_transactions';
         } else {
             throw 'Passed ChainType is incorrect.'

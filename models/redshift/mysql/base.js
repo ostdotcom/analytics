@@ -11,6 +11,7 @@ const rootPrefix = '../../..',
     ApplicationMailer = require(rootPrefix + '/lib/applicationMailer'),
     dataProcessingInfoGC = require(rootPrefix + "/lib/globalConstants/redshift/dataProcessingInfo"),
     dateUtil = require(rootPrefix + "/lib/dateUtil"),
+    blockScannerGC = require(rootPrefix + "/lib/globalConstants/blockScanner"),
     RedshiftClient = require(rootPrefix + "/lib/redshift");
 
 /**
@@ -36,7 +37,7 @@ class ModelBase extends MysqlQueryBuilders {
         oThis.dbName = params.dbName;
         oThis.applicationMailer = new ApplicationMailer();
         oThis.redshiftClient = new RedshiftClient();
-        if(oThis.chainType == "aux"){
+        if(oThis.chainType == blockScannerGC.auxChainType){
             oThis.tableNameSuffix = `_${oThis.chainId}`
         }
     }
@@ -111,11 +112,10 @@ class ModelBase extends MysqlQueryBuilders {
                 return oThis.redshiftClient.query(insertRemainingEntries);
             }).then(function () {
                 logger.info('Copy from temp table to main table complete.');
-                return responseHelper.successWithData({});
+                return Promise.resolve(responseHelper.successWithData({}));
             }).catch(function (err) {
                 logger.error("Exception in insertToMainFromTemp", err);
-                //
-                throw new Error(" Exception in insertToMainFromTemp" + err);
+                return Promise.reject(responseHelper.error({err: err}));
             });
 
     };

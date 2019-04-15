@@ -4,6 +4,7 @@ const rootPrefix = '../../..'
     , transfersGC = require(rootPrefix + '/lib/globalConstants/redshift/transfers')
     , Base = require("./base")
     , logger = require(rootPrefix + '/helpers/custom_console_logger.js')
+    , blockScannerGC = require(rootPrefix + "/lib/globalConstants/blockScanner")
     , Util = require('util')
 ;
 
@@ -29,9 +30,9 @@ class Transfers extends Base {
 
     get getTableName() {
         const oThis = this;
-        if (oThis.chainType == "aux") {
+        if (oThis.chainType == blockScannerGC.auxChainType) {
             return 'aux_transfers_' + oThis.chainId;
-        } else if (oThis.chainType == "origin") {
+        } else if (oThis.chainType == blockScannerGC.originChainType) {
             return 'origin_transfers';
         } else {
             throw 'Passed ChainType is incorrect.'
@@ -48,9 +49,9 @@ class Transfers extends Base {
     get getTempTableNameWithSchema() {
         const oThis = this;
 
-        if(oThis.chainType == "aux"){
+        if(oThis.chainType == blockScannerGC.auxChainType){
             return constants.PRESTAGING_SCHEMA_NAME + '.temp_aux_transfers_' + oThis.chainId;
-        } else if(oThis.chainType == "origin"){
+        } else if(oThis.chainType == blockScannerGC.originChainType){
             return constants.PRESTAGING_SCHEMA_NAME + '.temp_origin_transfers';
         } else {
             throw 'Passed ChainType is incorrect.'

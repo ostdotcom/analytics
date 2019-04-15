@@ -4,7 +4,8 @@ const rootPrefix = "..",
     dataProcessingInfoGC = require(rootPrefix + "/lib/globalConstants/redshift/dataProcessingInfo"),
     BlockScannerService = require(rootPrefix + "/services/block_scanner_service"),
     responseHelper = require(rootPrefix + '/lib/formatter/response'),
-    logger = require(rootPrefix + "/helpers/custom_console_logger")
+    logger = require(rootPrefix + "/helpers/custom_console_logger"),
+    TransactionsModel = require(rootPrefix + "/models/redshift/blockScanner/transactions")
 ;
 
 
@@ -19,6 +20,7 @@ class GetBlockScannerDataService {
         oThis.endBlock = params.endBlock;
         oThis.redshiftClient = new RedshiftClient();
         oThis.blockScanner = new BlockScanner(oThis.chainId);
+        oThis.transactionModel = new TransactionsModel({config: {chainId: oThis.chainId, chainType: oThis.chainType}});
     }
 
 
@@ -51,7 +53,11 @@ class GetBlockScannerDataService {
         logger.step("processing started at", startTime);
 
 
-        let blockScannerService = new BlockScannerService(oThis.chainId, startBlock, endBlock, oThis.chainType, oThis.isStartBlockGiven);
+        let blockScannerService = new BlockScannerService({
+            chainId: oThis.chainId, startBlock: startBlock,
+            endBlock: endBlock, chainType: oThis.chainType,
+            isStartBlockGiven: oThis.isStartBlockGiven
+        });
 
         await blockScannerService.process();
 
@@ -83,7 +89,8 @@ class GetBlockScannerDataService {
      */
     getStartBlockFromRedShift() {
         const oThis = this;
-        return oThis.redshiftClient.parameterizedQuery("select * from " + dataProcessingInfoGC.getTableNameWithSchema + " where property =$1", [dataProcessingInfoGC.lastProcessedBlockProperty]).then((res) => {
+
+        return oThis.redshiftClient.parameterizedQuery("select * from " + dataProcessingInfoGC.getTableNameWithSchema + " where property =$1", [oThis.transactionModel.getDataProcessingPropertyName]).then((res) => {
             return parseInt(res.rows[0].value) + 1;
         });
     }

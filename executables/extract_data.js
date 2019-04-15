@@ -4,6 +4,7 @@ const rootPrefix = "..",
     cronConstants = require(rootPrefix + "/lib/globalConstants/cronConstants"),
     MysqlService = require(rootPrefix + "/services/mysql_service"),
     GetBlockScannerData = require(rootPrefix + "/services/get_block_scanner_data_service"),
+    blockScannerGC = require(rootPrefix + "/lib/globalConstants/blockScanner"),
     ProcessLockerKlass = require(rootPrefix + '/lib/processLocker'),
     logger = require(rootPrefix + "/helpers/custom_console_logger"),
     ExtractBase = require(rootPrefix + "/executables/extract_base");
@@ -32,7 +33,7 @@ class ExtractData extends ExtractBase{
     constructor(params) {
         super(params);
         const oThis = this;
-        oThis.chainType = "aux";
+        oThis.chainType = blockScannerGC.auxChainType;
         oThis.chainId = program.chainId;
         oThis.startBlock = program.startBlock;
         oThis.endBlock = program.endBlock;
@@ -47,6 +48,21 @@ class ExtractData extends ExtractBase{
             parseInt(oThis.endBlock) + "_");
     }
 
+    async start(){
+        const oThis = this;
+        if (oThis.mysqlParam !== 'false' && oThis.mysqlParam != undefined) {
+            await oThis.extractMysqlData();
+        }
+
+        if (oThis.blockScannerParam !== 'false' && oThis.blockScannerParam != undefined) {
+
+            const getBlockScannerData = new GetBlockScannerData({
+                chainId: oThis.chainId,
+                chainType: oThis.chainType
+            });
+            await getBlockScannerData.perform(oThis.startBlock, oThis.endBlock);
+        }
+    }
 
     async extractMysqlData() {
         const oThis = this;
@@ -68,23 +84,6 @@ class ExtractData extends ExtractBase{
         }).catch((e) => {
             return Promise.reject(e);
         });
-    }
-
-
-    async fetchData(){
-        const oThis = this;
-        if (oThis.mysqlParam !== 'false' && oThis.mysqlParam != undefined) {
-            await oThis.extractMysqlData();
-        }
-
-        if (oThis.blockScannerParam !== 'false' && oThis.blockScannerParam != undefined) {
-
-            const getBlockScannerData = new GetBlockScannerData({
-                chainId: oThis.chainId,
-                chainType: oThis.chainType
-            });
-            await getBlockScannerData.perform(oThis.startBlock, oThis.endBlock);
-        }
     }
 
 

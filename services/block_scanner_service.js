@@ -29,14 +29,18 @@ class BlockScannerService {
      *
      * @constructor
      */
-    constructor(chainId, startBlock, endBlock, chainType, isStartBlockGiven) {
+    constructor(params) {
+
         const oThis = this;
-        oThis.chainId = chainId;
-        oThis.batchStartBlock = oThis.nextBlockToProcess = startBlock;
-        oThis.endBlock = endBlock;
-        oThis.isStartBlockGiven = isStartBlockGiven;
+        oThis.chainId = params.chainId;
+        oThis.endBlock = params.endBlock;
+        oThis.isStartBlockGiven = params.isStartBlockGiven;
+        oThis.chainType = params.chainType;
+        oThis.batchStartBlock = oThis.nextBlockToProcess = params.startBlock;
+
+
         oThis.applicationMailer = new ApplicationMailer();
-        oThis.chainType = chainType;
+
 
         oThis.ModelInstances =
             [new TransfersModel({config: {chainId: oThis.chainId, chainType: oThis.chainType}}),

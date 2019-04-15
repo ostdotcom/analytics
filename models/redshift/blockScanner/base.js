@@ -5,6 +5,7 @@ const rootPrefix = "../../.."
     , Util = require('util')
     , logger = require(rootPrefix + '/helpers/custom_console_logger.js')
     , ApplicationMailer = require(rootPrefix + '/lib/applicationMailer')
+    , blockScannerGC = require(rootPrefix + "/lib/globalConstants/blockScanner")
     , dataProcessingInfoGC = require(rootPrefix + "/lib/globalConstants/redshift/dataProcessingInfo")
 ;
 
@@ -102,7 +103,7 @@ class Base {
      */
     get getDataProcessingPropertyName() {
         const oThis = this;
-        let suffix  = oThis.chainType == "aux" ? "_aux_" + oThis.chainId : "_origin";
+        let suffix  = oThis.chainType == blockScannerGC.auxChainType ? "_aux_" + oThis.chainId : "_origin";
         return dataProcessingInfoGC.lastProcessedBlockProperty + suffix;
     }
 
