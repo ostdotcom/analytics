@@ -43,7 +43,7 @@ class MysqlService {
         oThis.applicationMailer = new ApplicationMailer();
         oThis.redshiftClient = new RedshiftClient();
         oThis.model = new oThis.Model({chainId: oThis.chainId});
-        oThis.s3UploadPath = `${Constants.SUB_ENVIRONMENT}${Constants.ENV_SUFFIX}/${oThis.chainId}/${Date.now()}/${oThis.model.getTableName()}`;
+        oThis.s3UploadPath = `${Constants.SUB_ENVIRONMENT}${Constants.ENV_SUFFIX}/${oThis.chainId}/${Date.now()}/${oThis.model.getTableName}`;
         oThis.localDirFullFilePath = `${Constants.LOCAL_DIR_FILE_PATH}/${oThis.s3UploadPath}`;
     }
 
@@ -149,7 +149,7 @@ class MysqlService {
 
         if (r.data.hasFiles) {
             let downloadToTemp = new DownloadToTemp({
-                tempTableName: oThis.model.getTempTableNameWithSchema(),
+                tempTableName: oThis.model.getTempTableNameWithSchema,
                 columnList: oThis.model.getColumnList
             });
             let resp = await downloadToTemp.copyFromS3ToTemp(`${oThis.s3UploadPath}`);

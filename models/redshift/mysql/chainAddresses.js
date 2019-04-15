@@ -57,7 +57,7 @@ class ChainAddresses extends ModelBase {
      *
      * @returns {String}
      */
-    getTableNameWithSchema() {
+    get getTableNameWithSchema() {
         const oThis = this;
         return Constants.PRESTAGING_SCHEMA_NAME + '.chain_addresses' + oThis.tableNameSuffix;
     };
@@ -77,7 +77,7 @@ class ChainAddresses extends ModelBase {
      *
      * @returns {String}
      */
-    getTablePrimaryKey() {
+    get getTablePrimaryKey() {
         return 'id'
     };
 
@@ -86,7 +86,7 @@ class ChainAddresses extends ModelBase {
      *
      * @returns {String}
      */
-    getTempTableNameWithSchema() {
+    get getTempTableNameWithSchema() {
         const oThis = this;
         return Constants.PRESTAGING_SCHEMA_NAME + '.temp_chain_addresses' + oThis.tableNameSuffix;
     };

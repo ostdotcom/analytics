@@ -36,7 +36,7 @@ class Base {
     insertToMainTable() {
         logger.log("insert to main table");
         const oThis = this;
-        const insertRemainingEntries = Util.format('INSERT into %s (%s, insertion_timestamp) (select %s, %s from %s);', oThis.getTableNameWithSchema(), oThis.getColumnList, oThis.getColumnList, oThis.getTimeStampInSecs, oThis.getTempTableNameWithSchema())
+        const insertRemainingEntries = Util.format('INSERT into %s (%s, insertion_timestamp) (select %s, %s from %s);', oThis.getTableNameWithSchema, oThis.getColumnList, oThis.getColumnList, oThis.getTimeStampInSecs, oThis.getTempTableNameWithSchema)
         return oThis.redshiftClient.query(insertRemainingEntries).then(async (res) => {
             logger.log("data moved from temp to main table successfully");
             await oThis.updateLastProcessedBlock();
@@ -54,7 +54,7 @@ class Base {
     async validateTempTableData(minBlockNumberForTempTable, maxAllowedEndblockInMain) {
 
         const oThis = this,
-            maxBlockNumberFromMainQuery = await oThis.redshiftClient.query(Util.format('select coalesce(max(block_number), -1) as max_block_number  from %s where block_number <= %s ', oThis.getTableNameWithSchema(), maxAllowedEndblockInMain));
+            maxBlockNumberFromMainQuery = await oThis.redshiftClient.query(Util.format('select coalesce(max(block_number), -1) as max_block_number  from %s where block_number <= %s ', oThis.getTableNameWithSchema, maxAllowedEndblockInMain));
 
         let maxBlockNumberFromMain = parseInt(maxBlockNumberFromMainQuery.rows[0].max_block_number);
 
@@ -95,19 +95,15 @@ class Base {
         return oThis.constructor.fieldsToBeMoveToAnalytics.join(", ");
     }
 
-    getModelImportString() {
-        throw 'getModelImportString not implemented'
+    get getTableNameWithSchema() {
+        throw 'getTableNameWithSchema not implemented'
     };
 
-    getTableNameWithSchema() {
-        throw 'getModelImportString not implemented'
-    };
-
-    getTablePrimaryKey() {
+    get getTablePrimaryKey() {
         throw 'getTablePrimaryKey not implemented'
     };
 
-    getTempTableNameWithSchema() {
+    get getTempTableNameWithSchema() {
         throw 'getTempTableNameWithSchema not implemented'
     };
 
