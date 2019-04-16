@@ -22,8 +22,8 @@ create schema if not exists ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV
 set search_path= ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX};
 
 
-DROP TABLE IF EXISTS temp_aux_transactions_${CHAIN_ID};
-CREATE TABLE temp_aux_transactions_${CHAIN_ID}
+DROP TABLE IF EXISTS temp_transactions_aux_${CHAIN_ID};
+CREATE TABLE temp_transactions_aux_${CHAIN_ID}
 (
   tx_uuid               VARCHAR(36),
   tx_hash               VARCHAR(66) NOT NULL,
@@ -48,8 +48,8 @@ CREATE TABLE temp_aux_transactions_${CHAIN_ID}
   DISTKEY (tx_hash) SORTKEY (block_number, kind);
 
 
-DROP TABLE IF EXISTS aux_transactions_${CHAIN_ID};
-CREATE TABLE aux_transactions_${CHAIN_ID}
+DROP TABLE IF EXISTS transactions_aux_${CHAIN_ID};
+CREATE TABLE transactions_aux_${CHAIN_ID}
 (
   id                    BIGINT NOT NULL IDENTITY(1,1),
   tx_uuid               VARCHAR(36),
@@ -76,8 +76,8 @@ CREATE TABLE aux_transactions_${CHAIN_ID}
   DISTKEY (tx_hash) SORTKEY (block_number, kind);
 
 
-DROP TABLE IF EXISTS temp_aux_transfers_${CHAIN_ID};
-CREATE TABLE temp_aux_transfers_${CHAIN_ID}
+DROP TABLE IF EXISTS temp_transfers_aux_${CHAIN_ID};
+CREATE TABLE temp_transfers_aux_${CHAIN_ID}
 (
   tx_hash          VARCHAR(255) NOT NULL,
   event_index      INT          NOT NULL,
@@ -90,8 +90,8 @@ CREATE TABLE temp_aux_transfers_${CHAIN_ID}
   DISTKEY (tx_hash) SORTKEY(block_number);
 
 
-DROP TABLE IF EXISTS aux_transfers_${CHAIN_ID};
-CREATE TABLE aux_transfers_${CHAIN_ID}
+DROP TABLE IF EXISTS transfers_aux_${CHAIN_ID};
+CREATE TABLE transfers_aux_${CHAIN_ID}
 (
   id                    BIGINT NOT NULL IDENTITY(1,1),
   tx_hash          VARCHAR(255) NOT NULL,

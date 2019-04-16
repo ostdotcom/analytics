@@ -23,8 +23,8 @@ create schema if not exists ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV
 set search_path= ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX};
 
 
-DROP TABLE IF EXISTS temp_origin_transactions;
-CREATE TABLE temp_origin_transactions
+DROP TABLE IF EXISTS temp_transactions_origin;
+CREATE TABLE temp_transactions_origin
 (
   tx_uuid               VARCHAR(36),
   tx_hash               VARCHAR(66) NOT NULL,
@@ -49,8 +49,8 @@ CREATE TABLE temp_origin_transactions
   DISTKEY (tx_hash) SORTKEY (block_number, kind);
 
 
-DROP TABLE IF EXISTS origin_transactions;
-CREATE TABLE origin_transactions
+DROP TABLE IF EXISTS transactions_origin;
+CREATE TABLE transactions_origin
 (
   id                    BIGINT NOT NULL IDENTITY(1,1),
   tx_uuid               VARCHAR(36),
@@ -77,8 +77,8 @@ CREATE TABLE origin_transactions
   DISTKEY (tx_hash) SORTKEY (block_number, kind);
 
 
-DROP TABLE IF EXISTS temp_origin_transfers;
-CREATE TABLE temp_origin_transfers
+DROP TABLE IF EXISTS temp_transfers_origin;
+CREATE TABLE temp_transfers_origin
 (
   tx_hash          VARCHAR(255) NOT NULL,
   event_index      INT          NOT NULL,
@@ -92,8 +92,8 @@ CREATE TABLE temp_origin_transfers
 
 
 
-DROP TABLE IF EXISTS origin_transfers;
-CREATE TABLE origin_transfers
+DROP TABLE IF EXISTS transfers_origin;
+CREATE TABLE transfers_origin
 (
   id                    BIGINT NOT NULL IDENTITY(1,1),
   tx_hash          VARCHAR(255) NOT NULL,

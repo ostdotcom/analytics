@@ -20,6 +20,14 @@ class Base {
         oThis.object = params.object || {};
         oThis.applicationMailer = new ApplicationMailer();
         oThis.redshiftClient = new RedshiftClient();
+        oThis.tableNameSuffix = "";
+        if(oThis.chainType == blockScannerGC.auxChainType){
+            oThis.tableNameSuffix = "_aux_" + oThis.chainId
+        }else if(oThis.chainType == blockScannerGC.originChainType){
+            oThis.tableNameSuffix = "_origin"
+        }else {
+            throw 'Passed ChainType is incorrect.'
+        }
     }
 
     async validateAndMoveFromTempToMain(minBlockNumberForTempTable, maxAllowedEndblockInMain) {
@@ -101,7 +109,7 @@ class Base {
      */
     get getDataProcessingPropertyName() {
         const oThis = this;
-        let suffix  = oThis.chainType == blockScannerGC.auxChainType ? "_aux_" + oThis.chainId : "_origin";
+        let suffix  = oThis.tableNameSuffix;
         return dataProcessingInfoGC.lastProcessedBlockProperty + suffix;
     }
 

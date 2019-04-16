@@ -30,13 +30,7 @@ class Transfers extends Base {
 
     get getTableName() {
         const oThis = this;
-        if (oThis.chainType == blockScannerGC.auxChainType) {
-            return 'aux_transfers_' + oThis.chainId;
-        } else if (oThis.chainType == blockScannerGC.originChainType) {
-            return 'origin_transfers';
-        } else {
-            throw 'Passed ChainType is incorrect.'
-        }
+        return 'transfers' + oThis.tableNameSuffix;
 
     };
 
@@ -48,17 +42,7 @@ class Transfers extends Base {
 
     get getTempTableNameWithSchema() {
         const oThis = this;
-
-        if(oThis.chainType == blockScannerGC.auxChainType){
-            return constants.PRESTAGING_SCHEMA_NAME + '.temp_aux_transfers_' + oThis.chainId;
-        } else if(oThis.chainType == blockScannerGC.originChainType){
-            return constants.PRESTAGING_SCHEMA_NAME + '.temp_origin_transfers';
-        } else {
-            throw 'Passed ChainType is incorrect.'
-        }
-
-
-
+        return constants.PRESTAGING_SCHEMA_NAME + '.temp_transfers' + oThis.tableNameSuffix;
     };
 
     handleBlockError(params) {
