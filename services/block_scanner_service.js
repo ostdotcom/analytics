@@ -138,6 +138,7 @@ class BlockScannerService {
 
                     try {
                         await operationModelInstance.validateAndMoveFromTempToMain(oThis.batchStartBlock, oThis.currentBatchEndBlock);
+                        await operationModelInstance.updateLastProcessedBlock(oThis.isStartBlockGiven, oThis.currentBatchEndBlock);
                     } catch (e) {
                         logger.error("error", e);
                         let error = responseHelper.error({

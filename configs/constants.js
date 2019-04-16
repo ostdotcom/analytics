@@ -1,5 +1,6 @@
 "use strict";
 
+const rootPrefix = "..";
 const Constants = function () {
 };
 
@@ -47,7 +48,9 @@ define('MAX_SPLIT_COUNT', process.env.MAX_SPLIT_COUNT);
 define('NO_OF_BLOCKS_TO_PROCESS_TOGETHER', process.env.NO_OF_BLOCKS_TO_PROCESS_TOGETHER);
 define('S3_WRITE_COUNT', process.env.S3_WRITE_COUNT);
 define("LOCAL_DIR_FILE_PATH", process.env.LOCAL_DIR_FILE_PATH);
-define("BLOCK_SCANNER_CONFIG_FILE_PATH", process.env.BLOCK_SCANNER_CONFIG_FILE_PATH);
+define("BLOCK_SCANNER_CONFIG_FILE", process.env.BLOCK_SCANNER_CONFIG_FILE_PATH ? require(process.env.BLOCK_SCANNER_CONFIG_FILE_PATH):
+    require( rootPrefix + "/block_scanner_config.json"));
+
 
 define("PRESTAGING_SCHEMA_NAME",process.env.PRESTAGING_SCHEMA_PREFIX + process.env.SUB_ENVIRONMENT + process.env.ENV_SUFFIX);
 

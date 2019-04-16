@@ -143,17 +143,18 @@ class ModelBase extends MysqlQueryBuilders {
     async fetchData(params){
         const oThis = this;
         let lastCronRunTime = await oThis.getLastCronRunTime();
-        let fetchDataQuery = oThis.constructor({}).select(oThis.columnsToFetchFromMysql()).
+        let fetchDataInstance = new oThis.constructor({});
+        let query = fetchDataInstance.select(oThis.columnsToFetchFromMysql()).
         where(['updated_at >= ? OR created_at >= ?', lastCronRunTime, dateUtil.getBeginnigOfDayInUTC(lastCronRunTime) ]).
         where(['created_at < ?', dateUtil.getBeginnigOfDayInUTC()]).
         order_by("id").
         limit(params.recordsToFetchOnce);
 
         if (params.lastProcessedId !== undefined){
-            fetchDataQuery = fetchDataQuery.where(['id > ?', params.lastProcessedId])
+            query = query.where(['id > ?', params.lastProcessedId])
         }
 
-        return new fetchDataQuery.fire();
+        return query.fire();
     }
     /**
      * columns to be fetched from Mysql

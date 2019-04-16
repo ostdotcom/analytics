@@ -36,7 +36,7 @@ class ExtractBase {
 
 
         try {
-            return oThis.start();
+            await oThis.start();
         } catch (e) {
             logger.error("Terminating error due to exception", e);
             process.exit(1);

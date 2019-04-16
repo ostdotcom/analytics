@@ -105,7 +105,7 @@ class MysqlService {
                 recordsToFetchOnce: recordsToFetchOnce,
                 lastProcessedId: lastProcessedId
             });
-            if (records.length > 0 && lastProcessedId !== undefined) {
+            if (records.length > 0 && lastProcessedId === undefined) {
                 shell.mkdir("-p", oThis.localDirFullFilePath);
             }
 

@@ -39,7 +39,6 @@ class Base {
         const insertRemainingEntries = Util.format('INSERT into %s (%s, insertion_timestamp) (select %s, %s from %s);', oThis.getTableNameWithSchema, oThis.getColumnList, oThis.getColumnList, oThis.getTimeStampInSecs, oThis.getTempTableNameWithSchema)
         return oThis.redshiftClient.query(insertRemainingEntries).then(async (res) => {
             logger.log("data moved from temp to main table successfully");
-            await oThis.updateLastProcessedBlock();
             return Promise.resolve(res);
         }).catch((err)=>{
             return Promise.reject(err);
@@ -79,12 +78,12 @@ class Base {
      * * @return {promise}
      *
      */
-    async updateLastProcessedBlock() {
+    async updateLastProcessedBlock(isStartBlockGiven, currentBatchEndBlock) {
         const oThis = this;
-        if (oThis.isStartBlockGiven == false) {
+        if (isStartBlockGiven == false) {
             logger.step("Starting updateLastProcessedBlock");
             return oThis.redshiftClient.parameterizedQuery("update " + dataProcessingInfoGC.getTableNameWithSchema + " set value=$1 " +
-                "where property=$2", [oThis.currentBatchEndBlock, oThis.getDataProcessingPropertyName]).then((res) => {
+                "where property=$2", [currentBatchEndBlock, oThis.getDataProcessingPropertyName]).then((res) => {
                 logger.log("last processed block updated successfully");
             });
         }
@@ -104,6 +103,17 @@ class Base {
         const oThis = this;
         let suffix  = oThis.chainType == blockScannerGC.auxChainType ? "_aux_" + oThis.chainId : "_origin";
         return dataProcessingInfoGC.lastProcessedBlockProperty + suffix;
+    }
+
+    get chainSuffix(){
+        const oThis = this;
+        if (oThis.chainType == blockScannerGC.auxChainType) {
+            return "_" + oThis.chainId ;
+        } else if (oThis.chainType == blockScannerGC.originChainType) {
+            return "" ;
+        } else {
+            throw 'Passed ChainType is incorrect.'
+        }
     }
 
 
