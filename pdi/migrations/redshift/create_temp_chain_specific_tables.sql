@@ -50,15 +50,14 @@ CREATE TABLE temp_incremental_chain_transactions_aux_${CHAIN_ID}
   chain_type            VARCHAR(20) NOT NULL,
   chain_id              INT NOT NULL,
   token_id              INT,
-  kind                  INT,
+  tx_kind                  INT,
   block_timestamp       INT NOT NULL,
-  rounded_date_timestamp       INT NOT NULL,
   tx_status          varchar(20)  NOT NULL,
   gas_price             BIGINT NOT NULL,
   gas_used              INT NOT NULL,
   gas_limit             INT NOT NULL
 )
-  DISTKEY (tx_hash) SORTKEY (kind, from_address);
+  DISTKEY (tx_hash) SORTKEY (tx_kind, tx_hash);
 
 
 DROP TABLE IF EXISTS temp_incremental_chain_workflow_transactions_aux_${CHAIN_ID};
@@ -69,24 +68,22 @@ CREATE TABLE temp_incremental_chain_workflow_transactions_aux_${CHAIN_ID}
   chain_type            VARCHAR(20) NOT NULL,
   chain_id              INT NOT NULL,
   token_id              INT,
-  kind                  INT,
+  tx_kind                  INT,
   rounded_date_timestamp       INT NOT NULL,
   tx_status          varchar(20)  NOT NULL,
   gas_price             BIGINT NOT NULL,
   gas_used              INT NOT NULL,
   gas_limit             INT NOT NULL,
+  tx_fees             BIGINT NOT NULL,
 
   workflow_id              BIGINT,
   workflow_kind              INT,
   workflow_status              INT,
-  rounded_workflow_create_timestamp              INT,
-  workflow_step_id              INT,
-  workflow_step_kind              INT,
-  workflow_step_status              INT
+  rounded_workflow_create_timestamp              INT
 )
   DISTKEY (tx_hash) SORTKEY (workflow_kind);
 
-  DROP TABLE IF EXISTS temp_incremental_chain_workflow_transactions_sk_aux_${CHAIN_ID};
+DROP TABLE IF EXISTS temp_incremental_chain_workflow_transactions_sk_aux_${CHAIN_ID};
 CREATE TABLE temp_incremental_chain_workflow_transactions_sk_aux_${CHAIN_ID}
 (
   tx_hash               VARCHAR(66) NOT NULL,
@@ -96,22 +93,20 @@ CREATE TABLE temp_incremental_chain_workflow_transactions_sk_aux_${CHAIN_ID}
   chain_id              INT NOT NULL,
   token_id              INT,
   token_sk              INT not null,
-  kind                  INT,
+  tx_kind                  INT,
   tx_date_sk       INT NOT NULL,
   tx_status          varchar(20)  NOT NULL,
   gas_price             BIGINT NOT NULL,
   gas_used              INT NOT NULL,
   gas_limit             INT NOT NULL,
+  tx_fees             BIGINT NOT NULL,
 
   workflow_id              BIGINT,
   workflow_kind_sk              BIGINT,
   workflow_kind              INT,
   workflow_status              INT,
   rounded_workflow_create_timestamp              INT,
-  workflow_date_sk INT NOT NULL,
-  workflow_step_id              INT,
-  workflow_step_kind              INT,
-  workflow_step_status              INT
+  workflow_date_sk INT NOT NULL
 )
   DISTKEY (tx_hash) SORTKEY (workflow_kind);
 
