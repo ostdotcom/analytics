@@ -48,7 +48,7 @@
 ## Setup a new env or sub env
 
 ### Option 1
-    sh kitchen.sh -file=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/content-pdi/jobs/setup_new_sub_environment.kjb -level=Detailed -param:SUB_ENV=main -param:CHAIN_ID=202 -param:ENV_SUFFIX=_d10
+    sh kitchen.sh -file=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/content-pdi/jobs/setup_new_sub_environment.kjb -level=Detailed -param:SUB_ENV=main -param:CHAIN_ID=202 -param:ENV_SUFFIX=_d10 -param:ORIGIN_CHAIN_ID=197
     
 ###  Option 2
 
@@ -64,9 +64,9 @@
 	        2. run create_all_chain_specific.sql in analytics folder
 	        3. run create_all.sql in analytics folder
     3. run onetimer/populate_dim_dates.kjb (chain id is needed for logging)   
-        sh kitchen.sh -file=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/content-pdi/jobs/onetimer/populate_dim_dates.kjb -level=Detailed -param:SUB_ENV=main -param:CHAIN_ID=202 -param:ENV_SUFFIX=_d6 
+        sh kitchen.sh -file=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/content-pdi/jobs/onetimer/populate_dim_dates.kjb -level=Detailed -param:SUB_ENV=main -param:ENV_SUFFIX=_d6 
     4. run onetimer/populate_dim_timess.kjb (chain id is needed for logging)
-         sh kitchen.sh -file=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/content-pdi/jobs/onetimer/populate_dim_times.kjb -level=Detailed -param:SUB_ENV=main -param:CHAIN_ID=202 -param:ENV_SUFFIX=_d6
+         sh kitchen.sh -file=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/content-pdi/jobs/onetimer/populate_dim_times.kjb -level=Detailed -param:SUB_ENV=main -param:ENV_SUFFIX=_d6
 
 ## Setup a new CHAIN_ID:
 
@@ -78,11 +78,13 @@
 	    MYSQL:
 		    1. Add a new Database
 			2. run create_all_chain_specific.sql
-			3. run create_log_tables.sql
+			3. run create_all.sql
 		Redshift
-			1. run create_temp_tables.sql
-			2. run create_all_chain_specific.sql in analytics folder
-			3. run create_all.sql in analytics folder
+			1. run create_all_tables.sql
+			2. run create_chain_specific_tables.sql		
+			3. run create_temp_tables.sql
+			4. run create_temp_chain_specific_tables.sql
+			5. run redshift.sql in analytics folder
 
 ## TO Run A JOB:
 	export KETTLE_HOME=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/configs/development
