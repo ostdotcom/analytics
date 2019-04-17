@@ -522,7 +522,7 @@
     <connection>analytics_redshift_connection</connection>
     <sql>(select min(workflow_date_sk) as min_workflow_date_sk 
 from ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.all_workflows_transactions 
-where last_updated_at > (select timestamp 'epoch' + (value * interval '1 second') as  last_processed_block_timestamp from 
+where last_updated_at > (select value as  last_processed_block_timestamp from 
 ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.pentaho_processing_info 
 where property = 'last_updated_at_all_workflows_transactions')</sql>
     <limit>0</limit>

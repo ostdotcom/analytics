@@ -692,7 +692,7 @@ insert into temp_incremental_chain_workflow_transactions_sk_${CHAIN_TYPE}${CHAIN
 
 insert into all_worflows_transactions
 (
-select *, GETDATE() as last_updated_at from temp_incremental_chain_workflow_transactions_sk_${CHAIN_TYPE}${CHAIN_ID_SUFFIX}
+select *, extract(epoch from GETDATE()) as last_updated_at from temp_incremental_chain_workflow_transactions_sk_${CHAIN_TYPE}${CHAIN_ID_SUFFIX}
 );
 
 update pentaho_processing_info
