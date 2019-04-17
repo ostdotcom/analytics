@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <job>
   <name>setup new sub environment</name>
-  <description/>
-  <extended_description/>
-  <job_version/>
+  <description />
+  <extended_description />
+  <job_version />
   <job_status>0</job_status>
   <directory>/</directory>
   <created_user>-</created_user>
@@ -12,33 +12,33 @@
   <modified_date>2019/04/04 18:10:35.731</modified_date>
   <parameters>
     <parameter>
-      <name>CHAIN_ID</name>
-      <default_value/>
-      <description/>
+      <name>ENV_SUFFIX</name>
+      <default_value />
+      <description />
     </parameter>
     <parameter>
-      <name>ENV_SUFFIX</name>
-      <default_value/>
-      <description/>
+      <name>ORIGIN_CHAIN_ID</name>
+      <default_value />
+      <description />
     </parameter>
     <parameter>
       <name>SUB_ENV</name>
-      <default_value/>
-      <description/>
+      <default_value />
+      <description />
     </parameter>
   </parameters>
   <connection>
     <name>analytics_mysql_connection</name>
-    <server/>
+    <server />
     <type>MYSQL</type>
     <access>JNDI</access>
     <database>analyticsMysqlConnection_${SUB_ENV}${ENV_SUFFIX}</database>
     <port>1521</port>
-    <username/>
+    <username />
     <password>Encrypted </password>
-    <servername/>
-    <data_tablespace/>
-    <index_tablespace/>
+    <servername />
+    <data_tablespace />
+    <index_tablespace />
     <attributes>
       <attribute>
         <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
@@ -49,16 +49,8 @@
         <attribute>N</attribute>
       </attribute>
       <attribute>
-        <code>INITIAL_POOL_SIZE</code>
-        <attribute>10</attribute>
-      </attribute>
-      <attribute>
         <code>IS_CLUSTERED</code>
         <attribute>N</attribute>
-      </attribute>
-      <attribute>
-        <code>MAXIMUM_POOL_SIZE</code>
-        <attribute>20</attribute>
       </attribute>
       <attribute>
         <code>PORT_NUMBER</code>
@@ -86,22 +78,22 @@
       </attribute>
       <attribute>
         <code>USE_POOLING</code>
-        <attribute>Y</attribute>
+        <attribute>N</attribute>
       </attribute>
     </attributes>
   </connection>
   <connection>
     <name>analytics_redshift_connection</name>
-    <server/>
+    <server />
     <type>REDSHIFT</type>
     <access>JNDI</access>
     <database>analyticsRedshiftConnection${ENV_SUFFIX}</database>
     <port>1521</port>
-    <username/>
+    <username />
     <password>Encrypted </password>
-    <servername/>
-    <data_tablespace/>
-    <index_tablespace/>
+    <servername />
+    <data_tablespace />
+    <index_tablespace />
     <attributes>
       <attribute>
         <code>EXTRA_OPTION_REDSHIFT.tcpKeepAlive</code>
@@ -116,16 +108,8 @@
         <attribute>N</attribute>
       </attribute>
       <attribute>
-        <code>INITIAL_POOL_SIZE</code>
-        <attribute>5</attribute>
-      </attribute>
-      <attribute>
         <code>IS_CLUSTERED</code>
         <attribute>N</attribute>
-      </attribute>
-      <attribute>
-        <code>MAXIMUM_POOL_SIZE</code>
-        <attribute>10</attribute>
       </attribute>
       <attribute>
         <code>PORT_NUMBER</code>
@@ -149,18 +133,18 @@
       </attribute>
       <attribute>
         <code>USE_POOLING</code>
-        <attribute>Y</attribute>
+        <attribute>N</attribute>
       </attribute>
     </attributes>
   </connection>
   <slaveservers>
     </slaveservers>
   <job-log-table>
-    <connection/>
-    <schema/>
+    <connection />
+    <schema />
     <table>${KETTLE_JOB_LOG_TABLE}_${CHAIN_ID}</table>
-    <size_limit_lines/>
-    <interval/>
+    <size_limit_lines />
+    <interval />
     <timeout_days>${JOB_LOGS_RECORD_TIMEOUT}</timeout_days>
     <field>
       <id>ID_JOB</id>
@@ -269,10 +253,10 @@
     </field>
   </job-log-table>
   <jobentry-log-table>
-    <connection/>
-    <schema/>
-    <table/>
-    <timeout_days/>
+    <connection />
+    <schema />
+    <table />
+    <timeout_days />
     <field>
       <id>ID_BATCH</id>
       <enabled>Y</enabled>
@@ -360,10 +344,10 @@
     </field>
   </jobentry-log-table>
   <channel-log-table>
-    <connection/>
-    <schema/>
-    <table/>
-    <timeout_days/>
+    <connection />
+    <schema />
+    <table />
+    <timeout_days />
     <field>
       <id>ID_BATCH</id>
       <enabled>Y</enabled>
@@ -426,13 +410,13 @@
     </field>
   </channel-log-table>
   <pass_batchid>Y</pass_batchid>
-  <shared_objects_file/>
+  <shared_objects_file />
   <entries>
     <entry>
       <name>Start</name>
-      <description/>
+      <description />
       <type>SPECIAL</type>
-      <attributes/>
+      <attributes />
       <start>Y</start>
       <dummy>N</dummy>
       <repeat>N</repeat>
@@ -448,51 +432,14 @@
       <nr>0</nr>
       <xloc>160</xloc>
       <yloc>160</yloc>
-      <attributes_kjc/>
-    </entry>
-    <entry>
-      <name>setup new chain</name>
-      <description/>
-      <type>JOB</type>
-      <attributes/>
-      <specification_method>filename</specification_method>
-      <job_object_id/>
-      <filename>${Internal.Entry.Current.Directory}/setup_new_chain.kjb</filename>
-      <jobname/>
-      <directory/>
-      <arg_from_previous>N</arg_from_previous>
-      <params_from_previous>N</params_from_previous>
-      <exec_per_row>N</exec_per_row>
-      <set_logfile>N</set_logfile>
-      <logfile/>
-      <logext/>
-      <add_date>N</add_date>
-      <add_time>N</add_time>
-      <loglevel>Nothing</loglevel>
-      <slave_server_name/>
-      <wait_until_finished>Y</wait_until_finished>
-      <follow_abort_remote>N</follow_abort_remote>
-      <expand_remote_job>N</expand_remote_job>
-      <create_parent_folder>N</create_parent_folder>
-      <pass_export>N</pass_export>
-      <run_configuration/>
-      <parameters>
-        <pass_all_parameters>Y</pass_all_parameters>
-      </parameters>
-      <set_append_logfile>N</set_append_logfile>
-      <parallel>N</parallel>
-      <draw>Y</draw>
-      <nr>0</nr>
-      <xloc>336</xloc>
-      <yloc>288</yloc>
-      <attributes_kjc/>
+      <attributes_kjc />
     </entry>
     <entry>
       <name>pentaho mysql create all</name>
-      <description/>
+      <description />
       <type>SQL</type>
-      <attributes/>
-      <sql/>
+      <attributes />
+      <sql />
       <useVariableSubstitution>T</useVariableSubstitution>
       <sqlfromfile>T</sqlfromfile>
       <sqlfilename>${Internal.Job.Filename.Directory}/../../migrations/mysql/create_all.sql</sqlfilename>
@@ -503,34 +450,34 @@
       <nr>0</nr>
       <xloc>336</xloc>
       <yloc>112</yloc>
-      <attributes_kjc/>
+      <attributes_kjc />
     </entry>
     <entry>
       <name>Populate dim dates</name>
-      <description/>
+      <description />
       <type>JOB</type>
-      <attributes/>
+      <attributes />
       <specification_method>filename</specification_method>
-      <job_object_id/>
+      <job_object_id />
       <filename>${Internal.Entry.Current.Directory}/onetimer/populate_dim_dates.kjb</filename>
-      <jobname/>
-      <directory/>
+      <jobname />
+      <directory />
       <arg_from_previous>N</arg_from_previous>
       <params_from_previous>N</params_from_previous>
       <exec_per_row>N</exec_per_row>
       <set_logfile>N</set_logfile>
-      <logfile/>
-      <logext/>
+      <logfile />
+      <logext />
       <add_date>N</add_date>
       <add_time>N</add_time>
       <loglevel>Nothing</loglevel>
-      <slave_server_name/>
+      <slave_server_name />
       <wait_until_finished>Y</wait_until_finished>
       <follow_abort_remote>N</follow_abort_remote>
       <expand_remote_job>N</expand_remote_job>
       <create_parent_folder>N</create_parent_folder>
       <pass_export>N</pass_export>
-      <run_configuration/>
+      <run_configuration />
       <parameters>
         <pass_all_parameters>Y</pass_all_parameters>
       </parameters>
@@ -540,34 +487,34 @@
       <nr>0</nr>
       <xloc>576</xloc>
       <yloc>112</yloc>
-      <attributes_kjc/>
+      <attributes_kjc />
     </entry>
     <entry>
       <name>Populate dim times</name>
-      <description/>
+      <description />
       <type>JOB</type>
-      <attributes/>
+      <attributes />
       <specification_method>filename</specification_method>
-      <job_object_id/>
+      <job_object_id />
       <filename>${Internal.Entry.Current.Directory}/onetimer/populate_dim_times.kjb</filename>
-      <jobname/>
-      <directory/>
+      <jobname />
+      <directory />
       <arg_from_previous>N</arg_from_previous>
       <params_from_previous>N</params_from_previous>
       <exec_per_row>N</exec_per_row>
       <set_logfile>N</set_logfile>
-      <logfile/>
-      <logext/>
+      <logfile />
+      <logext />
       <add_date>N</add_date>
       <add_time>N</add_time>
       <loglevel>Nothing</loglevel>
-      <slave_server_name/>
+      <slave_server_name />
       <wait_until_finished>Y</wait_until_finished>
       <follow_abort_remote>N</follow_abort_remote>
       <expand_remote_job>N</expand_remote_job>
       <create_parent_folder>N</create_parent_folder>
       <pass_export>N</pass_export>
-      <run_configuration/>
+      <run_configuration />
       <parameters>
         <pass_all_parameters>Y</pass_all_parameters>
       </parameters>
@@ -577,14 +524,14 @@
       <nr>0</nr>
       <xloc>816</xloc>
       <yloc>112</yloc>
-      <attributes_kjc/>
+      <attributes_kjc />
     </entry>
     <entry>
       <name>Prestaging Non-Chain Specific Redshift</name>
-      <description/>
+      <description />
       <type>SQL</type>
-      <attributes/>
-      <sql/>
+      <attributes />
+      <sql />
       <useVariableSubstitution>T</useVariableSubstitution>
       <sqlfromfile>T</sqlfromfile>
       <sqlfilename>${Internal.Job.Filename.Directory}/../../../migrations/redshift/create_all.sql</sqlfilename>
@@ -595,19 +542,64 @@
       <nr>0</nr>
       <xloc>160</xloc>
       <yloc>320</yloc>
-      <attributes_kjc/>
+      <attributes_kjc />
+    </entry>
+    <entry>
+      <name>pentaho redshift create all</name>
+      <description />
+      <type>SQL</type>
+      <attributes />
+      <sql />
+      <useVariableSubstitution>T</useVariableSubstitution>
+      <sqlfromfile>T</sqlfromfile>
+      <sqlfilename>${Internal.Job.Filename.Directory}/../../migrations/redshift/create_all_tables.sql</sqlfilename>
+      <sendOneStatement>F</sendOneStatement>
+      <connection>analytics_redshift_connection</connection>
+      <parallel>N</parallel>
+      <draw>Y</draw>
+      <nr>0</nr>
+      <xloc>416</xloc>
+      <yloc>192</yloc>
+      <attributes_kjc />
+    </entry>
+    <entry>
+      <name>pentaho redshift create temp all</name>
+      <description />
+      <type>SQL</type>
+      <attributes />
+      <sql />
+      <useVariableSubstitution>T</useVariableSubstitution>
+      <sqlfromfile>T</sqlfromfile>
+      <sqlfilename>${Internal.Job.Filename.Directory}/../../migrations/redshift/create_temp_all_tables.sql</sqlfilename>
+      <sendOneStatement>F</sendOneStatement>
+      <connection>analytics_redshift_connection</connection>
+      <parallel>N</parallel>
+      <draw>Y</draw>
+      <nr>0</nr>
+      <xloc>592</xloc>
+      <yloc>240</yloc>
+      <attributes_kjc />
+    </entry>
+    <entry>
+      <name>populate redshift dates</name>
+      <description />
+      <type>SQL</type>
+      <attributes />
+      <sql />
+      <useVariableSubstitution>T</useVariableSubstitution>
+      <sqlfromfile>T</sqlfromfile>
+      <sqlfilename>${Internal.Job.Filename.Directory}/../sql_scripts/onetimer/populate_dim_dates_redshift.sql</sqlfilename>
+      <sendOneStatement>F</sendOneStatement>
+      <connection>analytics_redshift_connection</connection>
+      <parallel>N</parallel>
+      <draw>Y</draw>
+      <nr>0</nr>
+      <xloc>839</xloc>
+      <yloc>285</yloc>
+      <attributes_kjc />
     </entry>
   </entries>
   <hops>
-    <hop>
-      <from>Start</from>
-      <to>setup new chain</to>
-      <from_nr>0</from_nr>
-      <to_nr>0</to_nr>
-      <enabled>Y</enabled>
-      <evaluation>Y</evaluation>
-      <unconditional>Y</unconditional>
-    </hop>
     <hop>
       <from>Start</from>
       <to>pentaho mysql create all</to>
@@ -644,8 +636,35 @@
       <evaluation>Y</evaluation>
       <unconditional>Y</unconditional>
     </hop>
+    <hop>
+      <from>Start</from>
+      <to>pentaho redshift create all</to>
+      <from_nr>0</from_nr>
+      <to_nr>0</to_nr>
+      <enabled>Y</enabled>
+      <evaluation>Y</evaluation>
+      <unconditional>Y</unconditional>
+    </hop>
+    <hop>
+      <from>pentaho redshift create all</from>
+      <to>pentaho redshift create temp all</to>
+      <from_nr>0</from_nr>
+      <to_nr>0</to_nr>
+      <enabled>Y</enabled>
+      <evaluation>Y</evaluation>
+      <unconditional>N</unconditional>
+    </hop>
+    <hop>
+      <from>pentaho redshift create temp all</from>
+      <to>populate redshift dates</to>
+      <from_nr>0</from_nr>
+      <to_nr>0</to_nr>
+      <enabled>Y</enabled>
+      <evaluation>Y</evaluation>
+      <unconditional>N</unconditional>
+    </hop>
   </hops>
   <notepads>
   </notepads>
-  <attributes/>
+  <attributes />
 </job>

@@ -1,7 +1,7 @@
 -- WbVarDef ENV_SUFFIX=_d6;
 -- WbVarDef SUB_ENV=main;
 -- WbVarDef TEMP_PENTAHO_REDSHIFT_SCHEMA_PREFIX=temp_ost_pentaho;
--- WbVarDef CHAIN_ID=202;
+-- WbVarDef AUX_CHAIN_ID=202;
 
 begin;
 
@@ -9,14 +9,14 @@ CREATE SCHEMA IF NOT EXISTS  ${TEMP_PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${
 set search_path=${TEMP_PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX};
 
 
-DROP TABLE IF EXISTS temp_pentaho_processing_info_${CHAIN_ID};
-CREATE TABLE temp_pentaho_processing_info_${CHAIN_ID}
+DROP TABLE IF EXISTS temp_pentaho_processing_info_${AUX_CHAIN_ID};
+CREATE TABLE temp_pentaho_processing_info_${AUX_CHAIN_ID}
 (
   property    VARCHAR(255) NOT NULL,
   value               BIGINT NOT NULL
 );
 
-INSERT INTO temp_pentaho_processing_info_${CHAIN_ID}
+INSERT INTO temp_pentaho_processing_info_${AUX_CHAIN_ID}
 (
   property,
   value
@@ -27,7 +27,7 @@ VALUES
   0
 );
 
-INSERT INTO temp_pentaho_processing_info_${CHAIN_ID}
+INSERT INTO temp_pentaho_processing_info_${AUX_CHAIN_ID}
 (
   property,
   value
@@ -42,8 +42,8 @@ commit;
 
 BEGIN;
 
-DROP TABLE IF EXISTS temp_incremental_chain_transactions_aux_${CHAIN_ID};
-CREATE TABLE temp_incremental_chain_transactions_aux_${CHAIN_ID}
+DROP TABLE IF EXISTS temp_incremental_chain_transactions_aux_${AUX_CHAIN_ID};
+CREATE TABLE temp_incremental_chain_transactions_aux_${AUX_CHAIN_ID}
 (
   tx_hash               VARCHAR(66) NOT NULL,
   from_address          VARCHAR(42) NOT NULL,
@@ -60,8 +60,8 @@ CREATE TABLE temp_incremental_chain_transactions_aux_${CHAIN_ID}
   DISTKEY (tx_hash) SORTKEY (tx_kind, tx_hash);
 
 
-DROP TABLE IF EXISTS temp_incremental_chain_workflow_transactions_aux_${CHAIN_ID};
-CREATE TABLE temp_incremental_chain_workflow_transactions_aux_${CHAIN_ID}
+DROP TABLE IF EXISTS temp_incremental_chain_workflow_transactions_aux_${AUX_CHAIN_ID};
+CREATE TABLE temp_incremental_chain_workflow_transactions_aux_${AUX_CHAIN_ID}
 (
   tx_hash               VARCHAR(66) NOT NULL,
   from_address          VARCHAR(42) NOT NULL,
@@ -83,8 +83,8 @@ CREATE TABLE temp_incremental_chain_workflow_transactions_aux_${CHAIN_ID}
 )
   DISTKEY (tx_hash) SORTKEY (workflow_kind);
 
-DROP TABLE IF EXISTS temp_incremental_chain_workflow_transactions_sk_aux_${CHAIN_ID};
-CREATE TABLE temp_incremental_chain_workflow_transactions_sk_aux_${CHAIN_ID}
+DROP TABLE IF EXISTS temp_incremental_chain_workflow_transactions_sk_aux_${AUX_CHAIN_ID};
+CREATE TABLE temp_incremental_chain_workflow_transactions_sk_aux_${AUX_CHAIN_ID}
 (
   tx_hash               VARCHAR(66) NOT NULL,
   from_address          VARCHAR(42) NOT NULL,

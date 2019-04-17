@@ -2,8 +2,8 @@
 <job>
   <name>populate dim dates</name>
   <description>One Timer to populate date dimension</description>
-  <extended_description/>
-  <job_version/>
+  <extended_description />
+  <job_version />
   <job_status>0</job_status>
   <directory>/</directory>
   <created_user>-</created_user>
@@ -13,27 +13,27 @@
   <parameters>
     <parameter>
       <name>ENV_SUFFIX</name>
-      <default_value/>
-      <description/>
+      <default_value />
+      <description />
     </parameter>
     <parameter>
       <name>SUB_ENV</name>
-      <default_value/>
-      <description/>
+      <default_value />
+      <description />
     </parameter>
   </parameters>
   <connection>
     <name>analytics_mysql_connection</name>
-    <server/>
+    <server />
     <type>MYSQL</type>
     <access>JNDI</access>
     <database>analyticsMysqlConnection_${SUB_ENV}${ENV_SUFFIX}</database>
     <port>1521</port>
-    <username/>
+    <username />
     <password>Encrypted </password>
-    <servername/>
-    <data_tablespace/>
-    <index_tablespace/>
+    <servername />
+    <data_tablespace />
+    <index_tablespace />
     <attributes>
       <attribute>
         <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
@@ -193,10 +193,10 @@
     </field>
   </job-log-table>
   <jobentry-log-table>
-    <connection/>
-    <schema/>
-    <table/>
-    <timeout_days/>
+    <connection />
+    <schema />
+    <table />
+    <timeout_days />
     <field>
       <id>ID_BATCH</id>
       <enabled>Y</enabled>
@@ -284,10 +284,10 @@
     </field>
   </jobentry-log-table>
   <channel-log-table>
-    <connection/>
-    <schema/>
-    <table/>
-    <timeout_days/>
+    <connection />
+    <schema />
+    <table />
+    <timeout_days />
     <field>
       <id>ID_BATCH</id>
       <enabled>Y</enabled>
@@ -350,13 +350,13 @@
     </field>
   </channel-log-table>
   <pass_batchid>N</pass_batchid>
-  <shared_objects_file/>
+  <shared_objects_file />
   <entries>
     <entry>
       <name>Start</name>
-      <description/>
+      <description />
       <type>SPECIAL</type>
-      <attributes/>
+      <attributes />
       <start>Y</start>
       <dummy>N</dummy>
       <repeat>N</repeat>
@@ -372,17 +372,17 @@
       <nr>0</nr>
       <xloc>208</xloc>
       <yloc>144</yloc>
-      <attributes_kjc/>
+      <attributes_kjc />
     </entry>
     <entry>
       <name>populate dates</name>
-      <description/>
+      <description />
       <type>SQL</type>
-      <attributes/>
-      <sql/>
+      <attributes />
+      <sql />
       <useVariableSubstitution>T</useVariableSubstitution>
       <sqlfromfile>T</sqlfromfile>
-      <sqlfilename>${Internal.Job.Filename.Directory}/../../sql_scripts/onetimer/populate_dim_dates.sql</sqlfilename>
+      <sqlfilename>${Internal.Job.Filename.Directory}/../../sql_scripts/onetimer/populate_dim_dates_mysql.sql</sqlfilename>
       <sendOneStatement>F</sendOneStatement>
       <connection>analytics_mysql_connection</connection>
       <parallel>N</parallel>
@@ -390,7 +390,7 @@
       <nr>0</nr>
       <xloc>384</xloc>
       <yloc>144</yloc>
-      <attributes_kjc/>
+      <attributes_kjc />
     </entry>
   </entries>
   <hops>
@@ -406,5 +406,5 @@
   </hops>
   <notepads>
   </notepads>
-  <attributes/>
+  <attributes />
 </job>
