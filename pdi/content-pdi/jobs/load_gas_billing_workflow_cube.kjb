@@ -353,8 +353,8 @@
       <parallel>N</parallel>
       <draw>Y</draw>
       <nr>0</nr>
-      <xloc>432</xloc>
-      <yloc>176</yloc>
+      <xloc>640</xloc>
+      <yloc>160</yloc>
       <attributes_kjc />
     </entry>
     <entry>
@@ -391,8 +391,8 @@
       <parallel>N</parallel>
       <draw>Y</draw>
       <nr>0</nr>
-      <xloc>784</xloc>
-      <yloc>160</yloc>
+      <xloc>336</xloc>
+      <yloc>192</yloc>
       <attributes_kjc />
     </entry>
     <entry>
@@ -437,7 +437,7 @@
   <hops>
     <hop>
       <from>Start</from>
-      <to>incremental_load_all_chain_workflow_transaction</to>
+      <to>update_workflow_transaction_statuses</to>
       <from_nr>0</from_nr>
       <to_nr>0</to_nr>
       <enabled>Y</enabled>
@@ -445,8 +445,8 @@
       <unconditional>Y</unconditional>
     </hop>
     <hop>
-      <from>incremental_load_all_chain_workflow_transaction</from>
-      <to>update_workflow_transaction_statuses</to>
+      <from>update_workflow_transaction_statuses</from>
+      <to>incremental_load_all_chain_workflow_transaction</to>
       <from_nr>0</from_nr>
       <to_nr>0</to_nr>
       <enabled>Y</enabled>
@@ -454,7 +454,7 @@
       <unconditional>N</unconditional>
     </hop>
     <hop>
-      <from>update_workflow_transaction_statuses</from>
+      <from>incremental_load_all_chain_workflow_transaction</from>
       <to>load_workflow_facts</to>
       <from_nr>0</from_nr>
       <to_nr>0</to_nr>

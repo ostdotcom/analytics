@@ -202,8 +202,8 @@ VALUES
   );
 
 
-DROP TABLE IF EXISTS all_addresses;
-CREATE TABLE all_addresses
+DROP TABLE IF EXISTS workflow_addresses;
+CREATE TABLE workflow_addresses
 (
     address        VARCHAR(42) NOT NULL,
     address_type_sk    INT  NOT NULL
@@ -289,7 +289,18 @@ INSERT INTO pentaho_processing_info
 )
 VALUES
 (
-  'last_updated_workflow_tx',
+  'last_updated_workflow',
+  0
+);
+
+INSERT INTO pentaho_processing_info
+(
+  property,
+  value
+)
+VALUES
+(
+  'last_updated_at_all_workflows_transactions',
   0
 );
 

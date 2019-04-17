@@ -48,8 +48,11 @@
 ## Setup a new env or sub env
 
 ### Option 1
-    sh kitchen.sh -file=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/content-pdi/jobs/setup_new_sub_environment.kjb -level=Detailed -param:SUB_ENV=main -param:ENV_SUFFIX=_d10 -param:ORIGIN_CHAIN_ID=197
-    sh kitchen.sh -file=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/content-pdi/jobs/setup_new_chain.kjb -level=Detailed -param:SUB_ENV=main -param:AUX_CHAIN_ID=202 -param:ENV_SUFFIX=_d10
+    export KETTLE_HOME=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/configs/development
+    export KETTLE_JNDI_ROOT=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/configs/development/simple-jndi
+
+    sh kitchen.sh -file=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/content-pdi/jobs/setup_new_sub_environment.kjb -level=Detailed -param:SUB_ENV=main -param:ENV_SUFFIX=_d6 -param:ORIGIN_CHAIN_ID=197
+    sh kitchen.sh -file=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/content-pdi/jobs/setup_new_chain.kjb -level=Detailed -param:SUB_ENV=main -param:AUX_CHAIN_ID=202 -param:ENV_SUFFIX=_d16
 
 ###  Option 2
 
@@ -72,6 +75,9 @@
 ## Setup a new AUX CHAIN_ID:
 
 ### Option 1
+	    export KETTLE_HOME=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/configs/development
+    	export KETTLE_JNDI_ROOT=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/configs/development/simple-jndi
+
         sh kitchen.sh -file=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/content-pdi/jobs/setup_new_chain.kjb -level=Detailed -param:SUB_ENV=main -param:AUX_CHAIN_ID=202 -param:ENV_SUFFIX=_d10
 
 ### Option 2 
