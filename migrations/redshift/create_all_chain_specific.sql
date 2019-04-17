@@ -2,7 +2,7 @@
 -- WbVarDef ENV_SUFFIX=_d7;
 -- WbVarDef SUB_ENV=main;
 -- WbVarDef PRESTAGING_REDSHIFT_SCHEMA_PREFIX=ost_warehouse;
--- WbVarDef CHAIN_ID=202;
+-- WbVarDef AUX_CHAIN_ID=202;
 
 
 --   GRANT ALL
@@ -22,8 +22,8 @@ create schema if not exists ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV
 set search_path= ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX};
 
 
-DROP TABLE IF EXISTS temp_transactions_aux_${CHAIN_ID};
-CREATE TABLE temp_transactions_aux_${CHAIN_ID}
+DROP TABLE IF EXISTS temp_transactions_aux_${AUX_CHAIN_ID};
+CREATE TABLE temp_transactions_aux_${AUX_CHAIN_ID}
 (
   tx_uuid               VARCHAR(36),
   tx_hash               VARCHAR(66) NOT NULL,
@@ -48,8 +48,8 @@ CREATE TABLE temp_transactions_aux_${CHAIN_ID}
   DISTKEY (tx_hash) SORTKEY (block_number, kind);
 
 
-DROP TABLE IF EXISTS transactions_aux_${CHAIN_ID};
-CREATE TABLE transactions_aux_${CHAIN_ID}
+DROP TABLE IF EXISTS transactions_aux_${AUX_CHAIN_ID};
+CREATE TABLE transactions_aux_${AUX_CHAIN_ID}
 (
   id                    BIGINT NOT NULL IDENTITY(1,1),
   tx_uuid               VARCHAR(36),
@@ -76,8 +76,8 @@ CREATE TABLE transactions_aux_${CHAIN_ID}
   DISTKEY (tx_hash) SORTKEY (block_number, kind);
 
 
-DROP TABLE IF EXISTS temp_transfers_aux_${CHAIN_ID};
-CREATE TABLE temp_transfers_aux_${CHAIN_ID}
+DROP TABLE IF EXISTS temp_transfers_aux_${AUX_CHAIN_ID};
+CREATE TABLE temp_transfers_aux_${AUX_CHAIN_ID}
 (
   tx_hash          VARCHAR(255) NOT NULL,
   event_index      INT          NOT NULL,
@@ -90,8 +90,8 @@ CREATE TABLE temp_transfers_aux_${CHAIN_ID}
   DISTKEY (tx_hash) SORTKEY(block_number);
 
 
-DROP TABLE IF EXISTS transfers_aux_${CHAIN_ID};
-CREATE TABLE transfers_aux_${CHAIN_ID}
+DROP TABLE IF EXISTS transfers_aux_${AUX_CHAIN_ID};
+CREATE TABLE transfers_aux_${AUX_CHAIN_ID}
 (
   id                    BIGINT NOT NULL IDENTITY(1,1),
   tx_hash          VARCHAR(255) NOT NULL,
@@ -106,8 +106,8 @@ CREATE TABLE transfers_aux_${CHAIN_ID}
 DISTKEY (tx_hash) SORTKEY(block_number);
 
 
-DROP TABLE IF EXISTS temp_tokens_${CHAIN_ID};
-CREATE TABLE temp_tokens_${CHAIN_ID}
+DROP TABLE IF EXISTS temp_tokens_${AUX_CHAIN_ID};
+CREATE TABLE temp_tokens_${AUX_CHAIN_ID}
 (
   token_id                  BIGINT NOT NULL,
   client_id                 INT,
@@ -123,8 +123,8 @@ CREATE TABLE temp_tokens_${CHAIN_ID}
   updated_at                timestamp NOT NULL
 )SORTKEY(token_id);
 
-DROP TABLE IF EXISTS tokens_${CHAIN_ID};
-CREATE TABLE tokens_${CHAIN_ID}
+DROP TABLE IF EXISTS tokens_${AUX_CHAIN_ID};
+CREATE TABLE tokens_${AUX_CHAIN_ID}
 (
   token_id                  BIGINT NOT NULL,
   client_id                 INT,
@@ -141,9 +141,9 @@ CREATE TABLE tokens_${CHAIN_ID}
 )SORTKEY(token_id);
 
 INSERT INTO data_processing_info
-(  property,  value)VALUES( 'last_processed_block_aux_${CHAIN_ID}', '-1');
+(  property,  value)VALUES( 'last_processed_block_aux_${AUX_CHAIN_ID}', '-1');
 
 INSERT INTO data_processing_info
-(  property,  value)VALUES( 'token_last_updated_at_${CHAIN_ID}', '1970-01-01 00:00:00');
+(  property,  value)VALUES( 'token_last_updated_at_${AUX_CHAIN_ID}', '1970-01-01 00:00:00');
 
 COMMIT;

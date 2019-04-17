@@ -2,7 +2,7 @@
 WbVarDef ENV_SUFFIX=_d6;
 WbVarDef SUB_ENV=main;
 WbVarDef PENTAHO_REDSHIFT_SCHEMA_PREFIX=ost_pentaho;
-WbVarDef CHAIN_ID=202;
+WbVarDef AUX_CHAIN_ID=202;
 WbVarDef ORIGIN_CHAIN_ID=100;
 */
 
@@ -137,7 +137,7 @@ VALUES
 DROP TABLE IF EXISTS dim_dates;
 CREATE TABLE dim_dates
 (
-    date_sk              BIGINT NOT NULL IDENTITY(0,1),
+    date_sk              BIGINT NOT NULL,
     timestamp bigint  NOT NULL,
     day int  NOT NULL,
     week_of_the_year int  NOT NULL,
@@ -257,7 +257,7 @@ CREATE TABLE workflow_facts
   total_transactions   BIGINT NOT NULL,
   workflow_count   BIGINT NOT NULL
 )
-  DISTKEY (id) SORTKEY (workflow_date_sk, from_address_type, workflow_kind_sk);
+  DISTKEY (id) SORTKEY (workflow_date_sk, workflow_kind_sk);
 
 commit;
 

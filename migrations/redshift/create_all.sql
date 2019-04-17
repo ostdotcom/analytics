@@ -2,7 +2,6 @@
 -- WbVarDef ENV_SUFFIX=_d7;
 -- WbVarDef SUB_ENV=main;
 -- WbVarDef PRESTAGING_REDSHIFT_SCHEMA_PREFIX=ost_warehouse;
--- WbVarDef CHAIN_ID=202;
 
 
 --   GRANT ALL
