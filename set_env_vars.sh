@@ -1,6 +1,6 @@
 export ENVIRONMENT='development'
 export SUB_ENVIRONMENT='main'
-export ENV_SUFFIX='_d6'
+export ENV_SUFFIX='_d7'
 export SAAS_MYSQL_DATABASE_ENVIRONMENT='staging'
 
 export KIT_MYSQL_CONNECTION_POOL_SIZE='3'
@@ -9,9 +9,9 @@ export KIT_SAAS_SUBENV_MYSQL_USER='saas_read'
 export KIT_SAAS_SUBENV_MYSQL_PASSWORD='sdfh732gFdHK7936aIghLjortab34793'
 export KIT_SAAS_SUBENV_MYSQL_PORT=3307
 
-export PRESTAGING_REDSHIFT_USER='analytics_user'
+export PRESTAGING_REDSHIFT_USER='master'
 export PRESTAGING_REDSHIFT_DATABASE='analytics'
-export PRESTAGING_REDSHIFT_PASSWORD='gdhsD56Sw248jljt68dfTRaxMn'
+export PRESTAGING_REDSHIFT_PASSWORD='ORaT5mNUYemqflc4'
 export PRESTAGING_REDSHIFT_PORT='5439'
 export PRESTAGING_REDSHIFT_HOST='redshift-instance.cl2x2qyuekxx.us-east-1.redshift.amazonaws.com'
 export PRESTAGING_SCHEMA_PREFIX='ost_warehouse_'
