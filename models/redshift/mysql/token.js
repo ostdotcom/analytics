@@ -25,9 +25,7 @@ class Token extends ModelBase {
      * @constructor
      */
     constructor(params) {
-        super({ dbName: dbName,
-            object: params.object || {},
-            chainId: params.chainId });
+        super({ ...params,dbName: dbName});
 
         const oThis = this;
 

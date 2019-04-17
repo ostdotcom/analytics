@@ -156,7 +156,7 @@ CREATE TABLE dim_tokens
     name varchar(255)  NOT NULL,
     symbol varchar(255)  NOT NULL,
     conversion_factor decimal(15,6) NOT NULL,
-    decimal int NOT NULL
+    number_of_decimal int NOT NULL
 )
   DISTKEY (token_sk) SORTKEY (token_sk);
 
@@ -166,7 +166,7 @@ INSERT INTO dim_tokens
   name,
   symbol,
   conversion_factor,
-  decimal
+  number_of_decimal
 )
 VALUES
   (

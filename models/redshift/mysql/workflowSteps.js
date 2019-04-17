@@ -25,9 +25,7 @@ class WorkflowSteps extends ModelBase {
      * @constructor
      */
     constructor(params) {
-        super({ dbName: dbName,
-            object: params.object || {}
-        });
+        super({ ...params,dbName: dbName});
 
         const oThis = this;
 
