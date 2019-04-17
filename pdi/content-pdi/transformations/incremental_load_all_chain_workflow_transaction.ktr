@@ -611,7 +611,7 @@ FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.chain_details;</s
       </output>
     </remotesteps>
     <GUI>
-      <xloc>512</xloc>
+      <xloc>496</xloc>
       <yloc>128</yloc>
       <draw>Y</draw>
     </GUI>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <transformation>
   <info>
-    <name>update_workflow_transaction_statuses</name>
+    <name>load_workflow_facts</name>
     <description />
     <extended_description />
     <trans_version>1</trans_version>
@@ -520,9 +520,11 @@
       <schema_name />
     </partitioning>
     <connection>analytics_redshift_connection</connection>
-    <sql>(select min(workflow_date_sk) as min_workflow_date_sk from all_worflows_transactions where last_updated_at > (select timestamp 'epoch' + (value * interval '1 second') as  last_processed_block_timestamp from 
+    <sql>(select min(workflow_date_sk) as min_workflow_date_sk 
+from ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.all_workflows_transactions 
+where last_updated_at > (select timestamp 'epoch' + (value * interval '1 second') as  last_processed_block_timestamp from 
 ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.pentaho_processing_info 
-where property = 'last_updated_workflow_tx')</sql>
+where property = 'last_updated_at_all_workflows_transactions')</sql>
     <limit>0</limit>
     <lookup />
     <execute_each_row>N</execute_each_row>
@@ -537,7 +539,7 @@ where property = 'last_updated_workflow_tx')</sql>
       </output>
     </remotesteps>
     <GUI>
-      <xloc>240</xloc>
+      <xloc>224</xloc>
       <yloc>288</yloc>
       <draw>Y</draw>
     </GUI>
@@ -560,43 +562,25 @@ where property = 'last_updated_workflow_tx')</sql>
     <quoteString>N</quoteString>
     <sql>begin;
 
-set search_path= ${TEMP_PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX};
+set search_path= ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX};
 
 delete from workflow_facts
 where workflow_date_sk >= ?;
 
 insert into workflow_facts
 (select
- workflow_kind_sk, token_sk, chain_id, workflow_date_sk, from_address_type, tx_status, workflow_status, 
-case when chain_type = 'origin'
-	then sum(gas_price * gas_used) else 0 end 
-		as origin_tx_fees,
-
-case when chain_type != 'origin'
-	then sum(gas_price * gas_used) else 0 end 
-		as as aux_tx_fees,
-
-case when chain_type = 'origin'
-	then avg(gas_price) else 0 end 
-		as as avg_origin_gas_price,
-
-case when chain_type != 'origin'
-	then avg(gas_price) else 0 end 
-		as as avg_aux_gas_price,
-
-case when chain_type = 'origin'
-	then sum(gas_used) else 0 end 
-		as as origin_total_gas_used,
-
-case when chain_type != 'origin'
-	then sum(gas_used) else 0 end 
-		as as aux_total_gas_used,
-
+ workflow_kind_sk, token_sk, chain_id, workflow_date_sk, from_address_type_sk, tx_status, workflow_status, 
+sum(tx_fees) as tx_fees,
+sum(gas_price)/count(1) as avg_gas_price,
+sum(gas_used) as total_gas_used,
 count(1) as total_transactions,
 count(distinct workflow_id) as workflow_count
 from all_worflows_transactions
 where workflow_date_sk >= );
 
+update pentaho_processing_info
+set value = (select coalesce(max(last_updated_at), 0) from all_workflows_transactions)
+where property='last_updated_at_all_workflows_transactions';
 
 commit;
 </sql>

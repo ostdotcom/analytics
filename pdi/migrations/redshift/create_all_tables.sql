@@ -2,7 +2,7 @@
 WbVarDef ENV_SUFFIX=_d6;
 WbVarDef SUB_ENV=main;
 WbVarDef PENTAHO_REDSHIFT_SCHEMA_PREFIX=ost_pentaho;
-WbVarDef CHAIN_ID=202;
+WbVarDef AUX_CHAIN_ID=202;
 WbVarDef ORIGIN_CHAIN_ID=100;
 */
 
@@ -137,7 +137,7 @@ VALUES
 DROP TABLE IF EXISTS dim_dates;
 CREATE TABLE dim_dates
 (
-    date_sk              BIGINT NOT NULL IDENTITY(0,1),
+    date_sk              BIGINT NOT NULL,
     timestamp bigint  NOT NULL,
     day int  NOT NULL,
     week_of_the_year int  NOT NULL,
@@ -202,8 +202,8 @@ VALUES
   );
 
 
-DROP TABLE IF EXISTS all_addresses;
-CREATE TABLE all_addresses
+DROP TABLE IF EXISTS workflow_addresses;
+CREATE TABLE workflow_addresses
 (
     address        VARCHAR(42) NOT NULL,
     address_type_sk    INT  NOT NULL
@@ -257,7 +257,7 @@ CREATE TABLE workflow_facts
   total_transactions   BIGINT NOT NULL,
   workflow_count   BIGINT NOT NULL
 )
-  DISTKEY (id) SORTKEY (workflow_date_sk, from_address_type, workflow_kind_sk);
+  DISTKEY (id) SORTKEY (workflow_date_sk, workflow_kind_sk);
 
 commit;
 
@@ -289,7 +289,18 @@ INSERT INTO pentaho_processing_info
 )
 VALUES
 (
-  'last_updated_workflow_tx',
+  'last_updated_workflow',
+  0
+);
+
+INSERT INTO pentaho_processing_info
+(
+  property,
+  value
+)
+VALUES
+(
+  'last_updated_at_all_workflows_transactions',
   0
 );
 
