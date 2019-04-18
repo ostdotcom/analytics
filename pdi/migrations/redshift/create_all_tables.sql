@@ -41,7 +41,7 @@ DROP TABLE IF EXISTS dim_workflow_kinds;
 CREATE TABLE dim_workflow_kinds
 (
   workflow_kind_sk              BIGINT NOT NULL IDENTITY(0,1),
-  workflow_kind              INT not null,
+  kind              INT not null,
   name   VARCHAR(50) NOT NULL
 
 )
@@ -49,7 +49,7 @@ CREATE TABLE dim_workflow_kinds
 
 INSERT INTO dim_workflow_kinds
 (
-  workflow_kind,
+  kind,
   name
 )
 VALUES
@@ -211,8 +211,8 @@ CREATE TABLE workflow_addresses
   DISTKEY (address) SORTKEY (address);
 
 
-DROP TABLE IF EXISTS all_worflows_transactions;
-CREATE TABLE all_worflows_transactions
+DROP TABLE IF EXISTS all_workflows_transactions;
+CREATE TABLE all_workflows_transactions
 (
   tx_hash               VARCHAR(66) NOT NULL,
   from_address          VARCHAR(42) NOT NULL,
@@ -222,7 +222,7 @@ CREATE TABLE all_worflows_transactions
   token_id              INT,
   token_sk              INT not null,
   tx_kind                  INT,
-  tx_date_sk       INT NOT NULL,
+  tx_date_sk       BIGINT NOT NULL,
   tx_status          varchar(20)  NOT NULL,
   gas_price             BIGINT NOT NULL,
   gas_used              INT NOT NULL,
@@ -231,9 +231,9 @@ CREATE TABLE all_worflows_transactions
   workflow_id              BIGINT,
   workflow_kind_sk              BIGINT not null,
   workflow_kind              INT,
-  workflow_status              INT,
+  workflow_status              VARCHAR(20) NOT NULL,
   rounded_workflow_create_timestamp              INT,
-  workflow_date_sk INT NOT NULL,
+  workflow_date_sk BIGINT NOT NULL,
   last_updated_at INT NOT NULL
 )
   DISTKEY (tx_hash) SORTKEY (last_updated_at);
@@ -247,10 +247,10 @@ CREATE TABLE workflow_facts
   token_sk              INT not null,
   chain_id              INT NOT NULL,
   chain_type              VARCHAR(20) NOT NULL,
-  workflow_date_sk INT NOT NULL,
+  workflow_date_sk BIGINT NOT NULL,
   from_address_type_sk          VARCHAR(20) NOT NULL,
   tx_status          varchar(20)  NOT NULL,
-  workflow_status              INT,
+  workflow_status              VARCHAR(20) NOT NULL,
   tx_fees   BIGINT NOT NULL,
   avg_gas_price   BIGINT NOT NULL,
   total_gas_used   BIGINT NOT NULL,

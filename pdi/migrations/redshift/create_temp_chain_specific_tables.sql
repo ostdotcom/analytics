@@ -78,7 +78,7 @@ CREATE TABLE temp_incremental_chain_workflow_transactions_aux_${AUX_CHAIN_ID}
 
   workflow_id              BIGINT,
   workflow_kind              INT,
-  workflow_status              INT,
+  workflow_status              VARCHAR(20) NOT NULL,
   rounded_workflow_create_timestamp              INT
 )
   DISTKEY (tx_hash) SORTKEY (workflow_kind);
@@ -104,7 +104,7 @@ CREATE TABLE temp_incremental_chain_workflow_transactions_sk_aux_${AUX_CHAIN_ID}
   workflow_id              BIGINT,
   workflow_kind_sk              BIGINT,
   workflow_kind              INT,
-  workflow_status              INT,
+  workflow_status              VARCHAR(20) NOT NULL,
   rounded_workflow_create_timestamp              INT,
   workflow_date_sk INT NOT NULL
 )

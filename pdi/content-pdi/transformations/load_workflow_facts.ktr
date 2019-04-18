@@ -520,11 +520,11 @@
       <schema_name />
     </partitioning>
     <connection>analytics_redshift_connection</connection>
-    <sql>(select min(workflow_date_sk) as min_workflow_date_sk 
+    <sql>select coalesce(min(workflow_date_sk), 0) as min_workflow_date_sk 
 from ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.all_workflows_transactions 
 where last_updated_at > (select value as  last_processed_block_timestamp from 
 ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.pentaho_processing_info 
-where property = 'last_updated_at_all_workflows_transactions')</sql>
+where property = 'last_updated_at_all_workflows_transactions');</sql>
     <limit>0</limit>
     <lookup />
     <execute_each_row>N</execute_each_row>
@@ -567,16 +567,18 @@ set search_path= ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX};
 delete from workflow_facts
 where workflow_date_sk >= ?;
 
-insert into workflow_facts
+insert into workflow_facts(workflow_kind_sk, token_sk, chain_id, chain_type, workflow_date_sk, from_address_type_sk, tx_status, workflow_status,
+tx_fees, avg_gas_price, total_gas_used, total_transactions, workflow_count)
 (select
- workflow_kind_sk, token_sk, chain_id, workflow_date_sk, from_address_type_sk, tx_status, workflow_status, 
+ workflow_kind_sk, token_sk, chain_id, chain_type, workflow_date_sk, from_address_type_sk, tx_status, workflow_status, 
 sum(tx_fees) as tx_fees,
 sum(gas_price)/count(1) as avg_gas_price,
 sum(gas_used) as total_gas_used,
 count(1) as total_transactions,
 count(distinct workflow_id) as workflow_count
 from all_worflows_transactions
-where workflow_date_sk >= );
+where workflow_date_sk >= ?
+group by 1,2,3,4,5,6,7,8);
 
 update pentaho_processing_info
 set value = (select coalesce(max(last_updated_at), 0) from all_workflows_transactions)
