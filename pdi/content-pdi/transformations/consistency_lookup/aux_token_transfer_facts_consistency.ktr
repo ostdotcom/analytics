@@ -978,7 +978,7 @@ SELECT *
 FROM (
 (
 SELECT COALESCE(SUM(total_gas_used),0) AS value,
-       'total_gas_used${CHAIN_ID}' AS metric_name
+       'total_gas_used' AS metric_name
 FROM token_transfer_facts_aux_${CHAIN_ID}
 where date_sk &lt; ${DATE_SK} 
 )
