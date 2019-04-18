@@ -575,7 +575,7 @@ sum(tx_fees) as total_tx_fees,
 sum(gas_price) as total_gas_price,
 sum(gas_used) as total_gas_used,
 count(1) as total_transactions,
-count(distinct workflow_id) as total_workflow_count
+count(distinct case when workflow_id = 0 then tx_hash else workflow_id::Varchar(20) end) as total_workflow_count
 from all_worflows_transactions
 where workflow_date_sk >= ?
 group by 1,2,3,4,5,6,7,8);
