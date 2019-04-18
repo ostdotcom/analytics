@@ -46,7 +46,7 @@ CREATE TABLE temp_incremental_chain_workflow_transactions_origin
 
   workflow_id              BIGINT,
   workflow_kind              INT,
-  workflow_status              INT,
+  workflow_status              VARCHAR(20) NOT NULL,
   rounded_workflow_create_timestamp              INT
 )
   DISTKEY (tx_hash) SORTKEY (workflow_kind);
@@ -56,13 +56,13 @@ CREATE TABLE temp_incremental_chain_workflow_transactions_sk_origin
 (
   tx_hash               VARCHAR(66) NOT NULL,
   from_address          VARCHAR(42) NOT NULL,
-  from_address_type          VARCHAR(20) NOT NULL,
+  from_address_type_sk          VARCHAR(20) NOT NULL,
   chain_type            VARCHAR(20) NOT NULL,
   chain_id              INT NOT NULL,
   token_id              INT,
   token_sk              INT not null,
   tx_kind                  INT,
-  tx_date_sk       INT NOT NULL,
+  tx_date_sk       BIGINT NOT NULL,
   tx_status          varchar(20)  NOT NULL,
   gas_price             BIGINT NOT NULL,
   gas_used              INT NOT NULL,
@@ -72,9 +72,9 @@ CREATE TABLE temp_incremental_chain_workflow_transactions_sk_origin
   workflow_id              BIGINT,
   workflow_kind_sk              BIGINT,
   workflow_kind              INT,
-  workflow_status              INT,
+  workflow_status              VARCHAR(20) NOT NULL,
   rounded_workflow_create_timestamp              INT,
-  workflow_date_sk INT NOT NULL
+  workflow_date_sk BIGINT NOT NULL
 )
   DISTKEY (tx_hash) SORTKEY (workflow_kind);
 

@@ -562,14 +562,20 @@ ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.pentaho_processing_inf
 set search_path= ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX};
 
 update all_worflows_transactions
-set workflow_status=w.status,
+set workflow_status=
+		case w.status
+			when 1 then 'pending'
+			when 2 then 'success'
+			when 3 then 'fail'
+			when 4 then 'fail'
+			end ,
 last_updated_at=extract( epoch from GETDATE())
 from all_worflows_transactions tx
 join (select id, status from ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflows where updated_at > '?' and created_at &lt;= '?')as w
 on w.id = tx.workflow_id;
 
 update pentaho_processing_info
-set value = (select coalesce(extract(epoch from max(updated_at)::Date), 0) from workflows)
+set value = (select coalesce(extract(epoch from max(updated_at)::Date), 0) from ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflows)
 where property='last_updated_workflow';
 
 

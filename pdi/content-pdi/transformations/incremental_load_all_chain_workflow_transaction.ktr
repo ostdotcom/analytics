@@ -11,12 +11,12 @@
     <parameters>
       <parameter>
         <name>ENV_SUFFIX</name>
-        <default_value>_d6</default_value>
+        <default_value />
         <description />
       </parameter>
       <parameter>
         <name>SUB_ENV</name>
-        <default_value>main</default_value>
+        <default_value />
         <description />
       </parameter>
     </parameters>
@@ -524,7 +524,7 @@
 		chain_id,
        CASE chain_type
          WHEN 'aux' THEN '_' || chain_id
-         ELSE NULL
+         ELSE ''
        END as chain_id_suffix
 FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.chain_details;</sql>
     <limit>0</limit>
@@ -552,7 +552,7 @@ FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.chain_details;</s
     <description />
     <distribute>Y</distribute>
     <custom_distribution />
-    <copies>1</copies>
+    <copies>3</copies>
     <partitioning>
       <method>none</method>
       <schema_name />
