@@ -128,10 +128,6 @@ VALUES
     (
     500,
     'Execute Transaction'
-  ),
-  (
-    501,
-    'Update Price Point'
   );
 
 DROP TABLE IF EXISTS dim_dates;
@@ -251,11 +247,11 @@ CREATE TABLE workflow_facts
   from_address_type_sk          VARCHAR(20) NOT NULL,
   tx_status          varchar(20)  NOT NULL,
   workflow_status              VARCHAR(20) NOT NULL,
-  tx_fees   BIGINT NOT NULL,
-  avg_gas_price   BIGINT NOT NULL,
+  total_tx_fees   BIGINT NOT NULL,
+  total_gas_price   BIGINT NOT NULL,
   total_gas_used   BIGINT NOT NULL,
   total_transactions   BIGINT NOT NULL,
-  workflow_count   BIGINT NOT NULL
+  total_workflow_count   BIGINT NOT NULL
 )
   DISTKEY (id) SORTKEY (workflow_date_sk, workflow_kind_sk);
 

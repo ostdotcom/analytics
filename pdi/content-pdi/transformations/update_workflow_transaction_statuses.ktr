@@ -11,12 +11,12 @@
     <parameters>
       <parameter>
         <name>ENV_SUFFIX</name>
-        <default_value>_d6</default_value>
+        <default_value />
         <description />
       </parameter>
       <parameter>
         <name>SUB_ENV</name>
-        <default_value>main</default_value>
+        <default_value />
         <description />
       </parameter>
     </parameters>

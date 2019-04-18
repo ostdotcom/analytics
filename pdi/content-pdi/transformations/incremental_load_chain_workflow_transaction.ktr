@@ -600,7 +600,6 @@ and block_timestamp > ?
 begin;
 truncate table temp_incremental_chain_workflow_transactions_${CHAIN_TYPE}${CHAIN_ID_SUFFIX};
 
-
 insert into temp_incremental_chain_workflow_transactions_${CHAIN_TYPE}${CHAIN_ID_SUFFIX}
 (select tx.tx_hash,
         tx.from_address,
@@ -616,9 +615,7 @@ insert into temp_incremental_chain_workflow_transactions_${CHAIN_TYPE}${CHAIN_ID
 		(tx.gas_price *tx.gas_used) as tx_fees,
 		
 		0 as workflow_id,
-		case when tx_kind = 54 then 500
-		else 501
-		end as workflow_kind,
+		500 as workflow_kind,
 		tx.tx_status as workflow_status,
 		(tx.block_timestamp - MOD(tx.block_timestamp,86400)::INTEGER) AS rounded_workflow_create_timestamp
 		
@@ -648,8 +645,7 @@ insert into temp_incremental_chain_workflow_transactions_${CHAIN_TYPE}${CHAIN_ID
 			when 3 then 'fail'
 			when 4 then 'fail'
 			end	as workflow_status,
-		(coalesce(extract(epoch from w.created_at::DATE),tx.block_timestamp)  - MOD(coalesce(extract(epoch from w.created_at::DATE),tx.block_timestamp),86400)::INTEGER) AS rounded_workflow_create_timestamp
-		
+		(coalesce(extract(epoch from w.created_at::DATE), (tx.block_timestamp - MOD(tx.block_timestamp,86400)::INTEGER))) AS rounded_workflow_create_timestamp		
  from  ( select * from temp_incremental_chain_transactions_${CHAIN_TYPE}${CHAIN_ID_SUFFIX} where tx_kind not in (54))as tx
 left join ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflow_steps as ws
 on ws.transaction_hash = tx.tx_hash
