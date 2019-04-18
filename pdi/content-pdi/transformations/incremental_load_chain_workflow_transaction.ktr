@@ -11,27 +11,27 @@
     <parameters>
       <parameter>
         <name>CHAIN_ID_SUFFIX</name>
-        <default_value>_202</default_value>
+        <default_value />
         <description />
       </parameter>
       <parameter>
         <name>CHAIN_TYPE</name>
-        <default_value>aux</default_value>
+        <default_value />
         <description />
       </parameter>
       <parameter>
         <name>CURRENT_CHAIN_ID</name>
-        <default_value>202</default_value>
+        <default_value />
         <description />
       </parameter>
       <parameter>
         <name>ENV_SUFFIX</name>
-        <default_value>_d6</default_value>
+        <default_value />
         <description />
       </parameter>
       <parameter>
         <name>SUB_ENV</name>
-        <default_value>main</default_value>
+        <default_value />
         <description />
       </parameter>
     </parameters>
@@ -574,9 +574,7 @@ where property = ('last_processed_block_timestamp_' || '${CHAIN_TYPE}' ||  '${CH
     <replace_variables>Y</replace_variables>
     <quoteString>N</quoteString>
     <sql>set search_path= ${TEMP_PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX};
-
 begin;
-
 truncate temp_incremental_chain_transactions_${CHAIN_TYPE}${CHAIN_ID_SUFFIX};
 
 insert into temp_incremental_chain_transactions_${CHAIN_TYPE}${CHAIN_ID_SUFFIX}
@@ -594,13 +592,13 @@ insert into temp_incremental_chain_transactions_${CHAIN_TYPE}${CHAIN_ID_SUFFIX}
       	gas_price,
       	gas_used,
       	gas_limit
- from ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.${CHAIN_TYPE}_transactions${CHAIN_ID_SUFFIX}
+ from ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.transactions_${CHAIN_TYPE}${CHAIN_ID_SUFFIX}
 where block_timestamp &lt;= (select max(updated_at) from ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflows)
 and block_timestamp > ?
 );
 
+begin;
 truncate table temp_incremental_chain_workflow_transactions_${CHAIN_TYPE}${CHAIN_ID_SUFFIX};
-
 
 insert into temp_incremental_chain_workflow_transactions_${CHAIN_TYPE}${CHAIN_ID_SUFFIX}
 (select tx.tx_hash,
@@ -617,14 +615,12 @@ insert into temp_incremental_chain_workflow_transactions_${CHAIN_TYPE}${CHAIN_ID
 		(tx.gas_price *tx.gas_used) as tx_fees,
 		
 		0 as workflow_id,
-		case when tx_kind = 54 then 500
-		else 501
-		end as workflow_kind,
+		500 as workflow_kind,
 		tx.tx_status as workflow_status,
 		(tx.block_timestamp - MOD(tx.block_timestamp,86400)::INTEGER) AS rounded_workflow_create_timestamp
 		
- from  select * from temp_incremental_chain_transactions_${CHAIN_TYPE}${CHAIN_ID_SUFFIX} 
-where tx_kind in (54)
+ from  (select * from temp_incremental_chain_transactions_${CHAIN_TYPE}${CHAIN_ID_SUFFIX} 
+where tx_kind in (54)) as tx
 );
 
 insert into temp_incremental_chain_workflow_transactions_${CHAIN_TYPE}${CHAIN_ID_SUFFIX}
@@ -643,9 +639,13 @@ insert into temp_incremental_chain_workflow_transactions_${CHAIN_TYPE}${CHAIN_ID
 		
 		coalesce(w.id,0) as workflow_id,
 		coalesce(w.kind,0) as workflow_kind,
-		coalesce(w.status, tx.tx_status) as workflow_status,
-		(coalesce(w.created_at,tx.block_timestamp)  - MOD(coalesce(w.created_at,tx.block_timestamp),86400)::INTEGER) AS rounded_workflow_create_timestamp
-		
+		case w.status when null then tx.tx_status
+			when 1 then 'pending'
+			when 2 then 'success'
+			when 3 then 'fail'
+			when 4 then 'fail'
+			end	as workflow_status,
+		(coalesce(extract(epoch from w.created_at::DATE), (tx.block_timestamp - MOD(tx.block_timestamp,86400)::INTEGER))) AS rounded_workflow_create_timestamp		
  from  ( select * from temp_incremental_chain_transactions_${CHAIN_TYPE}${CHAIN_ID_SUFFIX} where tx_kind not in (54))as tx
 left join ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflow_steps as ws
 on ws.transaction_hash = tx.tx_hash
@@ -653,7 +653,7 @@ left join ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflows
 on w.id = ws.workflow_id
 );
 
-
+begin;
 truncate table temp_incremental_chain_workflow_transactions_sk_${CHAIN_TYPE}${CHAIN_ID_SUFFIX};
 insert into temp_incremental_chain_workflow_transactions_sk_${CHAIN_TYPE}${CHAIN_ID_SUFFIX}
 (select tx.tx_hash,
@@ -661,8 +661,9 @@ insert into temp_incremental_chain_workflow_transactions_sk_${CHAIN_TYPE}${CHAIN
 		coalesce(ad.address_type_sk, 0) as from_address_type_sk,
         tx.chain_type,
       	tx.chain_id,
+		tx.token_id,
       	coalesce(tok.token_sk, 0) as token_sk,
-      	tx.kind,
+      	tx.tx_kind,
       	dtx.date_sk as tx_date_sk,
       	tx.tx_status,
       	tx.gas_price,
@@ -671,7 +672,7 @@ insert into temp_incremental_chain_workflow_transactions_sk_${CHAIN_TYPE}${CHAIN
 		tx.tx_fees,
 		
 		workflow_id,
-		coalesce(w.workflow_sk, 0) as workflow_kind_sk,
+		coalesce(w.workflow_kind_sk, 0) as workflow_kind_sk,
 		workflow_kind,
 		workflow_status,
 	 	rounded_workflow_create_timestamp,
@@ -683,24 +684,24 @@ insert into temp_incremental_chain_workflow_transactions_sk_${CHAIN_TYPE}${CHAIN
  left join ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.dim_tokens tok
 	on tok.token_id = tx.token_id
  join ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.dim_dates dtx
-	on d.timestamp = tx.rounded_date_timestamp
+	on dtx.timestamp = tx.rounded_date_timestamp
  join ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.dim_dates dw
-	on d.timestamp = tx.rounded_workflow_create_timestamp
+	on dw.timestamp = tx.rounded_workflow_create_timestamp
  left join ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.dim_workflow_kinds w
-	on w.kind = tx.tx_kind
+	on w.kind = tx.workflow_kind
 );
 
-insert into all_worflows_transactions
+begin;
+insert into ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.all_workflows_transactions
 (
-select *, GETDATE() as last_updated_at from temp_incremental_chain_workflow_transactions_sk_${CHAIN_TYPE}${CHAIN_ID_SUFFIX}
+select *, extract(epoch from GETDATE()) as last_updated_at from temp_incremental_chain_workflow_transactions_sk_${CHAIN_TYPE}${CHAIN_ID_SUFFIX}
 );
 
-update pentaho_processing_info
+update ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.pentaho_processing_info
 set value = GREATEST(value, (select coalesce(max(block_timestamp), 0) from temp_incremental_chain_transactions_${CHAIN_TYPE}${CHAIN_ID_SUFFIX}))
 where property=('last_processed_block_timestamp_' || '${CHAIN_TYPE}' || '${CHAIN_ID_SUFFIX}');
 
-commit;
-</sql>
+commit;</sql>
     <set_params>N</set_params>
     <insert_field />
     <update_field />

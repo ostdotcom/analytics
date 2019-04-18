@@ -59,9 +59,9 @@ CREATE INDEX IDX_transformation_logs_${AUX_CHAIN_ID}_1 ON transformation_logs_${
 CREATE INDEX IDX_transformation_logs_${AUX_CHAIN_ID}_2 ON transformation_logs_${AUX_CHAIN_ID}(ERRORS, STATUS, TRANSNAME)
 ;
 
-  drop table if exists `incremental_aggregated_aux_transfers_details_${AUX_CHAIN_ID}` ;
+  drop table if exists `incremental_aggregated_transfers_details_aux_${AUX_CHAIN_ID}` ;
 
-  CREATE TABLE `incremental_aggregated_aux_transfers_details_${AUX_CHAIN_ID}` (
+  CREATE TABLE `incremental_aggregated_transfers_details_aux_${AUX_CHAIN_ID}` (
     `id` bigint  NOT NULL auto_increment,
     `rounded_time_timestamp` integer  NOT NULL,
     `rounded_date_timestamp` integer  NOT NULL,
@@ -105,9 +105,9 @@ CREATE INDEX IDX_transformation_logs_${AUX_CHAIN_ID}_2 ON transformation_logs_${
   INSERT INTO `dim_meta_names_${AUX_CHAIN_ID}` (`meta_name_sk`,`meta_name`, `token_id`) VALUES(0,'NIL', 0);
 
 
-  drop table if exists `aux_token_transfer_facts_${AUX_CHAIN_ID}`;
+  drop table if exists `token_transfer_facts_aux_${AUX_CHAIN_ID}`;
   
-  CREATE TABLE `aux_token_transfer_facts_${AUX_CHAIN_ID}` (
+  CREATE TABLE `token_transfer_facts_aux_${AUX_CHAIN_ID}` (
     `id` bigint  NOT NULL AUTO_INCREMENT,
     `time_sk` bigint  NOT NULL ,
     `date_sk` bigint  NOT NULL ,
@@ -123,4 +123,4 @@ CREATE INDEX IDX_transformation_logs_${AUX_CHAIN_ID}_2 ON transformation_logs_${
   ) ;
 
 
-  ALTER TABLE `aux_token_transfer_facts_${AUX_CHAIN_ID}` ADD INDEX nu_date_token_meta_name (date_sk, token_sk, meta_name_sk);
+  ALTER TABLE `token_transfer_facts_aux_${AUX_CHAIN_ID}` ADD INDEX nu_date_token_meta_name (date_sk, token_sk, meta_name_sk);

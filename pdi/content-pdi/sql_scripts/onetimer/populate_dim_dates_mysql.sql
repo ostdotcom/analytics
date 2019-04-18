@@ -27,7 +27,7 @@ LIMIT 1000000;
 */
 
 INSERT INTO dim_dates (`date_sk`, `timestamp`, `day`, `week_of_the_year`, `month`, `quarter`, `year`)
-SELECT number + 1, UNIX_TIMESTAMP(DATE_ADD( '2018-01-01', INTERVAL number DAY )), 0,0,0,0,0
+SELECT number + 1, UNIX_TIMESTAMP(DATE_ADD( CONVERT_TZ('2018-01-01', '+00:00', @@session.time_zone), INTERVAL number DAY )), 0,0,0,0,0
 FROM numbers
 WHERE DATE_ADD( '2018-01-01', INTERVAL number DAY ) BETWEEN '2018-01-01' AND '2028-12-31'
 ORDER BY number;

@@ -9,32 +9,25 @@ CREATE SCHEMA IF NOT EXISTS  ${TEMP_PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${
 set search_path=${TEMP_PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX};
 
 
-DROP TABLE IF EXISTS temp_pentaho_processing_info_${AUX_CHAIN_ID};
-CREATE TABLE temp_pentaho_processing_info_${AUX_CHAIN_ID}
-(
-  property    VARCHAR(255) NOT NULL,
-  value               BIGINT NOT NULL
-);
-
-INSERT INTO temp_pentaho_processing_info_${AUX_CHAIN_ID}
+INSERT INTO temp_pentaho_processing_info
 (
   property,
   value
 )
 VALUES
 (
-  'last_processed_aux_transaction_insert_timestamp',
+  'last_processed_transaction_insert_timestamp_aux_${AUX_CHAIN_ID}',
   0
 );
 
-INSERT INTO temp_pentaho_processing_info_${AUX_CHAIN_ID}
+INSERT INTO temp_pentaho_processing_info
 (
   property,
   value
 )
 VALUES
 (
-  'last_updated_token_timestamp',
+  'last_updated_token_timestamp_aux_${AUX_CHAIN_ID}',
   0
 );  
 
@@ -78,7 +71,7 @@ CREATE TABLE temp_incremental_chain_workflow_transactions_aux_${AUX_CHAIN_ID}
 
   workflow_id              BIGINT,
   workflow_kind              INT,
-  workflow_status              INT,
+  workflow_status              VARCHAR(20) NOT NULL,
   rounded_workflow_create_timestamp              INT
 )
   DISTKEY (tx_hash) SORTKEY (workflow_kind);
@@ -104,7 +97,7 @@ CREATE TABLE temp_incremental_chain_workflow_transactions_sk_aux_${AUX_CHAIN_ID}
   workflow_id              BIGINT,
   workflow_kind_sk              BIGINT,
   workflow_kind              INT,
-  workflow_status              INT,
+  workflow_status              VARCHAR(20) NOT NULL,
   rounded_workflow_create_timestamp              INT,
   workflow_date_sk INT NOT NULL
 )
