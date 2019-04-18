@@ -12,11 +12,6 @@
   <modified_date>2019/03/14 21:27:34.694</modified_date>
   <parameters>
     <parameter>
-      <name>CHAIN_ID</name>
-      <default_value />
-      <description />
-    </parameter>
-    <parameter>
       <name>CONSISTENCY_LOGS_PATH</name>
       <default_value />
       <description />
@@ -330,13 +325,13 @@
       <attributes_kjc />
     </entry>
     <entry>
-      <name>Aux Token Transfer Fact Consistency</name>
+      <name>All Chains Aux Token Transfer Fact Consistency</name>
       <description />
       <type>TRANS</type>
       <attributes />
       <specification_method>filename</specification_method>
       <trans_object_id />
-      <filename>${Internal.Job.Filename.Directory}/../transformations/consistency_lookup/aux_token_transfer_facts_consistency.ktr</filename>
+      <filename>${Internal.Job.Filename.Directory}/../transformations/all_aux_chains_token_transfers_facts_consistency.ktr</filename>
       <transname />
       <arg_from_previous>N</arg_from_previous>
       <params_from_previous>N</params_from_previous>
@@ -363,15 +358,15 @@
       <parallel>N</parallel>
       <draw>Y</draw>
       <nr>0</nr>
-      <xloc>384</xloc>
-      <yloc>112</yloc>
+      <xloc>512</xloc>
+      <yloc>96</yloc>
       <attributes_kjc />
     </entry>
   </entries>
   <hops>
     <hop>
       <from>Start</from>
-      <to>Aux Token Transfer Fact Consistency</to>
+      <to>All Chains Aux Token Transfer Fact Consistency</to>
       <from_nr>0</from_nr>
       <to_nr>0</to_nr>
       <enabled>Y</enabled>
