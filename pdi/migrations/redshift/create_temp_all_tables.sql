@@ -10,6 +10,14 @@ CREATE SCHEMA IF NOT EXISTS  ${TEMP_PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${
 set search_path=${TEMP_PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX};
 
 
+DROP TABLE IF EXISTS temp_pentaho_processing_info;
+CREATE TABLE temp_pentaho_processing_info
+(
+  property    VARCHAR(255) NOT NULL,
+  value               BIGINT NOT NULL
+);
+
+
 DROP TABLE IF EXISTS temp_incremental_chain_transactions_origin;
 CREATE TABLE temp_incremental_chain_transactions_origin
 (

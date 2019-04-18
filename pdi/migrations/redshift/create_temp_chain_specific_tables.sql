@@ -9,32 +9,25 @@ CREATE SCHEMA IF NOT EXISTS  ${TEMP_PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${
 set search_path=${TEMP_PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX};
 
 
-DROP TABLE IF EXISTS temp_pentaho_processing_info_${AUX_CHAIN_ID};
-CREATE TABLE temp_pentaho_processing_info_${AUX_CHAIN_ID}
-(
-  property    VARCHAR(255) NOT NULL,
-  value               BIGINT NOT NULL
-);
-
-INSERT INTO temp_pentaho_processing_info_${AUX_CHAIN_ID}
+INSERT INTO temp_pentaho_processing_info
 (
   property,
   value
 )
 VALUES
 (
-  'last_processed_aux_transaction_insert_timestamp',
+  'last_processed_transaction_insert_timestamp_aux_${AUX_CHAIN_ID}',
   0
 );
 
-INSERT INTO temp_pentaho_processing_info_${AUX_CHAIN_ID}
+INSERT INTO temp_pentaho_processing_info
 (
   property,
   value
 )
 VALUES
 (
-  'last_updated_token_timestamp',
+  'last_updated_token_timestamp_aux_${AUX_CHAIN_ID}',
   0
 );  
 
