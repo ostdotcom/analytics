@@ -31,4 +31,5 @@ export S3_ACCESS_SECRET='GaramSppI5tRzMYprD//HAr+YKvGYkMTQtb3wLI+'
 export S3_BUCKET_NAME='analytics.stagingost.com'
 
 export LOCAL_DIR_FILE_PATH='/tmp/analytics_prestaging_data'
-export BLOCK_SCANNER_CONFIG_FILE_PATH=''
+export AUX_BLOCK_SCANNER_CONFIG_FILE_PATH=''
+export ORIGIN_BLOCK_SCANNER_CONFIG_FILE_PATH=''

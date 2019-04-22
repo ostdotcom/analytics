@@ -19,7 +19,7 @@ class GetBlockScannerDataService {
         oThis.startBlock = params.startBlock;
         oThis.endBlock = params.endBlock;
         oThis.redshiftClient = new RedshiftClient();
-        oThis.blockScanner = new BlockScanner(oThis.chainId);
+        oThis.blockScanner = new BlockScanner(oThis.chainId, oThis.chainType);
         oThis.transactionModel = new TransactionsModel({config: {chainId: oThis.chainId, chainType: oThis.chainType}});
     }
 

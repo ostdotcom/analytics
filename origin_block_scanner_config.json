@@ -1,0 +1,161 @@
+{
+  "ddbTablePrefix": "s6_m_o_",
+  "cache": {
+    "engine": "memcached",
+    "servers": [
+      "127.0.0.1:11211"
+    ],
+    "defaultTtl": 36000,
+    "consistentBehavior": "1"
+  },
+  "storage": {
+    "endpoint": "http://dynamodb.us-east-1.amazonaws.com",
+    "region": "us-east-1",
+    "apiKey": "AKIAIB4XIQCJEYZ2IXYQ",
+    "apiSecret": "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",
+    "apiVersion": "2012-08-10",
+    "enableSsl": "0",
+    "enableLogging": "0",
+    "enableAutoscaling": "1",
+    "maxRetryCount": "50",
+    "autoScaling": {
+      "endpoint": "http://autoscaling.us-east-1.amazonaws.com",
+      "region": "us-east-1",
+      "apiKey": "AKIAIB4XIQCJEYZ2IXYQ",
+      "apiSecret": "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",
+      "apiVersion": "2016-02-06",
+      "enableSsl": "0"
+    }
+  },
+  "chains": [
+    {
+      "chainId": "3",
+      "cache": {
+        "engine": "memcached",
+        "servers": [
+          "127.0.0.1:11211",
+          "127.0.0.1:11211"
+        ],
+        "defaultTtl": 36000,
+        "consistentBehavior": "1"
+      },
+      "storage": {
+        "endpoint": "http://dynamodb.us-east-1.amazonaws.com",
+        "region": "us-east-1",
+        "apiKey": "AKIAIB4XIQCJEYZ2IXYQ",
+        "apiSecret": "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",
+        "apiVersion": "2012-08-10",
+        "enableSsl": "0",
+        "enableLogging": "0",
+        "enableAutoscaling": "1",
+        "maxRetryCount": "50",
+        "autoScaling": {
+          "endpoint": "http://autoscaling.us-east-1.amazonaws.com",
+          "region": "us-east-1",
+          "apiKey": "AKIAIB4XIQCJEYZ2IXYQ",
+          "apiSecret": "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",
+          "apiVersion": "2016-02-06",
+          "enableSsl": "0"
+        }
+      },
+      "nodes": [
+        {
+          "client": "geth",
+          "wsEndpoint": "ws://s6-mn-o3-r1.stagingost.com:8546",
+          "rpcEndpoint": null
+        },
+        {
+          "client": "geth",
+          "wsEndpoint": "ws://s6-mn-o3-r2.stagingost.com:8546",
+          "rpcEndpoint": null
+        }
+      ]
+    }
+  ],
+  "extraStorageColumns": {
+    "pendingTransactions": {
+      "unsettledDebits": {
+        "shortName": "ud",
+        "dataType": "S"
+      },
+      "eip1077Signature": {
+        "shortName": "es",
+        "dataType": "S"
+      },
+      "metaProperty": {
+        "shortName": "mp",
+        "dataType": "S"
+      },
+      "ruleId": {
+        "shortName": "rid",
+        "dataType": "N"
+      },
+      "status": {
+        "shortName": "sts",
+        "dataType": "N"
+      },
+      "transferExecutableData": {
+        "shortName": "ted",
+        "dataType": "S"
+      },
+      "transfers": {
+        "shortName": "trs",
+        "dataType": "S"
+      },
+      "ruleAddress": {
+        "shortName": "ra",
+        "dataType": "S"
+      },
+      "sessionKeyNonce": {
+        "shortName": "skn",
+        "dataType": "S"
+      },
+      "sessionKeyAddress": {
+        "shortName": "ska",
+        "dataType": "S"
+      },
+      "tokenId": {
+        "shortName": "ti",
+        "dataType": "N"
+      },
+      "kind": {
+        "shortName": "kd",
+        "dataType": "N"
+      },
+      "blockNumber": {
+        "shortName": "bn",
+        "dataType": "N"
+      },
+      "blockTimestamp": {
+        "shortName": "bts",
+        "dataType": "N"
+      },
+      "erc20Address": {
+        "shortName": "ea",
+        "dataType": "S"
+      },
+      "toBeSyncedInEs": {
+        "shortName": "sie",
+        "dataType": "N"
+      }
+    },
+    "transactions": {
+      "metaProperty": {
+        "shortName": "mp",
+        "dataType": "S"
+      },
+      "ruleId": {
+        "shortName": "rid",
+        "dataType": "N"
+      },
+      "tokenId": {
+        "shortName": "ti",
+        "dataType": "N"
+      },
+      "kind": {
+        "shortName": "kd",
+        "dataType": "N"
+      }
+    }
+  }
+}
