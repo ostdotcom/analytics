@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <job>
-  <name>load_all_cubes</name>
+  <name>load_dimensions</name>
   <description>Job Template</description>
   <extended_description />
   <job_version>1</job_version>
