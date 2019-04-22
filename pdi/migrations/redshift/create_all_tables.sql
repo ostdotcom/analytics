@@ -194,7 +194,7 @@ VALUES
     'OST'
   ),
   (
-  'PC'
+  'PARTNER COMPANY'
   );
 
 
