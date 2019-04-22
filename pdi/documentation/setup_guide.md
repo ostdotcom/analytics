@@ -51,7 +51,7 @@
     export KETTLE_HOME=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/configs/development
     export KETTLE_JNDI_ROOT=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/configs/development/simple-jndi
 
-    sh kitchen.sh -file=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/content-pdi/jobs/setup_new_sub_environment.kjb -level=Detailed -param:SUB_ENV=main -param:ENV_SUFFIX=_d6 -param:ORIGIN_CHAIN_ID=100
+    sh kitchen.sh -file=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/content-pdi/jobs/setup_new_sub_environment.kjb -level=Detailed -param:SUB_ENV=main -param:ENV_SUFFIX=_d6 -param:ORIGIN_CHAIN_ID=3
     sh kitchen.sh -file=/Users/amanbarbaria/workspace/projects/analytics/analytics/pdi/content-pdi/jobs/setup_new_chain.kjb -level=Detailed -param:SUB_ENV=main -param:AUX_CHAIN_ID=202 -param:ENV_SUFFIX=_d6
 
 ###  Option 2
