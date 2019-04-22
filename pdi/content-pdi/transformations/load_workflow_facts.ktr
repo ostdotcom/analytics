@@ -421,7 +421,7 @@
     <size_rowset>10000</size_rowset>
     <sleep_time_empty>50</sleep_time_empty>
     <sleep_time_full>50</sleep_time_full>
-    <unique_connections>N</unique_connections>
+    <unique_connections>Y</unique_connections>
     <feedback_shown>Y</feedback_shown>
     <feedback_size>50000</feedback_size>
     <using_thread_priorities>Y</using_thread_priorities>
@@ -560,9 +560,7 @@ where property = 'last_updated_at_all_workflows_transactions');</sql>
     <single_statement>N</single_statement>
     <replace_variables>Y</replace_variables>
     <quoteString>N</quoteString>
-    <sql>begin;
-
-set search_path= ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX};
+    <sql>set search_path= ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX};
 
 delete from workflow_facts
 where workflow_date_sk >= ?;
@@ -583,8 +581,6 @@ group by 1,2,3,4,5,6,7,8);
 update pentaho_processing_info
 set value = (select coalesce(max(last_updated_at), 0) from all_workflows_transactions)
 where property='last_updated_at_all_workflows_transactions';
-
-commit;
 </sql>
     <set_params>N</set_params>
     <insert_field />

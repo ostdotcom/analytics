@@ -64,7 +64,14 @@ class MysqlService {
 
         try {
             await oThis.fetchDetailsAndWriteIntoLocalFile();
-            await oThis.uploadLocalFilesToS3();
+            let r = await oThis.uploadLocalFilesToS3();
+
+            if (!r.data.hasFiles) {
+              logger.log("No data found for model-", oThis.model.tableName);
+							return Promise.resolve(r);
+            }
+
+					  await oThis.downloadFromS3ToTemp();
             await oThis.model.insertToMainFromTemp();
             await oThis.model.updateDataProcessingInfoTable(cronStartTime);
         } catch (e) {
@@ -149,16 +156,25 @@ class MysqlService {
             return Promise.reject(r);
         }
 
-        if (r.data.hasFiles) {
-            let downloadToTemp = new DownloadToTemp({
-                tempTableName: oThis.model.getTempTableNameWithSchema,
-                columnList: oThis.model.getColumnList
-            });
-            let resp = await downloadToTemp.copyFromS3ToTemp(`${oThis.s3UploadPath}`);
-            return Promise.resolve(resp);
-        }
-        return Promise.resolve(responseHelper.successWithData({}));
+			return Promise.resolve(r);
     }
+
+	/**
+	 * Upload local files to s3
+	 *
+	 * @return {Promise}
+	 *
+	 */
+	async downloadFromS3ToTemp() {
+		const oThis = this;
+
+			let downloadToTempObj = new DownloadToTemp({
+				tempTableName: oThis.model.getTempTableNameWithSchema,
+				columnList: oThis.model.getColumnList
+			});
+			let resp = await downloadToTempObj.copyFromS3ToTemp(`${oThis.s3UploadPath}`);
+			return Promise.resolve(resp);
+	}
 
 
     /**
