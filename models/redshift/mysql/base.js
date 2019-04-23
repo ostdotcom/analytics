@@ -151,9 +151,8 @@ class ModelBase extends MysqlQueryBuilders {
         limit(params.recordsToFetchOnce);
 
         if (params.lastProcessedId !== undefined){
-            query = query.where(['id > ?', params.lastProcessedId])
+            query = query.where(['id > ?', params.lastProcessedId]);
         }
-
         return query.fire();
     }
     /**
