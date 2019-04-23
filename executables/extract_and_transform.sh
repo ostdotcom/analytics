@@ -1,6 +1,30 @@
 #!/usr/bin/env bash
 
-LOCKFILE="/tmp/`basename $0`"
+while [[ $# -gt 0 ]]
+do
+    key="$1";
+
+    usage_str="Usage: ./extract_and_transform.sh --chain-id <Number> --start-block-no <Number>";
+    # Read parameters
+    case $key in
+        --chain-id)
+            CHAIN_ID="$2"
+            shift # past argument
+            shift # past value
+            ;;
+        --start-block-no)
+            START_BLOCK_NO="$2"
+            shift # past argument
+            shift # past value
+            ;;
+        *)    # unknown option
+            echo $usage_str;
+            exit 1
+            ;;
+    esac
+done
+
+LOCKFILE="/tmp/${CHAIN_ID}_`basename $0`"
 LOCKFD=200
 
 # PRIVATE
@@ -65,30 +89,6 @@ function send_email(){
     cat ${mail_body_file} | mail -s "${EMAIL_SUBJECT_TAG} ${subject}" "${EMAIL_SUBSCRIBERS}"
     rm -f ${mail_body_file}
 }
-
-while [[ $# -gt 0 ]]
-do
-    key="$1";
-
-    usage_str="Usage: ./extract_and_transform.sh --chain-id <Number> --start-block-no <Number>";
-    # Read parameters
-    case $key in
-        --chain-id)
-            CHAIN_ID="$2"
-            shift # past argument
-            shift # past value
-            ;;
-        --start-block-no)
-            START_BLOCK_NO="$2"
-            shift # past argument
-            shift # past value
-            ;;
-        *)    # unknown option
-            echo $usage_str;
-            exit 1
-            ;;
-    esac
-done
 
 # Extract data
 echo "******************************** DATA Extraction Started [$(date '+%Y-%m-%d %H:%M:%S')] ********************************"
