@@ -43,7 +43,7 @@ class BlockScannerService {
             transfers: {localPath: "/transfers", model: TransfersModel}
         };
 
-        oThis.modelNamesInOrder = ['transfers', 'transactions']
+        oThis.modelNamesInOrder = ['transfers', 'transactions'];
     }
 
 
@@ -120,7 +120,7 @@ class BlockScannerService {
                 res = await oThis.loadIntoTempTable(batchNo, s3UploadPath, localDirFullFilePath);
 
                 if (!res.success) {
-									oThis.applicationMailer.perform({subject: 'blockScanner:loadIntoTempTable failed', body: {error:res}});
+					oThis.applicationMailer.perform({subject: 'blockScanner:loadIntoTempTable failed', body: {error:res}});
                     return Promise.resolve(res);
                 }
 
