@@ -369,7 +369,7 @@
       <attributes />
       <specification_method>filename</specification_method>
       <trans_object_id />
-      <filename>/Users/mayurpatil/workspace/analytics/pdi/content-pdi/transformations/workflow_facts_consistency.ktr</filename>
+      <filename>${Internal.Job.Filename.Directory}/../transformations/workflow_facts_consistency.ktr</filename>
       <transname />
       <arg_from_previous>N</arg_from_previous>
       <params_from_previous>N</params_from_previous>
