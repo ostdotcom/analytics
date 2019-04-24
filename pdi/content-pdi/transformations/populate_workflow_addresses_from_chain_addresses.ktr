@@ -421,7 +421,7 @@
     <size_rowset>10000</size_rowset>
     <sleep_time_empty>50</sleep_time_empty>
     <sleep_time_full>50</sleep_time_full>
-    <unique_connections>Y</unique_connections>
+    <unique_connections>N</unique_connections>
     <feedback_shown>Y</feedback_shown>
     <feedback_size>50000</feedback_size>
     <using_thread_priorities>Y</using_thread_priorities>
@@ -527,10 +527,12 @@
     <sql>set search_path=${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX};
 
 INSERT INTO workflow_addresses(address, address_type_sk) 
-(select address, ? 
+(select distinct(address), ? 
 from ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.chain_addresses 
 where id > 
-(select value  from pentaho_processing_info where property = 'last_processed_chain_address'));
+(select value  from pentaho_processing_info where property = 'last_processed_chain_address')      
+and address not in (select address from workflow_addresses)
+);
 
 UPDATE pentaho_processing_info 
 set value = (select max(id) from ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.chain_addresses ) 

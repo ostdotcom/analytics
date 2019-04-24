@@ -13,17 +13,17 @@
   <parameters>
     <parameter>
       <name>CONSISTENCY_LOGS_PATH</name>
-      <default_value />
+      <default_value>/Users/mayurpatil/workspace/analytics</default_value>
       <description />
     </parameter>
     <parameter>
       <name>ENV_SUFFIX</name>
-      <default_value />
+      <default_value>_d40</default_value>
       <description />
     </parameter>
     <parameter>
       <name>SUB_ENV</name>
-      <default_value />
+      <default_value>main</default_value>
       <description />
     </parameter>
   </parameters>

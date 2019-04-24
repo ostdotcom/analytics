@@ -2,8 +2,8 @@
 <transformation>
   <info>
     <name>workflow_facts_consistency</name>
-    <description/>
-    <extended_description/>
+    <description />
+    <extended_description />
     <trans_version>1</trans_version>
     <trans_type>Normal</trans_type>
     <trans_status>0</trans_status>
@@ -11,27 +11,27 @@
     <parameters>
       <parameter>
         <name>CONSISTENCY_PATH</name>
-        <default_value/>
-        <description/>
+        <default_value />
+        <description />
       </parameter>
       <parameter>
         <name>ENV_SUFFIX</name>
-        <default_value/>
-        <description/>
+        <default_value />
+        <description />
       </parameter>
       <parameter>
         <name>SUB_ENV</name>
-        <default_value/>
-        <description/>
+        <default_value />
+        <description />
       </parameter>
     </parameters>
     <log>
       <trans-log-table>
-        <connection/>
-        <schema/>
+        <connection />
+        <schema />
         <table>${KETTLE_TRANS_LOG_TABLE}</table>
-        <size_limit_lines/>
-        <interval/>
+        <size_limit_lines />
+        <interval />
         <timeout_days>${TRANSFORMATION_LOGS_RECORD_TIMEOUT}</timeout_days>
         <field>
           <id>ID_BATCH</id>
@@ -57,37 +57,37 @@
           <id>LINES_READ</id>
           <enabled>Y</enabled>
           <name>LINES_READ</name>
-          <subject/>
+          <subject />
         </field>
         <field>
           <id>LINES_WRITTEN</id>
           <enabled>Y</enabled>
           <name>LINES_WRITTEN</name>
-          <subject/>
+          <subject />
         </field>
         <field>
           <id>LINES_UPDATED</id>
           <enabled>Y</enabled>
           <name>LINES_UPDATED</name>
-          <subject/>
+          <subject />
         </field>
         <field>
           <id>LINES_INPUT</id>
           <enabled>Y</enabled>
           <name>LINES_INPUT</name>
-          <subject/>
+          <subject />
         </field>
         <field>
           <id>LINES_OUTPUT</id>
           <enabled>Y</enabled>
           <name>LINES_OUTPUT</name>
-          <subject/>
+          <subject />
         </field>
         <field>
           <id>LINES_REJECTED</id>
           <enabled>Y</enabled>
           <name>LINES_REJECTED</name>
-          <subject/>
+          <subject />
         </field>
         <field>
           <id>ERRORS</id>
@@ -141,11 +141,11 @@
         </field>
       </trans-log-table>
       <perf-log-table>
-        <connection/>
-        <schema/>
-        <table/>
-        <interval/>
-        <timeout_days/>
+        <connection />
+        <schema />
+        <table />
+        <interval />
+        <timeout_days />
         <field>
           <id>ID_BATCH</id>
           <enabled>Y</enabled>
@@ -223,10 +223,10 @@
         </field>
       </perf-log-table>
       <channel-log-table>
-        <connection/>
-        <schema/>
-        <table/>
-        <timeout_days/>
+        <connection />
+        <schema />
+        <table />
+        <timeout_days />
         <field>
           <id>ID_BATCH</id>
           <enabled>Y</enabled>
@@ -289,10 +289,10 @@
         </field>
       </channel-log-table>
       <step-log-table>
-        <connection/>
-        <schema/>
-        <table/>
-        <timeout_days/>
+        <connection />
+        <schema />
+        <table />
+        <timeout_days />
         <field>
           <id>ID_BATCH</id>
           <enabled>Y</enabled>
@@ -365,10 +365,10 @@
         </field>
       </step-log-table>
       <metrics-log-table>
-        <connection/>
-        <schema/>
-        <table/>
-        <timeout_days/>
+        <connection />
+        <schema />
+        <table />
+        <timeout_days />
         <field>
           <id>ID_BATCH</id>
           <enabled>Y</enabled>
@@ -417,9 +417,9 @@
       </metrics-log-table>
     </log>
     <maxdate>
-      <connection/>
-      <table/>
-      <field/>
+      <connection />
+      <table />
+      <field />
       <offset>0.0</offset>
       <maxdiff>0.0</maxdiff>
     </maxdate>
@@ -430,7 +430,7 @@
     <feedback_shown>Y</feedback_shown>
     <feedback_size>50000</feedback_size>
     <using_thread_priorities>Y</using_thread_priorities>
-    <shared_objects_file/>
+    <shared_objects_file />
     <capture_step_performance>N</capture_step_performance>
     <step_performance_capturing_delay>1000</step_performance_capturing_delay>
     <step_performance_capturing_size_limit>100</step_performance_capturing_size_limit>
@@ -453,16 +453,16 @@
   </notepads>
   <connection>
     <name>analytics_redshift_connection</name>
-    <server/>
+    <server />
     <type>REDSHIFT</type>
     <access>JNDI</access>
     <database>analyticsRedshiftConnection${ENV_SUFFIX}</database>
     <port>1521</port>
-    <username/>
+    <username />
     <password>Encrypted </password>
-    <servername/>
-    <data_tablespace/>
-    <index_tablespace/>
+    <servername />
+    <data_tablespace />
+    <index_tablespace />
     <attributes>
       <attribute>
         <code>EXTRA_OPTION_REDSHIFT.tcpKeepAlive</code>
@@ -509,11 +509,6 @@
   <order>
     <hop>
       <from>Table input</from>
-      <to>get chain details data</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>get chain details data</from>
       <to>workflow consistency check</to>
       <enabled>Y</enabled>
     </hop>
@@ -521,24 +516,26 @@
   <step>
     <name>Table input</name>
     <type>TableInput</type>
-    <description/>
+    <description />
     <distribute>Y</distribute>
-    <custom_distribution/>
+    <custom_distribution />
     <copies>1</copies>
     <partitioning>
       <method>none</method>
-      <schema_name/>
+      <schema_name />
     </partitioning>
     <connection>analytics_redshift_connection</connection>
-    <sql>SELECT date_sk, timestamp FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.dim_dates WHERE timestamp = EXTRACT(epoch FROM TRUNC(GETDATE()));
+    <sql>SELECT date_sk, timestamp 'epoch' + (timestamp * interval '1 second') as last_date   FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.dim_dates 
+WHERE timestamp = EXTRACT(epoch FROM TRUNC(GETDATE())) - 86400
+;
 </sql>
     <limit>0</limit>
-    <lookup/>
+    <lookup />
     <execute_each_row>N</execute_each_row>
     <variables_active>Y</variables_active>
     <lazy_conversion_active>N</lazy_conversion_active>
-    <attributes/>
-    <cluster_schema/>
+    <attributes />
+    <cluster_schema />
     <remotesteps>
       <input>
       </input>
@@ -552,90 +549,38 @@
     </GUI>
   </step>
   <step>
-    <name>get chain details data</name>
-    <type>TableInput</type>
-    <description/>
+    <name>workflow consistency check</name>
+    <type>TransExecutor</type>
+    <description />
     <distribute>Y</distribute>
-    <custom_distribution/>
+    <custom_distribution />
     <copies>1</copies>
     <partitioning>
       <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <connection>analytics_redshift_connection</connection>
-    <sql>SELECT chain_type,
-		chain_id,
-       	'_' || chain_id as chain_id_suffix,
-		? as date_sk,
-		? as date_timestamp 
-FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.chain_details where chain_type = 'origin';</sql>
-    <limit>0</limit>
-    <lookup>Table input</lookup>
-    <execute_each_row>N</execute_each_row>
-    <variables_active>Y</variables_active>
-    <lazy_conversion_active>N</lazy_conversion_active>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>240</xloc>
-      <yloc>64</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>workflow consistency check</name>
-    <type>TransExecutor</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>2</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
+      <schema_name />
     </partitioning>
     <specification_method>filename</specification_method>
-    <trans_object_id/>
-    <trans_name/>
+    <trans_object_id />
+    <trans_name />
     <filename>${Internal.Entry.Current.Directory}/consistency_lookup/workflow_consistency_check.ktr</filename>
-    <directory_path/>
+    <directory_path />
     <group_size>1</group_size>
-    <group_field/>
-    <group_time/>
+    <group_field />
+    <group_time />
     <parameters>
-      <variablemapping>
-        <variable>CHAIN_TYPE</variable>
-        <field>chain_type</field>
-        <input/>
-      </variablemapping>
-      <variablemapping>
-        <variable>CHAIN_ID_SUFFIX</variable>
-        <field>chain_id_suffix</field>
-        <input/>
-      </variablemapping>
-      <variablemapping>
-        <variable>CHAIN_ID</variable>
-        <field>chain_id</field>
-        <input/>
-      </variablemapping>
       <variablemapping>
         <variable>DATE_SK</variable>
         <field>date_sk</field>
-        <input/>
+        <input />
       </variablemapping>
       <variablemapping>
-        <variable>DATE_TIMESTAMP</variable>
-        <field>date_timestamp</field>
-        <input/>
+        <variable>LAST_DATE</variable>
+        <field>last_date</field>
+        <input />
       </variablemapping>
       <inherit_all_vars>N</inherit_all_vars>
     </parameters>
-    <execution_result_target_step/>
+    <execution_result_target_step />
     <execution_time_field>ExecutionTime</execution_time_field>
     <execution_result_field>ExecutionResult</execution_result_field>
     <execution_errors_field>ExecutionNrErrors</execution_errors_field>
@@ -650,12 +595,12 @@ FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.chain_details whe
     <execution_exit_status_field>ExecutionExitStatus</execution_exit_status_field>
     <execution_log_text_field>ExecutionLogText</execution_log_text_field>
     <execution_log_channelid_field>ExecutionLogChannelId</execution_log_channelid_field>
-    <result_rows_target_step/>
-    <result_files_target_step/>
+    <result_rows_target_step />
+    <result_files_target_step />
     <result_files_file_name_field>FileName</result_files_file_name_field>
-    <executors_output_step/>
-    <attributes/>
-    <cluster_schema/>
+    <executors_output_step />
+    <attributes />
+    <cluster_schema />
     <remotesteps>
       <input>
       </input>
@@ -673,5 +618,5 @@ FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.chain_details whe
   <slave-step-copy-partition-distribution>
   </slave-step-copy-partition-distribution>
   <slave_transformation>N</slave_transformation>
-  <attributes/>
+  <attributes />
 </transformation>
