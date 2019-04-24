@@ -8,6 +8,7 @@ const rootPrefix = '../../..',
     ModelBase = require(rootPrefix + '/models/redshift/mysql/base'),
     Constants = require(rootPrefix + '/configs/constants'),
     tokensGC = require(rootPrefix + '/lib/globalConstants/redshift/tokens'),
+		baseGC = require(rootPrefix + '/lib/globalConstants/redshift/base'),
     dataProcessingInfoGC = require(rootPrefix + "/lib/globalConstants/redshift/dataProcessingInfo");
 
 // Declare variables.
@@ -88,6 +89,16 @@ class Token extends ModelBase {
         const oThis = this;
         return Constants.PRESTAGING_SCHEMA_NAME + '.temp_tokens'+ oThis.tableNameSuffix;
     };
+
+	  /**
+	   * Default Data Extraction Type
+	   *
+	   * @return {string}
+	   *
+	   */
+		static get defaultFetchType(){
+	      return baseGC.createdTillCurrentTimeDataExtractionFetchType;
+	  }
 
 
 

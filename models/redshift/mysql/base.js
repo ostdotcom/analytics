@@ -10,6 +10,7 @@ const rootPrefix = '../../..',
     responseHelper = require(rootPrefix + '/lib/formatter/response'),
     ApplicationMailer = require(rootPrefix + '/lib/applicationMailer'),
     dataProcessingInfoGC = require(rootPrefix + "/lib/globalConstants/redshift/dataProcessingInfo"),
+	  baseGC = require(rootPrefix + '/lib/globalConstants/redshift/base'),
     dateUtil = require(rootPrefix + "/lib/dateUtil"),
     blockScannerGC = require(rootPrefix + "/lib/globalConstants/blockScanner"),
     RedshiftClient = require(rootPrefix + "/lib/redshift");
@@ -143,18 +144,53 @@ class ModelBase extends MysqlQueryBuilders {
     async fetchData(params){
         const oThis = this;
         let lastCronRunTime = await oThis.getLastCronRunTime();
+
         let fetchDataInstance = new oThis.constructor({});
-        let query = fetchDataInstance.select(oThis.columnsToFetchFromMysql()).
-        where(['updated_at >= ? OR created_at >= ?', lastCronRunTime, dateUtil.getBeginnigOfDayInUTC(lastCronRunTime) ]).
-        where(['created_at < ?', dateUtil.getBeginnigOfDayInUTC()]).
-        order_by("id").
-        limit(params.recordsToFetchOnce);
+        fetchDataInstance = fetchDataInstance.select(oThis.columnsToFetchFromMysql());
+
+        let query = oThis.fetchQueryWhereClause(fetchDataInstance, lastCronRunTime);
+        query = query.order_by("id").limit(params.recordsToFetchOnce);
 
         if (params.lastProcessedId !== undefined){
             query = query.where(['id > ?', params.lastProcessedId]);
         }
         return query.fire();
     }
+
+    /**
+     * Filter for query to use for Mysql data fetch
+     *
+     * @return {@constructor}
+     *
+     */
+    fetchQueryWhereClause(fetchDataInstance, lastCronRunTime){
+    	const oThis = this;
+			let query=undefined;
+
+			if(oThis.constructor.defaultFetchType == baseGC.createdTillYesterdayDataExtractionFetchType){
+				query = fetchDataInstance.where(['created_at < ?', dateUtil.getBeginnigOfDayInUTC()]).
+				where(['updated_at >= ? OR created_at >= ?', lastCronRunTime, dateUtil.getBeginnigOfDayInUTC(lastCronRunTime) ]);
+
+      } else if(oThis.constructor.defaultFetchType == baseGC.createdTillCurrentTimeDataExtractionFetchType){
+				query = fetchDataInstance.where(['updated_at >= ?', lastCronRunTime])
+      }
+      else{
+				throw 'defaultFetchType not implemented'
+      }
+
+      return query;
+    }
+
+	  /**
+	   * Default Data Extraction Type
+	   *
+	   * @return {string}
+	   *
+	   */
+	  static get defaultFetchType(){
+	  	return baseGC.createdTillYesterdayDataExtractionFetchType;
+	  }
+
     /**
      * columns to be fetched from Mysql
      *
@@ -169,7 +205,6 @@ class ModelBase extends MysqlQueryBuilders {
         }
         return columns;
     }
-
 
     /**
      * Update last updated at value of the data_processing_info_{chain_id} table
