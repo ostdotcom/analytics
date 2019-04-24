@@ -3,7 +3,7 @@ WbVarDef ENV_SUFFIX=_d6;
 WbVarDef SUB_ENV=main;
 WbVarDef PENTAHO_REDSHIFT_SCHEMA_PREFIX=ost_pentaho;
 WbVarDef AUX_CHAIN_ID=202;
-WbVarDef ORIGIN_CHAIN_ID=100;
+WbVarDef ORIGIN_CHAIN_ID=3;
 */
 
 begin;
@@ -126,6 +126,18 @@ VALUES
     'Logout Sessions'
   ),
     (
+    18,
+    'ST Prime Redeem & Unstake'
+  ),
+    (
+    19,
+    'BT Redeem & Unstake'
+  ),
+    (
+    20,
+    'Update Price Point'
+  ),
+    (
     500,
     'Execute Transaction'
   );
@@ -221,9 +233,9 @@ CREATE TABLE all_workflows_transactions
   tx_date_sk       BIGINT NOT NULL,
   tx_status          varchar(20)  NOT NULL,
   gas_price             BIGINT NOT NULL,
-  gas_used              INT NOT NULL,
+  gas_used              BIGINT NOT NULL,
   gas_limit             INT NOT NULL,
-  tx_fees             BIGINT NOT NULL,
+  tx_fees             DECIMAL(30,0) NOT NULL,
   workflow_id              BIGINT,
   workflow_kind_sk              BIGINT not null,
   workflow_kind              INT,
@@ -247,7 +259,7 @@ CREATE TABLE workflow_facts
   from_address_type_sk          VARCHAR(20) NOT NULL,
   tx_status          varchar(20)  NOT NULL,
   workflow_status              VARCHAR(20) NOT NULL,
-  total_tx_fees   BIGINT NOT NULL,
+  total_tx_fees   DECIMAL(30,0) NOT NULL,
   total_gas_price   BIGINT NOT NULL,
   total_gas_used   BIGINT NOT NULL,
   total_transactions   BIGINT NOT NULL,
@@ -333,5 +345,17 @@ VALUES
   'last_processed_token_timestamp',
   0
 );
+
+INSERT INTO pentaho_processing_info
+(
+  property,
+  value
+)
+VALUES
+(
+  'incremental_load_all_chain_workflow_transaction',
+  0
+);
+
 
 commit;

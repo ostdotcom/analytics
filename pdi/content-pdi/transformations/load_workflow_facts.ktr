@@ -504,7 +504,7 @@
   <order>
     <hop>
       <from>get_last_process_time_for_chain</from>
-      <to>load_all_worflows_transactions</to>
+      <to>load_all_workflows_transactions</to>
       <enabled>Y</enabled>
     </hop>
   </order>
@@ -545,7 +545,7 @@ where property = 'last_updated_at_all_workflows_transactions');</sql>
     </GUI>
   </step>
   <step>
-    <name>load_all_worflows_transactions</name>
+    <name>load_all_workflows_transactions</name>
     <type>ExecSQL</type>
     <description />
     <distribute>Y</distribute>
@@ -574,7 +574,7 @@ sum(gas_price) as total_gas_price,
 sum(gas_used) as total_gas_used,
 count(1) as total_transactions,
 count(distinct case when workflow_id = 0 then tx_hash else workflow_id::Varchar(20) end) as total_workflow_count
-from all_worflows_transactions
+from all_workflows_transactions
 where workflow_date_sk >= ?
 group by 1,2,3,4,5,6,7,8);
 
