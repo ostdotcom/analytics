@@ -975,7 +975,7 @@ UNION ALL
 select COALESCE(SUM(workflow_count),0) as value, 
 'workflow_count' AS metric_name  
 FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflow_facts     
-and workflow_date_sk &lt; (select date_sk from ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.dim_dates where timestamp=${DATE_TIMESTAMP}-86400)
+where workflow_date_sk &lt; (select date_sk from ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.dim_dates where timestamp=${DATE_TIMESTAMP}-86400)
 )
 
 
