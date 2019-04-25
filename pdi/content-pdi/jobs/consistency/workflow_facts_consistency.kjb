@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <job>
-  <name>setup new chain</name>
-  <description />
+  <name>workflow_facts_consistency</name>
+  <description>Job Template</description>
   <extended_description />
-  <job_version />
+  <job_version>1</job_version>
   <job_status>0</job_status>
   <directory>/</directory>
   <created_user>-</created_user>
-  <created_date>2019/04/04 13:41:13.982</created_date>
+  <created_date>2019/03/14 21:27:34.694</created_date>
   <modified_user>-</modified_user>
-  <modified_date>2019/04/04 13:41:13.982</modified_date>
+  <modified_date>2019/03/14 21:27:34.694</modified_date>
   <parameters>
     <parameter>
-      <name>AUX_CHAIN_ID</name>
+      <name>CONSISTENCY_LOGS_PATH</name>
       <default_value />
       <description />
     </parameter>
@@ -26,123 +26,23 @@
       <default_value />
       <description />
     </parameter>
+    <parameter>
+      <name>VERIFICATION_START_DATE</name>
+      <default_value />
+      <description />
+    </parameter>
+    <parameter>
+      <name>VERIFICATION_START_DATE_SK</name>
+      <default_value />
+      <description />
+    </parameter>
   </parameters>
-  <connection>
-    <name>analytics_mysql_connection</name>
-    <server />
-    <type>MYSQL</type>
-    <access>JNDI</access>
-    <database>analyticsMysqlConnection_${SUB_ENV}${ENV_SUFFIX}</database>
-    <port>1521</port>
-    <username />
-    <password>Encrypted </password>
-    <servername />
-    <data_tablespace />
-    <index_tablespace />
-    <attributes>
-      <attribute>
-        <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
-        <attribute>N</attribute>
-      </attribute>
-      <attribute>
-        <code>FORCE_IDENTIFIERS_TO_UPPERCASE</code>
-        <attribute>N</attribute>
-      </attribute>
-      <attribute>
-        <code>IS_CLUSTERED</code>
-        <attribute>N</attribute>
-      </attribute>
-      <attribute>
-        <code>PORT_NUMBER</code>
-        <attribute>1521</attribute>
-      </attribute>
-      <attribute>
-        <code>PRESERVE_RESERVED_WORD_CASE</code>
-        <attribute>Y</attribute>
-      </attribute>
-      <attribute>
-        <code>QUOTE_ALL_FIELDS</code>
-        <attribute>N</attribute>
-      </attribute>
-      <attribute>
-        <code>STREAM_RESULTS</code>
-        <attribute>Y</attribute>
-      </attribute>
-      <attribute>
-        <code>SUPPORTS_BOOLEAN_DATA_TYPE</code>
-        <attribute>Y</attribute>
-      </attribute>
-      <attribute>
-        <code>SUPPORTS_TIMESTAMP_DATA_TYPE</code>
-        <attribute>Y</attribute>
-      </attribute>
-      <attribute>
-        <code>USE_POOLING</code>
-        <attribute>N</attribute>
-      </attribute>
-    </attributes>
-  </connection>
-  <connection>
-    <name>analytics_redshift_connection</name>
-    <server />
-    <type>REDSHIFT</type>
-    <access>JNDI</access>
-    <database>analyticsRedshiftConnection${ENV_SUFFIX}</database>
-    <port>1521</port>
-    <username />
-    <password>Encrypted </password>
-    <servername />
-    <data_tablespace />
-    <index_tablespace />
-    <attributes>
-      <attribute>
-        <code>EXTRA_OPTION_REDSHIFT.tcpKeepAlive</code>
-        <attribute>true</attribute>
-      </attribute>
-      <attribute>
-        <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
-        <attribute>N</attribute>
-      </attribute>
-      <attribute>
-        <code>FORCE_IDENTIFIERS_TO_UPPERCASE</code>
-        <attribute>N</attribute>
-      </attribute>
-      <attribute>
-        <code>IS_CLUSTERED</code>
-        <attribute>N</attribute>
-      </attribute>
-      <attribute>
-        <code>PORT_NUMBER</code>
-        <attribute>1521</attribute>
-      </attribute>
-      <attribute>
-        <code>PRESERVE_RESERVED_WORD_CASE</code>
-        <attribute>Y</attribute>
-      </attribute>
-      <attribute>
-        <code>QUOTE_ALL_FIELDS</code>
-        <attribute>N</attribute>
-      </attribute>
-      <attribute>
-        <code>SUPPORTS_BOOLEAN_DATA_TYPE</code>
-        <attribute>Y</attribute>
-      </attribute>
-      <attribute>
-        <code>SUPPORTS_TIMESTAMP_DATA_TYPE</code>
-        <attribute>Y</attribute>
-      </attribute>
-      <attribute>
-        <code>USE_POOLING</code>
-        <attribute>N</attribute>
-      </attribute>
-    </attributes>
-  </connection>
   <slaveservers>
     </slaveservers>
   <job-log-table>
     <connection />
     <schema />
-    <table>${KETTLE_JOB_LOG_TABLE}_${CHAIN_ID}</table>
+    <table>${KETTLE_JOB_LOG_TABLE}</table>
     <size_limit_lines />
     <interval />
     <timeout_days>${JOB_LOGS_RECORD_TIMEOUT}</timeout_days>
@@ -427,90 +327,141 @@
       <minutes>0</minutes>
       <weekDay>1</weekDay>
       <DayOfMonth>1</DayOfMonth>
-      <parallel>Y</parallel>
+      <parallel>N</parallel>
+      <draw>Y</draw>
+      <nr>0</nr>
+      <xloc>48</xloc>
+      <yloc>208</yloc>
+      <attributes_kjc />
+    </entry>
+    <entry>
+      <name>workflow_consistency_check</name>
+      <description />
+      <type>TRANS</type>
+      <attributes />
+      <specification_method>filename</specification_method>
+      <trans_object_id />
+      <filename>${Internal.Job.Filename.Directory}/../../transformations/consistency_lookup/workflow_consistency_check.ktr</filename>
+      <transname />
+      <arg_from_previous>N</arg_from_previous>
+      <params_from_previous>N</params_from_previous>
+      <exec_per_row>N</exec_per_row>
+      <clear_rows>N</clear_rows>
+      <clear_files>N</clear_files>
+      <set_logfile>N</set_logfile>
+      <logfile />
+      <logext />
+      <add_date>N</add_date>
+      <add_time>N</add_time>
+      <loglevel>Basic</loglevel>
+      <cluster>N</cluster>
+      <slave_server_name />
+      <set_append_logfile>N</set_append_logfile>
+      <wait_until_finished>Y</wait_until_finished>
+      <follow_abort_remote>N</follow_abort_remote>
+      <create_parent_folder>N</create_parent_folder>
+      <logging_remote_work>N</logging_remote_work>
+      <run_configuration>Pentaho local</run_configuration>
+      <parameters>
+        <pass_all_parameters>Y</pass_all_parameters>
+      </parameters>
+      <parallel>N</parallel>
+      <draw>Y</draw>
+      <nr>0</nr>
+      <xloc>800</xloc>
+      <yloc>208</yloc>
+      <attributes_kjc />
+    </entry>
+    <entry>
+      <name>set_workflow_end_date_variable</name>
+      <description />
+      <type>TRANS</type>
+      <attributes />
+      <specification_method>filename</specification_method>
+      <trans_object_id />
+      <filename>${Internal.Job.Filename.Directory}/../../transformations/consistency_lookup/set_workflow_end_date_variable.ktr</filename>
+      <transname />
+      <arg_from_previous>N</arg_from_previous>
+      <params_from_previous>N</params_from_previous>
+      <exec_per_row>N</exec_per_row>
+      <clear_rows>N</clear_rows>
+      <clear_files>N</clear_files>
+      <set_logfile>N</set_logfile>
+      <logfile />
+      <logext />
+      <add_date>N</add_date>
+      <add_time>N</add_time>
+      <loglevel>Basic</loglevel>
+      <cluster>N</cluster>
+      <slave_server_name />
+      <set_append_logfile>N</set_append_logfile>
+      <wait_until_finished>Y</wait_until_finished>
+      <follow_abort_remote>N</follow_abort_remote>
+      <create_parent_folder>N</create_parent_folder>
+      <logging_remote_work>N</logging_remote_work>
+      <run_configuration />
+      <parameters>
+        <pass_all_parameters>Y</pass_all_parameters>
+      </parameters>
+      <parallel>N</parallel>
+      <draw>Y</draw>
+      <nr>0</nr>
+      <xloc>528</xloc>
+      <yloc>208</yloc>
+      <attributes_kjc />
+    </entry>
+    <entry>
+      <name>set_verification_start_date_variable</name>
+      <description />
+      <type>TRANS</type>
+      <attributes />
+      <specification_method>filename</specification_method>
+      <trans_object_id />
+      <filename>${Internal.Job.Filename.Directory}/../../transformations/consistency_lookup/set_verification_start_date_variable.ktr</filename>
+      <transname />
+      <arg_from_previous>N</arg_from_previous>
+      <params_from_previous>N</params_from_previous>
+      <exec_per_row>N</exec_per_row>
+      <clear_rows>N</clear_rows>
+      <clear_files>N</clear_files>
+      <set_logfile>N</set_logfile>
+      <logfile />
+      <logext />
+      <add_date>N</add_date>
+      <add_time>N</add_time>
+      <loglevel>Basic</loglevel>
+      <cluster>N</cluster>
+      <slave_server_name />
+      <set_append_logfile>N</set_append_logfile>
+      <wait_until_finished>Y</wait_until_finished>
+      <follow_abort_remote>N</follow_abort_remote>
+      <create_parent_folder>N</create_parent_folder>
+      <logging_remote_work>N</logging_remote_work>
+      <run_configuration />
+      <parameters>
+        <pass_all_parameters>Y</pass_all_parameters>
+      </parameters>
+      <parallel>N</parallel>
       <draw>Y</draw>
       <nr>0</nr>
       <xloc>288</xloc>
-      <yloc>192</yloc>
-      <attributes_kjc />
-    </entry>
-    <entry>
-      <name>Prestaging Chain Specific redshift</name>
-      <description />
-      <type>SQL</type>
-      <attributes />
-      <sql />
-      <useVariableSubstitution>T</useVariableSubstitution>
-      <sqlfromfile>T</sqlfromfile>
-      <sqlfilename>${Internal.Job.Filename.Directory}/../../../migrations/redshift/create_all_chain_specific.sql</sqlfilename>
-      <sendOneStatement>F</sendOneStatement>
-      <connection>analytics_redshift_connection</connection>
-      <parallel>N</parallel>
-      <draw>Y</draw>
-      <nr>0</nr>
-      <xloc>576</xloc>
-      <yloc>32</yloc>
-      <attributes_kjc />
-    </entry>
-    <entry>
-      <name>pentaho redshift chain specific table </name>
-      <description />
-      <type>SQL</type>
-      <attributes />
-      <sql />
-      <useVariableSubstitution>T</useVariableSubstitution>
-      <sqlfromfile>T</sqlfromfile>
-      <sqlfilename>${Internal.Job.Filename.Directory}/../../migrations/redshift/create_chain_specific_tables.sql</sqlfilename>
-      <sendOneStatement>F</sendOneStatement>
-      <connection>analytics_redshift_connection</connection>
-      <parallel>N</parallel>
-      <draw>Y</draw>
-      <nr>0</nr>
-      <xloc>272</xloc>
-      <yloc>352</yloc>
-      <attributes_kjc />
-    </entry>
-    <entry>
-      <name>pentaho mysql chain specific </name>
-      <description />
-      <type>SQL</type>
-      <attributes />
-      <sql />
-      <useVariableSubstitution>T</useVariableSubstitution>
-      <sqlfromfile>T</sqlfromfile>
-      <sqlfilename>${Internal.Job.Filename.Directory}/../../migrations/mysql/create_all_chain_specific.sql</sqlfilename>
-      <sendOneStatement>F</sendOneStatement>
-      <connection>analytics_mysql_connection</connection>
-      <parallel>N</parallel>
-      <draw>Y</draw>
-      <nr>0</nr>
-      <xloc>416</xloc>
-      <yloc>272</yloc>
-      <attributes_kjc />
-    </entry>
-    <entry>
-      <name>pentaho redshift temp chain specific table</name>
-      <description />
-      <type>SQL</type>
-      <attributes />
-      <sql />
-      <useVariableSubstitution>T</useVariableSubstitution>
-      <sqlfromfile>T</sqlfromfile>
-      <sqlfilename>${Internal.Job.Filename.Directory}/../../migrations/redshift/create_temp_chain_specific_tables.sql</sqlfilename>
-      <sendOneStatement>F</sendOneStatement>
-      <connection>analytics_redshift_connection</connection>
-      <parallel>N</parallel>
-      <draw>Y</draw>
-      <nr>0</nr>
-      <xloc>256</xloc>
-      <yloc>464</yloc>
+      <yloc>208</yloc>
       <attributes_kjc />
     </entry>
   </entries>
   <hops>
     <hop>
+      <from>set_workflow_end_date_variable</from>
+      <to>workflow_consistency_check</to>
+      <from_nr>0</from_nr>
+      <to_nr>0</to_nr>
+      <enabled>Y</enabled>
+      <evaluation>Y</evaluation>
+      <unconditional>N</unconditional>
+    </hop>
+    <hop>
       <from>Start</from>
-      <to>Prestaging Chain Specific redshift</to>
+      <to>set_verification_start_date_variable</to>
       <from_nr>0</from_nr>
       <to_nr>0</to_nr>
       <enabled>Y</enabled>
@@ -518,26 +469,8 @@
       <unconditional>Y</unconditional>
     </hop>
     <hop>
-      <from>Start</from>
-      <to>pentaho mysql chain specific </to>
-      <from_nr>0</from_nr>
-      <to_nr>0</to_nr>
-      <enabled>Y</enabled>
-      <evaluation>Y</evaluation>
-      <unconditional>Y</unconditional>
-    </hop>
-    <hop>
-      <from>Start</from>
-      <to>pentaho redshift chain specific table </to>
-      <from_nr>0</from_nr>
-      <to_nr>0</to_nr>
-      <enabled>Y</enabled>
-      <evaluation>Y</evaluation>
-      <unconditional>Y</unconditional>
-    </hop>
-    <hop>
-      <from>pentaho redshift chain specific table </from>
-      <to>pentaho redshift temp chain specific table</to>
+      <from>set_verification_start_date_variable</from>
+      <to>set_workflow_end_date_variable</to>
       <from_nr>0</from_nr>
       <to_nr>0</to_nr>
       <enabled>Y</enabled>
@@ -547,5 +480,20 @@
   </hops>
   <notepads>
   </notepads>
-  <attributes />
+  <attributes>
+    <group>
+      <name>METASTORE.pentaho</name>
+      <attribute>
+        <key>Default Run Configuration</key>
+        <value>{"namespace":"pentaho","id":"Default Run Configuration","name":"Default Run Configuration","description":"Defines a default run configuration","metaStoreName":null}</value>
+      </attribute>
+    </group>
+    <group>
+      <name>{"_":"Embedded MetaStore Elements","namespace":"pentaho","type":"Default Run Configuration"}</name>
+      <attribute>
+        <key>Pentaho local</key>
+        <value>{"children":[{"children":[],"id":"server","value":null},{"children":[],"id":"clustered","value":"N"},{"children":[],"id":"name","value":"Pentaho local"},{"children":[],"id":"description","value":null},{"children":[],"id":"pentaho","value":"N"},{"children":[],"id":"readOnly","value":"Y"},{"children":[],"id":"sendResources","value":"N"},{"children":[],"id":"logRemoteExecutionLocally","value":"N"},{"children":[],"id":"remote","value":"N"},{"children":[],"id":"local","value":"Y"},{"children":[],"id":"showTransformations","value":"N"}],"id":"Pentaho local","value":null,"name":"Pentaho local","owner":null,"ownerPermissionsList":[]}</value>
+      </attribute>
+    </group>
+  </attributes>
 </job>

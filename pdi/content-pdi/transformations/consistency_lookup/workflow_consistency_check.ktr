@@ -15,13 +15,33 @@
         <description />
       </parameter>
       <parameter>
+        <name>END_DATE</name>
+        <default_value />
+        <description />
+      </parameter>
+      <parameter>
+        <name>END_DATE_SK</name>
+        <default_value />
+        <description />
+      </parameter>
+      <parameter>
         <name>ENV_SUFFIX</name>
-        <default_value>_d40</default_value>
+        <default_value />
         <description />
       </parameter>
       <parameter>
         <name>SUB_ENV</name>
-        <default_value>main</default_value>
+        <default_value />
+        <description />
+      </parameter>
+      <parameter>
+        <name>VERIFICATION_START_DATE</name>
+        <default_value />
+        <description />
+      </parameter>
+      <parameter>
+        <name>VERIFICATION_START_DATE_SK</name>
+        <default_value />
         <description />
       </parameter>
     </parameters>
@@ -29,7 +49,7 @@
       <trans-log-table>
         <connection />
         <schema />
-        <table>${KETTLE_TRANS_LOG_TABLE}_${CHAIN_ID}</table>
+        <table>${KETTLE_TRANS_LOG_TABLE}</table>
         <size_limit_lines />
         <interval />
         <timeout_days>${TRANSFORMATION_LOGS_RECORD_TIMEOUT}</timeout_days>
@@ -691,7 +711,7 @@
       <servlet_output>N</servlet_output>
       <do_not_open_new_file_init>N</do_not_open_new_file_init>
       <extention>log</extention>
-      <append>N</append>
+      <append>Y</append>
       <split>N</split>
       <haspartno>N</haspartno>
       <add_date>N</add_date>
@@ -773,7 +793,7 @@
       <servlet_output>N</servlet_output>
       <do_not_open_new_file_init>N</do_not_open_new_file_init>
       <extention>log</extention>
-      <append>N</append>
+      <append>Y</append>
       <split>N</split>
       <haspartno>N</haspartno>
       <add_date>N</add_date>
@@ -822,24 +842,28 @@ SELECT count(*) as value,
 FROM ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflow_steps
 where transaction_hash != '' 
 and 
-created_at &lt; '${LAST_DATE}'
+created_at &lt; '${END_DATE}'
+and created_at >= '${VERIFICATION_START_DATE}'
 )
 UNION ALL
 (
 select count(*) as value,
 'workflow_success_count' as metric_name
-FROM ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflows where 
-status = 2 
-and 
-created_at &lt; '${LAST_DATE}'
+FROM ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflows  as w where 
+ w.id in (select distinct(workflow_id) from ost_warehouse_main_d40.workflow_steps where transaction_hash != '') 
+and status = 2 
+and created_at &lt; '${END_DATE}'
+and created_at >= '${VERIFICATION_START_DATE}'
 )
 UNION ALL
 (
 select count(*) as value,
 'workflow_failed_count' as metric_name
-FROM ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflows where 
-status in (3, 4) and 
-created_at &lt; '${LAST_DATE}'
+FROM ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflows  as w where 
+ w.id in (select distinct(workflow_id) from ost_warehouse_main_d40.workflow_steps where transaction_hash != '') 
+and status in (3, 4) 
+and created_at &lt; '${END_DATE}'
+and created_at >= '${VERIFICATION_START_DATE}'
 )
 UNION ALL
 (
@@ -851,8 +875,7 @@ UNION ALL
 select count(distinct(address)) as value,
 'pc_addresses_count' as metric_name
 FROM ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.token_addresses  where 
-created_at &lt; '${LAST_DATE}'
-and kind not in (2,4)
+ kind not in (2,4)
 and kind &lt;=10 
 )
 UNION ALL
@@ -864,8 +887,10 @@ UNION ALL
 (
 select count(*) as value,
 'all_workflows_count' as metric_name
-FROM ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflows where 
-created_at &lt; '${LAST_DATE}'
+FROM ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflows  as w where 
+ w.id in (select distinct(workflow_id) from ost_warehouse_main_d40.workflow_steps where transaction_hash != '') 
+and created_at &lt; '${END_DATE}'
+and created_at >= '${VERIFICATION_START_DATE}'
 )
 
 )
@@ -909,7 +934,9 @@ SELECT COALESCE(SUM(total_transactions),0) AS value,
 'workflow_steps_transactions_count' AS metric_name 
 FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflow_facts 
 where workflow_kind_sk not in (SELECT workflow_kind_sk FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.dim_workflow_kinds 
-							where kind in ( 500 , 0)) and  workflow_date_sk &lt; ${DATE_SK} 
+							where kind in ( 500 , 0)) and  workflow_date_sk &lt; ${END_DATE_SK} and  workflow_date_sk >= ${VERIFICATION_START_DATE_SK}
+
+
 )
 UNION ALL
 (
@@ -918,7 +945,7 @@ select COALESCE(count(distinct workflow_id),0) as value,
 FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.all_workflows_transactions where workflow_status  = 'success'
 and workflow_kind_sk not in (SELECT workflow_kind_sk FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.dim_workflow_kinds 
 							where kind in ( 500, 0 )) 
-and  workflow_date_sk &lt; ${DATE_SK} 
+and  workflow_date_sk &lt; ${END_DATE_SK} and  workflow_date_sk >= ${VERIFICATION_START_DATE_SK}
 )
 UNION ALL
 (
@@ -927,7 +954,7 @@ select COALESCE(count(distinct workflow_id),0) as value,
 FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.all_workflows_transactions where workflow_status  = 'fail'
 and workflow_kind_sk not in (SELECT workflow_kind_sk FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.dim_workflow_kinds 
 							where kind in ( 500 , 0)) 
-and  workflow_date_sk &lt; ${DATE_SK} 
+and  workflow_date_sk &lt; ${END_DATE_SK} and  workflow_date_sk >= ${VERIFICATION_START_DATE_SK}
 )
 UNION ALL
 (
@@ -958,7 +985,7 @@ select COALESCE(count(distinct workflow_id),0) as value,
 'all_workflows_count' AS metric_name  
 FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.all_workflows_transactions  
 where workflow_kind_sk not in (SELECT workflow_kind_sk FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.dim_workflow_kinds 
-							where kind in ( 500 , 0)) and  workflow_date_sk &lt; ${DATE_SK}    
+							where kind in ( 500 , 0)) and  workflow_date_sk &lt; ${END_DATE_SK}  and  workflow_date_sk >= ${VERIFICATION_START_DATE_SK}
 )
 
 )
