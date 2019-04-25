@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <transformation>
   <info>
-    <name>set_variable_transformation</name>
+    <name>set_workflow_end_date_variable</name>
     <description />
     <extended_description />
     <trans_version>1</trans_version>
@@ -503,50 +503,11 @@
   </connection>
   <order>
     <hop>
-      <from>Table input 2</from>
+      <from>Table input</from>
       <to>Set variables</to>
       <enabled>Y</enabled>
     </hop>
   </order>
-  <step>
-    <name>Table input 2</name>
-    <type>TableInput</type>
-    <description />
-    <distribute>Y</distribute>
-    <custom_distribution />
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name />
-    </partitioning>
-    <connection>analytics_redshift_connection</connection>
-    <sql>
-select case when ('${VALIDATE_START_TIME}' = 'all')  then 0 else date_sk end as start_date_sk,
-	case when ('${VALIDATE_START_TIME}' = 'all')   then  timestamp 'epoch' + (0 * interval '1 second')  else  timestamp 'epoch' + (timestamp * interval '1 second') end as start_date,
-	case when ('${VALIDATE_START_TIME}' = 'all')  then 0 else timestamp end as start_timestamp
-from ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.dim_dates
-WHERE timestamp = EXTRACT(epoch FROM TRUNC(GETDATE())) - 86400 * 5
-;
-</sql>
-    <limit>0</limit>
-    <lookup />
-    <execute_each_row>N</execute_each_row>
-    <variables_active>Y</variables_active>
-    <lazy_conversion_active>N</lazy_conversion_active>
-    <attributes />
-    <cluster_schema />
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>352</xloc>
-      <yloc>188</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
   <step>
     <name>Set variables</name>
     <type>SetVariable</type>
@@ -560,21 +521,15 @@ WHERE timestamp = EXTRACT(epoch FROM TRUNC(GETDATE())) - 86400 * 5
     </partitioning>
     <fields>
       <field>
-        <field_name>start_date</field_name>
-        <variable_name>VERIFICATION_START_DATE</variable_name>
-        <variable_type>JVM</variable_type>
+        <field_name>end_date</field_name>
+        <variable_name>END_DATE</variable_name>
+        <variable_type>PARENT_JOB</variable_type>
         <default_value />
       </field>
       <field>
-        <field_name>start_timestamp</field_name>
-        <variable_name>VERIFICATION_START_TIMESTAMP</variable_name>
-        <variable_type>JVM</variable_type>
-        <default_value />
-      </field>
-      <field>
-        <field_name>start_date_sk</field_name>
-        <variable_name>VERIFICATION_START_DATE_SK</variable_name>
-        <variable_type>JVM</variable_type>
+        <field_name>end_date_sk</field_name>
+        <variable_name>END_DATE_SK</variable_name>
+        <variable_type>PARENT_JOB</variable_type>
         <default_value />
       </field>
     </fields>
@@ -590,6 +545,39 @@ WHERE timestamp = EXTRACT(epoch FROM TRUNC(GETDATE())) - 86400 * 5
     <GUI>
       <xloc>552</xloc>
       <yloc>188</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>Table input</name>
+    <type>TableInput</type>
+    <description />
+    <distribute>Y</distribute>
+    <custom_distribution />
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name />
+    </partitioning>
+    <connection>analytics_redshift_connection</connection>
+    <sql>SELECT date_sk as end_date_sk, timestamp 'epoch' + (timestamp * interval '1 second') as end_date   FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.dim_dates 
+WHERE timestamp = EXTRACT(epoch FROM TRUNC(GETDATE())) - 86400;</sql>
+    <limit>0</limit>
+    <lookup />
+    <execute_each_row>N</execute_each_row>
+    <variables_active>Y</variables_active>
+    <lazy_conversion_active>N</lazy_conversion_active>
+    <attributes />
+    <cluster_schema />
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>352</xloc>
+      <yloc>176</yloc>
       <draw>Y</draw>
     </GUI>
   </step>

@@ -29,6 +29,16 @@
         <default_value />
         <description />
       </parameter>
+      <parameter>
+        <name>VERIFICATION_START_DATE_SK</name>
+        <default_value />
+        <description />
+      </parameter>
+      <parameter>
+        <name>VERIFICATION_START_TIMESTAMP</name>
+        <default_value />
+        <description />
+      </parameter>
     </parameters>
     <log>
       <trans-log-table>
@@ -882,7 +892,8 @@ FROM ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.transactions_a
 WHERE kind = 54
 AND   token_id IS NOT NULL
 AND   token_id > 0
-AND block_timestamp &lt; ${DATE_TIMESTAMP}
+AND block_timestamp &lt; ${CURRENT_DAY_TIMESTAMP}
+AND block_timestamp >= ${VERIFICATION_START_TIMESTAMP}
 )
 UNION ALL
 (
@@ -892,7 +903,8 @@ FROM ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.transactions_a
 WHERE kind = 54
 AND   token_id IS NOT NULL
 AND   token_id > 0
-AND block_timestamp &lt; ${DATE_TIMESTAMP}
+AND block_timestamp &lt; ${CURRENT_DAY_TIMESTAMP}
+AND block_timestamp >= ${VERIFICATION_START_TIMESTAMP}
 )
 UNION ALL
 (
@@ -904,7 +916,8 @@ ON a.tx_hash = b.tx_hash
 WHERE a.kind = 54
 AND   a.token_id IS NOT NULL
 AND   a.token_id > 0
-AND   a.block_timestamp &lt; ${DATE_TIMESTAMP}
+AND   a.block_timestamp &lt; ${CURRENT_DAY_TIMESTAMP}
+AND a.block_timestamp >= ${VERIFICATION_START_TIMESTAMP}
 )
 UNION ALL
 (
@@ -916,7 +929,8 @@ FROM ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.transactions_a
 WHERE a.kind = 54
 AND   a.token_id IS NOT NULL
 AND   a.token_id > 0
-AND   a.block_timestamp &lt; ${DATE_TIMESTAMP}
+AND   a.block_timestamp &lt; ${CURRENT_DAY_TIMESTAMP}
+AND a.block_timestamp >= ${VERIFICATION_START_TIMESTAMP}
 )
 UNION ALL
 (
@@ -924,6 +938,7 @@ SELECT COUNT(1) AS value,
        'duplicate_transaction_count' AS metric_name
 FROM (SELECT tx_hash
       FROM ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.transactions_aux_${CHAIN_ID}
+	  where block_timestamp >= ${VERIFICATION_START_TIMESTAMP}	
       GROUP BY 1
       HAVING COUNT(1) > 1
       )
@@ -935,6 +950,7 @@ SELECT COUNT(1) AS value,
 FROM (SELECT tx_hash,
              event_index
       FROM ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.transfers_aux_${CHAIN_ID}
+	where insertion_timestamp >= 	${VERIFICATION_START_TIMESTAMP}
       GROUP BY 1,
                2
       HAVING COUNT(1) > 1)
@@ -956,8 +972,8 @@ ORDER BY 2;</sql>
       </output>
     </remotesteps>
     <GUI>
-      <xloc>80</xloc>
-      <yloc>144</yloc>
+      <xloc>96</xloc>
+      <yloc>128</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
@@ -980,28 +996,32 @@ FROM (
 SELECT COALESCE(SUM(total_gas_used),0) AS value,
        'total_gas_used' AS metric_name
 FROM token_transfer_facts_aux_${CHAIN_ID}
-where date_sk &lt; ${DATE_SK} 
+where date_sk &lt; ${CURRENT_DAY_DATE_SK} 
+and date_sk >= ${VERIFICATION_START_DATE_SK} 
 )
 UNION ALL
 (
 SELECT COALESCE(SUM(total_transactions),0) AS value,
        'total_distinct_transactions' AS metric_name
 FROM token_transfer_facts_aux_${CHAIN_ID}
-where date_sk &lt; ${DATE_SK}
+where date_sk &lt; ${CURRENT_DAY_DATE_SK}
+and date_sk >= ${VERIFICATION_START_DATE_SK} 
 )
 UNION ALL
 (
 SELECT COALESCE(SUM(total_volume),0) AS value,
        'total_volume' AS metric_name
 FROM token_transfer_facts_aux_${CHAIN_ID}
-where date_sk &lt; ${DATE_SK}
+where date_sk &lt; ${CURRENT_DAY_DATE_SK}
+and date_sk >= ${VERIFICATION_START_DATE_SK} 
 )
 UNION ALL
 (
 SELECT COALESCE(SUM(total_transfers),0) AS value,
        'total_transfers' AS metric_name
 FROM token_transfer_facts_aux_${CHAIN_ID}
-where date_sk &lt; ${DATE_SK}
+where date_sk &lt; ${CURRENT_DAY_DATE_SK}
+and date_sk >= ${VERIFICATION_START_DATE_SK} 
 )
 UNION ALL
 (

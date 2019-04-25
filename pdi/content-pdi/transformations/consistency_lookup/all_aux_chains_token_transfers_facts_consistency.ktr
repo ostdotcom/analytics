@@ -10,12 +10,27 @@
     <directory>/</directory>
     <parameters>
       <parameter>
+        <name>CONSISTENCY_LOGS_PATH</name>
+        <default_value />
+        <description />
+      </parameter>
+      <parameter>
         <name>ENV_SUFFIX</name>
         <default_value />
         <description />
       </parameter>
       <parameter>
         <name>SUB_ENV</name>
+        <default_value />
+        <description />
+      </parameter>
+      <parameter>
+        <name>VERIFICATION_START_DATE_SK</name>
+        <default_value />
+        <description />
+      </parameter>
+      <parameter>
+        <name>VERIFICATION_START_TIMESTAMP</name>
         <default_value />
         <description />
       </parameter>
@@ -525,7 +540,10 @@
       <schema_name />
     </partitioning>
     <connection>analytics_redshift_connection</connection>
-    <sql>SELECT date_sk, timestamp FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.dim_dates WHERE timestamp = EXTRACT(epoch FROM TRUNC(GETDATE()));
+    <sql>SELECT date_sk as current_day_date_sk, 
+timestamp as current_day_timestamp
+FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.dim_dates 
+WHERE timestamp = EXTRACT(epoch FROM TRUNC(GETDATE()));
 </sql>
     <limit>0</limit>
     <lookup />
@@ -560,7 +578,7 @@
     <specification_method>filename</specification_method>
     <trans_object_id />
     <trans_name />
-    <filename>${Internal.Entry.Current.Directory}/consistency_lookup/aux_token_transfer_facts_consistency.ktr</filename>
+    <filename>${Internal.Entry.Current.Directory}/aux_token_transfer_facts_consistency.ktr</filename>
     <directory_path />
     <group_size>1</group_size>
     <group_field />
@@ -582,13 +600,13 @@
         <input />
       </variablemapping>
       <variablemapping>
-        <variable>DATE_SK</variable>
-        <field>date_sk</field>
+        <variable>CURRENT_DAY_DATE_SK</variable>
+        <field>current_day_date_sk</field>
         <input />
       </variablemapping>
       <variablemapping>
-        <variable>DATE_TIMESTAMP</variable>
-        <field>date_timestamp</field>
+        <variable>CURRENT_DAY_TIMESTAMP</variable>
+        <field>current_day_timestamp</field>
         <input />
       </variablemapping>
       <inherit_all_vars>N</inherit_all_vars>
@@ -641,8 +659,8 @@
     <sql>SELECT chain_type,
 		chain_id,
        	'_' || chain_id as chain_id_suffix,
-		? as date_sk,
-		? as date_timestamp 
+		? as current_day_date_sk,
+		? as current_day_timestamp 
 FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.chain_details where chain_type = 'aux';</sql>
     <limit>0</limit>
     <lookup>Table input</lookup>
