@@ -39,10 +39,10 @@ class ExtractBase {
             await oThis.start();
         } catch (e) {
             logger.error("Terminating error due to exception", e);
-            process.exit(1);
+            return setTimeout(function(){ process.exit(1);}, 1000);
         }
-        logger.log("ending the process with success");
-        process.exit(0);
+        logger.log("Ending the process with success");
+        return setTimeout(function(){ process.exit(0);}, 1000);
     }
 
 

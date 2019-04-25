@@ -71,11 +71,11 @@ class MysqlService {
 							return Promise.resolve(r);
             }
 
-					  await oThis.downloadFromS3ToTemp();
+            await oThis.downloadFromS3ToTemp();
             await oThis.model.insertToMainFromTemp();
             await oThis.model.updateDataProcessingInfoTable(cronStartTime);
         } catch (e) {
-            logger.error("token service terminated due to exception-", e);
+            logger.error(oThis.model.tableName , 'mysql service terminated due to exception-', e);
             let rH = responseHelper.error({
 
                 internal_error_identifier: 's_t_p_1',
@@ -83,7 +83,7 @@ class MysqlService {
                 debug_options: {error: e}
             });
             oThis.applicationMailer.perform({
-                subject: "token service terminated due to exception",
+                subject: `${oThis.model.tableName} mysql service service terminated due to exception`,
                 body: {error: rH}
             });
             return Promise.reject(rH);
