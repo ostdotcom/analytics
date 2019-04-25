@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <transformation>
   <info>
-    <name>workflow_consistency_check</name>
+    <name>set_variable_transformation</name>
     <description />
     <extended_description />
     <trans_version>1</trans_version>
@@ -10,18 +10,13 @@
     <directory>/</directory>
     <parameters>
       <parameter>
-        <name>CONSISTENCY_LOGS_PATH</name>
+        <name>ENV_SUFFIX</name>
         <default_value />
         <description />
       </parameter>
       <parameter>
-        <name>ENV_SUFFIX</name>
-        <default_value>_d40</default_value>
-        <description />
-      </parameter>
-      <parameter>
         <name>SUB_ENV</name>
-        <default_value>main</default_value>
+        <default_value />
         <description />
       </parameter>
     </parameters>
@@ -29,7 +24,7 @@
       <trans-log-table>
         <connection />
         <schema />
-        <table>${KETTLE_TRANS_LOG_TABLE}_${CHAIN_ID}</table>
+        <table>${KETTLE_TRANS_LOG_TABLE}</table>
         <size_limit_lines />
         <interval />
         <timeout_days>${TRANSFORMATION_LOGS_RECORD_TIMEOUT}</timeout_days>
@@ -508,394 +503,13 @@
   </connection>
   <order>
     <hop>
-      <from>Merge Join</from>
-      <to>all_incremental_data_difference</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>Merge Join</from>
-      <to>Filter rows</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>Filter rows</from>
-      <to>if result is true do nothing</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>Filter rows</from>
-      <to>incremental_data_difference output</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>metrics from analytics db</from>
-      <to>Merge Join</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>metrics from Prestaging db</from>
-      <to>Merge Join</to>
+      <from>Table input 2</from>
+      <to>Set variables</to>
       <enabled>Y</enabled>
     </hop>
   </order>
   <step>
-    <name>Filter rows</name>
-    <type>FilterRows</type>
-    <description />
-    <distribute>Y</distribute>
-    <custom_distribution />
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name />
-    </partitioning>
-    <send_true_to>if result is true do nothing</send_true_to>
-    <send_false_to>incremental_data_difference output</send_false_to>
-    <compare>
-      <condition>
-        <negated>N</negated>
-        <leftvalue>value</leftvalue>
-        <function>=</function>
-        <rightvalue>value_1</rightvalue>
-      </condition>
-    </compare>
-    <attributes />
-    <cluster_schema />
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>656</xloc>
-      <yloc>320</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>Merge Join</name>
-    <type>MergeJoin</type>
-    <description />
-    <distribute>N</distribute>
-    <custom_distribution />
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name />
-    </partitioning>
-    <join_type>LEFT OUTER</join_type>
-    <step1>metrics from Prestaging db</step1>
-    <step2>metrics from analytics db</step2>
-    <keys_1>
-      <key>metric_name</key>
-    </keys_1>
-    <keys_2>
-      <key>metric_name</key>
-    </keys_2>
-    <attributes />
-    <cluster_schema />
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>320</xloc>
-      <yloc>320</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>Transformation executor 2</name>
-    <type>TransExecutor</type>
-    <description />
-    <distribute>Y</distribute>
-    <custom_distribution />
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name />
-    </partitioning>
-    <specification_method>filename</specification_method>
-    <trans_object_id />
-    <trans_name />
-    <filename />
-    <directory_path />
-    <group_size>1</group_size>
-    <group_field />
-    <group_time />
-    <parameters>
-      <inherit_all_vars>Y</inherit_all_vars>
-    </parameters>
-    <execution_result_target_step />
-    <execution_time_field>ExecutionTime</execution_time_field>
-    <execution_result_field>ExecutionResult</execution_result_field>
-    <execution_errors_field>ExecutionNrErrors</execution_errors_field>
-    <execution_lines_read_field>ExecutionLinesRead</execution_lines_read_field>
-    <execution_lines_written_field>ExecutionLinesWritten</execution_lines_written_field>
-    <execution_lines_input_field>ExecutionLinesInput</execution_lines_input_field>
-    <execution_lines_output_field>ExecutionLinesOutput</execution_lines_output_field>
-    <execution_lines_rejected_field>ExecutionLinesRejected</execution_lines_rejected_field>
-    <execution_lines_updated_field>ExecutionLinesUpdated</execution_lines_updated_field>
-    <execution_lines_deleted_field>ExecutionLinesDeleted</execution_lines_deleted_field>
-    <execution_files_retrieved_field>ExecutionFilesRetrieved</execution_files_retrieved_field>
-    <execution_exit_status_field>ExecutionExitStatus</execution_exit_status_field>
-    <execution_log_text_field>ExecutionLogText</execution_log_text_field>
-    <execution_log_channelid_field>ExecutionLogChannelId</execution_log_channelid_field>
-    <result_rows_target_step />
-    <result_files_target_step />
-    <result_files_file_name_field>FileName</result_files_file_name_field>
-    <executors_output_step />
-    <attributes />
-    <cluster_schema />
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>144</xloc>
-      <yloc>272</yloc>
-      <draw>N</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>all_incremental_data_difference</name>
-    <type>TextFileOutput</type>
-    <description />
-    <distribute>Y</distribute>
-    <custom_distribution />
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name />
-    </partitioning>
-    <separator>;</separator>
-    <enclosure>"</enclosure>
-    <enclosure_forced>N</enclosure_forced>
-    <enclosure_fix_disabled>N</enclosure_fix_disabled>
-    <header>Y</header>
-    <footer>N</footer>
-    <format>DOS</format>
-    <compression>None</compression>
-    <encoding>UTF-8</encoding>
-    <endedLine />
-    <fileNameInField>N</fileNameInField>
-    <fileNameField />
-    <create_parent_folder>Y</create_parent_folder>
-    <file>
-      <name>${CONSISTENCY_LOGS_PATH}/all_incremental_data_difference</name>
-      <servlet_output>N</servlet_output>
-      <do_not_open_new_file_init>N</do_not_open_new_file_init>
-      <extention>log</extention>
-      <append>Y</append>
-      <split>N</split>
-      <haspartno>N</haspartno>
-      <add_date>N</add_date>
-      <add_time>N</add_time>
-      <SpecifyFormat>N</SpecifyFormat>
-      <date_time_format />
-      <add_to_result_filenames>Y</add_to_result_filenames>
-      <pad>N</pad>
-      <fast_dump>N</fast_dump>
-      <splitevery>0</splitevery>
-    </file>
-    <fields>
-    </fields>
-    <attributes />
-    <cluster_schema />
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>304</xloc>
-      <yloc>480</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>if result is true do nothing</name>
-    <type>Dummy</type>
-    <description />
-    <distribute>Y</distribute>
-    <custom_distribution />
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name />
-    </partitioning>
-    <attributes />
-    <cluster_schema />
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>672</xloc>
-      <yloc>512</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>incremental_data_difference output</name>
-    <type>TextFileOutput</type>
-    <description />
-    <distribute>Y</distribute>
-    <custom_distribution />
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name />
-    </partitioning>
-    <separator>;</separator>
-    <enclosure>"</enclosure>
-    <enclosure_forced>N</enclosure_forced>
-    <enclosure_fix_disabled>N</enclosure_fix_disabled>
-    <header>Y</header>
-    <footer>N</footer>
-    <format>DOS</format>
-    <compression>None</compression>
-    <encoding>UTF-8</encoding>
-    <endedLine />
-    <fileNameInField>N</fileNameInField>
-    <fileNameField />
-    <create_parent_folder>Y</create_parent_folder>
-    <file>
-      <name>${CONSISTENCY_LOGS_PATH}/incremental_data_difference</name>
-      <servlet_output>N</servlet_output>
-      <do_not_open_new_file_init>N</do_not_open_new_file_init>
-      <extention>log</extention>
-      <append>Y</append>
-      <split>N</split>
-      <haspartno>N</haspartno>
-      <add_date>N</add_date>
-      <add_time>N</add_time>
-      <SpecifyFormat>N</SpecifyFormat>
-      <date_time_format />
-      <add_to_result_filenames>Y</add_to_result_filenames>
-      <pad>N</pad>
-      <fast_dump>N</fast_dump>
-      <splitevery>0</splitevery>
-    </file>
-    <fields>
-    </fields>
-    <attributes />
-    <cluster_schema />
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>1008</xloc>
-      <yloc>336</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>metrics from Prestaging db</name>
-    <type>TableInput</type>
-    <description />
-    <distribute>Y</distribute>
-    <custom_distribution />
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name />
-    </partitioning>
-    <connection>analytics_redshift_connection</connection>
-    <sql>SELECT *
-FROM (
-(
-
-SELECT count(*) as value,
-'workflow_steps_transactions_count' as metric_name
-FROM ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflow_steps
-where transaction_hash != '' 
-and 
-created_at &lt; '${LAST_DATE}'
-and created_at >= '${VERIFICATION_START_DATE}'
-)
-UNION ALL
-(
-select count(*) as value,
-'workflow_success_count' as metric_name
-FROM ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflows  as w where 
- w.id in (select distinct(workflow_id) from ost_warehouse_main_d40.workflow_steps where transaction_hash != '') 
-and status = 2 
-and created_at &lt; '${LAST_DATE}'
-and created_at >= '${VERIFICATION_START_DATE}'
-)
-UNION ALL
-(
-select count(*) as value,
-'workflow_failed_count' as metric_name
-FROM ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflows  as w where 
- w.id in (select distinct(workflow_id) from ost_warehouse_main_d40.workflow_steps where transaction_hash != '') 
-and status in (3, 4) 
-and created_at &lt; '${LAST_DATE}'
-and created_at >= '${VERIFICATION_START_DATE}'
-)
-UNION ALL
-(
-select 0 as value,
-'duplicate_addresses_count' as metric_name
-)
-UNION ALL
-(
-select count(distinct(address)) as value,
-'pc_addresses_count' as metric_name
-FROM ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.token_addresses  where 
- kind not in (2,4)
-and kind &lt;=10 
-)
-UNION ALL
-(
-select 0 as value,
-'unknown_workflow_kind_or_address_type_count' as metric_name
-)
-UNION ALL
-(
-select count(*) as value,
-'all_workflows_count' as metric_name
-FROM ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflows  as w where 
- w.id in (select distinct(workflow_id) from ost_warehouse_main_d40.workflow_steps where transaction_hash != '') 
-and created_at &lt; '${LAST_DATE}'
-and created_at >= '${VERIFICATION_START_DATE}'
-)
-
-)
-ORDER BY 2;</sql>
-    <limit>0</limit>
-    <lookup />
-    <execute_each_row>N</execute_each_row>
-    <variables_active>Y</variables_active>
-    <lazy_conversion_active>N</lazy_conversion_active>
-    <attributes />
-    <cluster_schema />
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>80</xloc>
-      <yloc>144</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>metrics from analytics db</name>
+    <name>Table input 2</name>
     <type>TableInput</type>
     <description />
     <distribute>Y</distribute>
@@ -907,70 +521,12 @@ ORDER BY 2;</sql>
     </partitioning>
     <connection>analytics_redshift_connection</connection>
     <sql>
-SELECT *
-FROM (
-(
-SELECT COALESCE(SUM(total_transactions),0) AS value,  
-'workflow_steps_transactions_count' AS metric_name 
-FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflow_facts 
-where workflow_kind_sk not in (SELECT workflow_kind_sk FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.dim_workflow_kinds 
-							where kind in ( 500 , 0)) and  workflow_date_sk &lt; ${DATE_SK} and  workflow_date_sk >= ${VERIFICATION_START_DATE_SK}
-
-
-)
-UNION ALL
-(
-select COALESCE(count(distinct workflow_id),0) as value, 
-'workflow_success_count' AS metric_name 
-FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.all_workflows_transactions where workflow_status  = 'success'
-and workflow_kind_sk not in (SELECT workflow_kind_sk FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.dim_workflow_kinds 
-							where kind in ( 500, 0 )) 
-and  workflow_date_sk &lt; ${DATE_SK} and  workflow_date_sk >= ${VERIFICATION_START_DATE_SK}
-)
-UNION ALL
-(
-select COALESCE(count(distinct workflow_id),0) as value, 
-'workflow_failed_count' AS metric_name 
-FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.all_workflows_transactions where workflow_status  = 'fail'
-and workflow_kind_sk not in (SELECT workflow_kind_sk FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.dim_workflow_kinds 
-							where kind in ( 500 , 0)) 
-and  workflow_date_sk &lt; ${DATE_SK} and  workflow_date_sk >= ${VERIFICATION_START_DATE_SK}
-)
-UNION ALL
-(
-select coalesce(count(1),0) as value, 
-'duplicate_addresses_count' AS metric_name 
-FROM (select address from ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflow_addresses  
-group by address 
-having count(1) > 1)
-)
-UNION ALL
-(
-select count(*) as value, 
-'pc_addresses_count' AS metric_name 
-FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflow_addresses 
-where address_type_sk = (select address_type_sk from ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.dim_address_types where address_type = 'PARTNER COMPANY')
-)
-UNION ALL
-(
-select count(*) as value, 
-'unknown_workflow_kind_or_address_type_count' AS metric_name  
-FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflow_facts 
-where workflow_kind_sk = 0
-or from_address_type_sk = 0
-)
-UNION ALL
-(
-select COALESCE(count(distinct workflow_id),0) as value, 
-'all_workflows_count' AS metric_name  
-FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.all_workflows_transactions  
-where workflow_kind_sk not in (SELECT workflow_kind_sk FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.dim_workflow_kinds 
-							where kind in ( 500 , 0)) and  workflow_date_sk &lt; ${DATE_SK}  and  workflow_date_sk >= ${VERIFICATION_START_DATE_SK}
-)
-
-)
-ORDER BY 2;
-
+select case when ('${VALIDATE_START_TIME}' = 'all')  then 0 else date_sk end as start_date_sk,
+	case when ('${VALIDATE_START_TIME}' = 'all')   then  timestamp 'epoch' + (0 * interval '1 second')  else  timestamp 'epoch' + (timestamp * interval '1 second') end as start_date,
+	case when ('${VALIDATE_START_TIME}' = 'all')  then 0 else timestamp end as start_timestamp
+from ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.dim_dates
+WHERE timestamp = EXTRACT(epoch FROM TRUNC(GETDATE())) - 86400 * 5
+;
 </sql>
     <limit>0</limit>
     <lookup />
@@ -986,8 +542,54 @@ ORDER BY 2;
       </output>
     </remotesteps>
     <GUI>
-      <xloc>336</xloc>
-      <yloc>80</yloc>
+      <xloc>352</xloc>
+      <yloc>188</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>Set variables</name>
+    <type>SetVariable</type>
+    <description />
+    <distribute>Y</distribute>
+    <custom_distribution />
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name />
+    </partitioning>
+    <fields>
+      <field>
+        <field_name>start_date</field_name>
+        <variable_name>VERIFICATION_START_DATE</variable_name>
+        <variable_type>JVM</variable_type>
+        <default_value />
+      </field>
+      <field>
+        <field_name>start_timestamp</field_name>
+        <variable_name>VERIFICATION_START_TIMESTAMP</variable_name>
+        <variable_type>JVM</variable_type>
+        <default_value />
+      </field>
+      <field>
+        <field_name>start_date_sk</field_name>
+        <variable_name>VERIFICATION_START_DATE_SK</variable_name>
+        <variable_type>JVM</variable_type>
+        <default_value />
+      </field>
+    </fields>
+    <use_formatting>Y</use_formatting>
+    <attributes />
+    <cluster_schema />
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>552</xloc>
+      <yloc>188</yloc>
       <draw>Y</draw>
     </GUI>
   </step>

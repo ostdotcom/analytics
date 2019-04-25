@@ -508,16 +508,16 @@
   </connection>
   <order>
     <hop>
-      <from>Table input</from>
+      <from>end date data</from>
       <to>workflow consistency check</to>
       <enabled>Y</enabled>
     </hop>
   </order>
   <step>
-    <name>Table input</name>
+    <name>end date data</name>
     <type>TableInput</type>
     <description />
-    <distribute>Y</distribute>
+    <distribute>N</distribute>
     <custom_distribution />
     <copies>1</copies>
     <partitioning>
@@ -525,7 +525,7 @@
       <schema_name />
     </partitioning>
     <connection>analytics_redshift_connection</connection>
-    <sql>SELECT date_sk, timestamp 'epoch' + (timestamp * interval '1 second') as last_date   FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.dim_dates 
+    <sql>SELECT 'date' as date_input, date_sk, timestamp 'epoch' + (timestamp * interval '1 second') as last_date   FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.dim_dates 
 WHERE timestamp = EXTRACT(epoch FROM TRUNC(GETDATE())) - 86400
 ;
 </sql>
@@ -543,8 +543,8 @@ WHERE timestamp = EXTRACT(epoch FROM TRUNC(GETDATE())) - 86400
       </output>
     </remotesteps>
     <GUI>
-      <xloc>48</xloc>
-      <yloc>128</yloc>
+      <xloc>144</xloc>
+      <yloc>48</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
@@ -608,8 +608,8 @@ WHERE timestamp = EXTRACT(epoch FROM TRUNC(GETDATE())) - 86400
       </output>
     </remotesteps>
     <GUI>
-      <xloc>512</xloc>
-      <yloc>96</yloc>
+      <xloc>416</xloc>
+      <yloc>160</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
