@@ -1,0 +1,123 @@
+<Schema name="PENTAHO D6 MAIN REDSHIFT">
+
+  <Dimension type="TimeDimension" visible="true" highCardinality="false" name="Dates">
+    <Hierarchy name="Time" visible="true" hasAll="true" primaryKey="date_sk">
+      <Table name="dim_dates" schema="ost_pentaho_main_d6">
+      </Table>
+      <Level name="Year" visible="true" column="year" type="Numeric" uniqueMembers="false" levelType="TimeYears" hideMemberIf="Never">
+      </Level>
+      <Level name="Quarter" visible="true" column="quarter" type="Numeric" uniqueMembers="false" levelType="TimeQuarters" hideMemberIf="Never">
+      </Level>
+      <Level name="Month" visible="true" column="month"  type="Numeric" uniqueMembers="false" levelType="TimeMonths" hideMemberIf="Never">
+      </Level>
+      <Level name="Week Of Year" visible="true" column="week_of_the_year" type="Numeric" uniqueMembers="false" levelType="TimeWeeks" hideMemberIf="Never">
+      </Level>
+      <Level name="Date" visible="true" column="day" type="Numeric" uniqueMembers="false" levelType="TimeDays" hideMemberIf="Never">
+      </Level>
+    </Hierarchy>
+  </Dimension>
+
+  <Dimension type="StandardDimension" visible="true" highCardinality="false" name="WorkflowKind">
+    <Hierarchy visible="true" hasAll="true" primaryKey="workflow_kind_sk">
+      <Table name="dim_workflow_kinds" schema="ost_pentaho_main_d6">
+      </Table>
+      <Level name="Workflow Name" visible="true" column="name" type="String" uniqueMembers="false" levelType="Regular" hideMemberIf="Never">
+      </Level>
+    </Hierarchy>
+  </Dimension>
+
+
+  <Dimension visible="true" highCardinality="false" name="Tokens">
+    <Hierarchy visible="true" hasAll="true" primaryKey="token_sk">
+      <Table name="dim_tokens" schema="ost_pentaho_main_d6">
+      </Table>
+      <Level name="Name" visible="true" column="name" type="String" uniqueMembers="true" levelType="Regular" hideMemberIf="Never" description="Token Name">
+      </Level>
+      <Level name="Symbol" visible="true" column="symbol" type="String" uniqueMembers="true" levelType="Regular" hideMemberIf="Never" description="Symbol of token">
+      </Level>
+    </Hierarchy>
+  </Dimension>
+
+
+  <Dimension visible="true" highCardinality="false" name="AddressType">
+    <Hierarchy visible="true" hasAll="true" primaryKey="address_type_sk">
+      <Table name="dim_address_types" schema="ost_pentaho_main_d6">
+      </Table>
+      <Level name="Address Type" visible="true" column="address_type" type="String" uniqueMembers="true" levelType="Regular" hideMemberIf="Never" description="Type of Address">
+      </Level>
+    </Hierarchy>
+  </Dimension>
+
+
+  <Cube name="Gas Billing Cube" visible="true" cache="true" enabled="true">
+    <Table name="workflow_facts" schema="ost_pentaho_main_d6">
+    </Table>
+
+    <DimensionUsage source="Dates" name="Dates" description="Workflow Created at" visible="true" foreignKey="workflow_date_sk" highCardinality="false">
+    </DimensionUsage>
+
+    <DimensionUsage source="Workflow Kind" name="WorkflowKind" visible="true" foreignKey="workflow_kind_sk" highCardinality="false">
+    </DimensionUsage>
+
+    <DimensionUsage source="Tokens" name="Tokens" visible="true" foreignKey="token_sk" highCardinality="false">
+    </DimensionUsage>
+
+    <DimensionUsage source="Address Type" name="AddressType" visible="true" description="From Address type" foreignKey="from_address_type_sk" highCardinality="false">
+    </DimensionUsage>
+
+
+    <Dimension visible="true" highCardinality="false" name="ChainType">
+      <Hierarchy visible="true" hasAll="true">
+        <Level name="ChainType" visible="true" column="chain_type" type="String" uniqueMembers="false" levelType="Regular" hideMemberIf="Never">
+        </Level>
+      </Hierarchy>
+    </Dimension>
+
+    <Dimension visible="true" highCardinality="false" name="WorkflowStatus">
+      <Hierarchy visible="true" hasAll="true">
+        <Level name="Workflow Status" visible="true" column="workflow_status" type="String" uniqueMembers="false" levelType="Regular" hideMemberIf="Never">
+        </Level>
+      </Hierarchy>
+    </Dimension>
+
+    <Dimension visible="true" highCardinality="false" name="TransactionStatus">
+      <Hierarchy visible="true" hasAll="true">
+        <Level name="Transaction Status" visible="true" column="tx_status" type="String" uniqueMembers="false" levelType="Regular" hideMemberIf="Never">
+        </Level>
+      </Hierarchy>
+    </Dimension>
+
+
+    <Measure name="Total Tx Fee" column="total_tx_fees" datatype="Numeric" formatString="#,##0" aggregator="sum" visible="true">
+    </Measure>
+
+    <Measure name="Total Gas Price" column="total_gas_price" datatype="Numeric" formatString="#,##0" aggregator="sum" visible="false">
+    </Measure>
+
+    <Measure name="Total Gas Used" column="total_gas_used" datatype="Numeric" formatString="#,##0" aggregator="sum" visible="true">
+    </Measure>
+
+    <Measure name="Total Transactions" column="total_transactions" datatype="Numeric" formatString="#,##0" aggregator="sum" visible="true">
+    </Measure>
+
+    <Measure name="Total Workflow Count" column="total_workflow_count" datatype="Numeric" formatString="#,##0" aggregator="sum" visible="true">
+    </Measure>
+
+    <CalculatedMember name="Avg Gas Price" formatString="#0.0#%" description="Average Gas Price" formula="[Measures].[Total Gas Price]/[Measures].[Total Transactions]" dimension="Measures" visible="true">
+    </CalculatedMember>
+
+  </Cube>
+
+
+  <Role name="Power User">
+    <SchemaGrant access="none">
+      <CubeGrant cube="Gas Billing Cube" access="all">
+      </CubeGrant>
+    </SchemaGrant>
+  </Role>
+
+  <Role name="Administrator">
+    <SchemaGrant access="all">
+    </SchemaGrant>
+  </Role>
+</Schema>
