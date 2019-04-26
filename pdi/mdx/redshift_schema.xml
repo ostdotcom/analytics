@@ -58,19 +58,19 @@
     <DimensionUsage source="Dates" name="Dates" description="Workflow Created at" visible="true" foreignKey="workflow_date_sk" highCardinality="false">
     </DimensionUsage>
 
-    <DimensionUsage source="Workflow Kind" name="WorkflowKind" visible="true" foreignKey="workflow_kind_sk" highCardinality="false">
+    <DimensionUsage source="WorkflowKind" name="Workflow Kind" visible="true" foreignKey="workflow_kind_sk" highCardinality="false">
     </DimensionUsage>
 
     <DimensionUsage source="Tokens" name="Tokens" visible="true" foreignKey="token_sk" highCardinality="false">
     </DimensionUsage>
 
-    <DimensionUsage source="Address Type" name="AddressType" visible="true" description="From Address type" foreignKey="from_address_type_sk" highCardinality="false">
+    <DimensionUsage source="AddressType" name="Address Type" visible="true" description="From Address type" foreignKey="from_address_type_sk" highCardinality="false">
     </DimensionUsage>
 
 
     <Dimension visible="true" highCardinality="false" name="ChainType">
       <Hierarchy visible="true" hasAll="true">
-        <Level name="ChainType" visible="true" column="chain_type" type="String" uniqueMembers="false" levelType="Regular" hideMemberIf="Never">
+        <Level name="Chain Type" visible="true" column="chain_type" type="String" uniqueMembers="false" levelType="Regular" hideMemberIf="Never">
         </Level>
       </Hierarchy>
     </Dimension>
