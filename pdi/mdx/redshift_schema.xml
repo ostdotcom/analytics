@@ -1,8 +1,10 @@
+<!-- DB_SCHEMA=ost_pentaho_main_s6 -->
+
 <Schema name="PENTAHO D6 MAIN REDSHIFT">
 
   <Dimension type="TimeDimension" visible="true" highCardinality="false" name="Dates">
     <Hierarchy name="Time" visible="true" hasAll="true" primaryKey="date_sk">
-      <Table name="dim_dates" schema="ost_pentaho_main_d6">
+      <Table name="dim_dates" schema="{DB_SCHEMA}">
       </Table>
       <Level name="Year" visible="true" column="year" type="Numeric" uniqueMembers="false" levelType="TimeYears" hideMemberIf="Never">
       </Level>
@@ -19,7 +21,7 @@
 
   <Dimension type="StandardDimension" visible="true" highCardinality="false" name="WorkflowKind">
     <Hierarchy visible="true" hasAll="true" primaryKey="workflow_kind_sk">
-      <Table name="dim_workflow_kinds" schema="ost_pentaho_main_d6">
+      <Table name="dim_workflow_kinds" schema="{DB_SCHEMA}">
       </Table>
       <Level name="Workflow Name" visible="true" column="name" type="String" uniqueMembers="false" levelType="Regular" hideMemberIf="Never">
       </Level>
@@ -29,7 +31,7 @@
 
   <Dimension visible="true" highCardinality="false" name="Tokens">
     <Hierarchy visible="true" hasAll="true" primaryKey="token_sk">
-      <Table name="dim_tokens" schema="ost_pentaho_main_d6">
+      <Table name="dim_tokens" schema="{DB_SCHEMA}">
       </Table>
       <Level name="Name" visible="true" column="name" type="String" uniqueMembers="true" levelType="Regular" hideMemberIf="Never" description="Token Name">
       </Level>
@@ -41,7 +43,7 @@
 
   <Dimension visible="true" highCardinality="false" name="AddressType">
     <Hierarchy visible="true" hasAll="true" primaryKey="address_type_sk">
-      <Table name="dim_address_types" schema="ost_pentaho_main_d6">
+      <Table name="dim_address_types" schema="{DB_SCHEMA}">
       </Table>
       <Level name="Address Type" visible="true" column="address_type" type="String" uniqueMembers="true" levelType="Regular" hideMemberIf="Never" description="Type of Address">
       </Level>
@@ -50,7 +52,7 @@
 
 
   <Cube name="Gas Billing Cube" visible="true" cache="true" enabled="true">
-    <Table name="workflow_facts" schema="ost_pentaho_main_d6">
+    <Table name="workflow_facts" schema="{DB_SCHEMA}">
     </Table>
 
     <DimensionUsage source="Dates" name="Dates" description="Workflow Created at" visible="true" foreignKey="workflow_date_sk" highCardinality="false">
