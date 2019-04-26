@@ -887,7 +887,7 @@
 FROM (
 (
 SELECT COALESCE(SUM(gas_used),0) AS value,
-       'total_gas_used' AS metric_name
+       'total_gas_used_${CHAIN_ID}' AS metric_name
 FROM ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.transactions_aux_${CHAIN_ID}
 WHERE kind = 54
 AND   token_id IS NOT NULL
@@ -898,7 +898,7 @@ AND block_timestamp >= ${VERIFICATION_START_TIMESTAMP}
 UNION ALL
 (
 SELECT COUNT(DISTINCT tx_hash) AS value,
-       'total_distinct_transactions' AS metric_name
+       'total_distinct_transactions_${CHAIN_ID}' AS metric_name
 FROM ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.transactions_aux_${CHAIN_ID}
 WHERE kind = 54
 AND   token_id IS NOT NULL
@@ -909,7 +909,7 @@ AND block_timestamp >= ${VERIFICATION_START_TIMESTAMP}
 UNION ALL
 (
 SELECT COALESCE(SUM(b.amount),0) AS value,
-       'total_volume' AS metric_name
+       'total_volume_${CHAIN_ID}' AS metric_name
 FROM ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.transactions_aux_${CHAIN_ID} AS a
   JOIN ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.transfers_aux_${CHAIN_ID} AS b 
 ON a.tx_hash = b.tx_hash
@@ -922,7 +922,7 @@ AND a.block_timestamp >= ${VERIFICATION_START_TIMESTAMP}
 UNION ALL
 (
 SELECT COUNT(DISTINCT b.tx_hash || '-' || b.event_index) AS value,
-       'total_transfers' AS metric_name
+       'total_transfers_${CHAIN_ID}' AS metric_name
 FROM ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.transactions_aux_${CHAIN_ID} AS a
   JOIN ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.transfers_aux_${CHAIN_ID} AS b
  ON a.tx_hash = b.tx_hash
@@ -935,7 +935,7 @@ AND a.block_timestamp >= ${VERIFICATION_START_TIMESTAMP}
 UNION ALL
 (
 SELECT COUNT(1) AS value,
-       'duplicate_transaction_count' AS metric_name
+       'duplicate_transaction_count_${CHAIN_ID}' AS metric_name
 FROM (SELECT tx_hash
       FROM ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.transactions_aux_${CHAIN_ID}
 	  where block_timestamp >= ${VERIFICATION_START_TIMESTAMP}	
@@ -946,7 +946,7 @@ FROM (SELECT tx_hash
 UNION ALL
 (
 SELECT COUNT(1) AS value,
-       'duplicate_transfer_count' AS metric_name
+       'duplicate_transfer_count_${CHAIN_ID}' AS metric_name
 FROM (SELECT tx_hash,
              event_index
       FROM ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.transfers_aux_${CHAIN_ID}
@@ -994,7 +994,7 @@ SELECT *
 FROM (
 (
 SELECT COALESCE(SUM(total_gas_used),0) AS value,
-       'total_gas_used' AS metric_name
+       'total_gas_used_${CHAIN_ID}' AS metric_name
 FROM token_transfer_facts_aux_${CHAIN_ID}
 where date_sk &lt; ${CURRENT_DAY_DATE_SK} 
 and date_sk >= ${VERIFICATION_START_DATE_SK} 
@@ -1002,7 +1002,7 @@ and date_sk >= ${VERIFICATION_START_DATE_SK}
 UNION ALL
 (
 SELECT COALESCE(SUM(total_transactions),0) AS value,
-       'total_distinct_transactions' AS metric_name
+       'total_distinct_transactions_${CHAIN_ID}' AS metric_name
 FROM token_transfer_facts_aux_${CHAIN_ID}
 where date_sk &lt; ${CURRENT_DAY_DATE_SK}
 and date_sk >= ${VERIFICATION_START_DATE_SK} 
@@ -1010,7 +1010,7 @@ and date_sk >= ${VERIFICATION_START_DATE_SK}
 UNION ALL
 (
 SELECT COALESCE(SUM(total_volume),0) AS value,
-       'total_volume' AS metric_name
+       'total_volume_${CHAIN_ID}' AS metric_name
 FROM token_transfer_facts_aux_${CHAIN_ID}
 where date_sk &lt; ${CURRENT_DAY_DATE_SK}
 and date_sk >= ${VERIFICATION_START_DATE_SK} 
@@ -1018,7 +1018,7 @@ and date_sk >= ${VERIFICATION_START_DATE_SK}
 UNION ALL
 (
 SELECT COALESCE(SUM(total_transfers),0) AS value,
-       'total_transfers' AS metric_name
+       'total_transfers_${CHAIN_ID}' AS metric_name
 FROM token_transfer_facts_aux_${CHAIN_ID}
 where date_sk &lt; ${CURRENT_DAY_DATE_SK}
 and date_sk >= ${VERIFICATION_START_DATE_SK} 
@@ -1026,12 +1026,12 @@ and date_sk >= ${VERIFICATION_START_DATE_SK}
 UNION ALL
 (
 SELECT 0 AS value,
-       'duplicate_transaction_count' AS metric_name
+       'duplicate_transaction_count_${CHAIN_ID}' AS metric_name
 )
 UNION ALL
 (
 SELECT 0 AS value,
-       'duplicate_transfer_count' AS metric_name
+       'duplicate_transfer_count_${CHAIN_ID}' AS metric_name
 )
 ) as a
 ORDER BY 2;
