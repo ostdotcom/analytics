@@ -49,7 +49,7 @@ done
 # Extract data
 echo "******************************** DATA Extraction Started [$(date '+%Y-%m-%d %H:%M:%S')] ********************************"
 SECONDS=0;
-/bin/node executables/extract_data.js --blockScanner true --token true --chainId ${CHAIN_ID} >> log/extract_data.log 2>&1
+/bin/node executables/extract_data.js --mysql true --blockScanner true --chainId ${CHAIN_ID} >> log/extract_data.log 2>&1
 if [[ $? != 0 ]]; then
     echo ""
     echo ""
