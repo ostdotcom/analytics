@@ -39,7 +39,7 @@ echo "TRANSFORM_ONLY: ${TRANSFORM_ONLY}"
 echo "VERIFY_ONLY: ${VERIFY_ONLY}"
 
 # ENV variables
-echo "\nENVIRONMENT: ${ENVIRONMENT}"
+echo "ENVIRONMENT: ${ENVIRONMENT}"
 echo "SUB_ENVIRONMENT: ${SUB_ENVIRONMENT}"
 echo "ENV_SUFFIX: ${ENV_SUFFIX}"
 echo "ORIGIN_CHAIN_ID: ${ORIGIN_CHAIN_ID}"
@@ -192,7 +192,7 @@ if [[ ! -z $VERIFY_ONLY ]]; then
     echo "******************************** Verify Transformation Started [$(date '+%Y-%m-%d %H:%M:%S')] ********************************"
     SECONDS=0;
     task=incremental_consistency
-    job_dir="pdi/content-pdi/jobs"
+    job_dir="pdi/content-pdi/jobs/consistency"
     log_file=log/incremental_consistency.log
     timeout --signal=${TIMEOUT_SIGNAL} ${TIMEOUT_DURATION} /bin/bash ${KETTLE_CLIENT_PATH}/kitchen.sh -file ${job_dir}/${task}.kjb -level=Debug -param:START_FROM_BEGIN_DATE=0 -param:SUB_ENV=${SUB_ENVIRONMENT} -param:ENV_SUFFIX=${ENV_SUFFIX} -param:CONSISTENCY_LOGS_PATH=${CONSISTENCY_LOGS_PATH} >> $log_file 2>&1 &
     PID=$!
