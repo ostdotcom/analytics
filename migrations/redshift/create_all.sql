@@ -308,4 +308,20 @@ INSERT INTO data_processing_info
 INSERT INTO data_processing_info
 (  property,  value)VALUES( 'staker_whitelisted_addresses_last_updated_at', '1970-01-01 00:00:00');
 
- COMMIT;
+
+DROP TABLE IF EXISTS rds_instance_logs;
+
+CREATE TABLE rds_instance_logs
+(
+  restore_time          BIGINT NOT NULL,
+  instance_identifier   VARCHAR(255) NOT NULL,
+  host                  VARCHAR(255),
+  aws_status            VARCHAR(255) NOT NULL,
+  cron_status           VARCHAR(255) NOT NULL,
+  error_log             VARCHAR(1024),
+  last_action_time      BIGINT NOT NULL,
+  created_at            datetime NOT NULL,
+  updated_at            datetime NOT NULL
+);
+
+COMMIT;

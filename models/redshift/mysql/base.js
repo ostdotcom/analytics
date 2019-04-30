@@ -32,6 +32,7 @@ class ModelBase extends MysqlQueryBuilders {
 
         const oThis = this;
         oThis.object = params.object || {};
+        oThis.dynamicMysqlHost = params.dynamicMysqlHost;
         oThis.chainId = params.chainId;
         oThis.chainType = params.chainType;
         oThis.tableNameSuffix = "";
@@ -49,9 +50,14 @@ class ModelBase extends MysqlQueryBuilders {
      * @return {*}
      */
     onReadConnection() {
+			const oThis = this;
         // At present, following is not being used. But when we implement replication,
         // following connection pool will be used for slave connections.
-        return mysqlWrapper.getPoolFor(this.dbName, 'master');
+      if (oThis.dynamicMysqlHost){
+				return mysqlWrapper.getPoolForDynamicHost(oThis.dbName, 'master', undefined , {host: oThis.dynamicMysqlHost});
+			} else{
+				return mysqlWrapper.getPoolFor(oThis.dbName, 'master');
+			}
     }
 
     /**
@@ -60,7 +66,14 @@ class ModelBase extends MysqlQueryBuilders {
      * @return {*}
      */
     onWriteConnection() {
-        return mysqlWrapper.getPoolFor(this.dbName, 'master');
+			const oThis = this;
+			// At present, following is not being used. But when we implement replication,
+			// following connection pool will be used for slave connections.
+			if (oThis.dynamicMysqlHost){
+				return mysqlWrapper.getPoolForDynamicHost(oThis.dbName, 'master', undefined , {host: oThis.dynamicMysqlHost});
+			} else{
+				return mysqlWrapper.getPoolFor(oThis.dbName, 'master');
+			}
     }
 
     /**
@@ -135,6 +148,25 @@ class ModelBase extends MysqlQueryBuilders {
     }
 
 
+	/**
+	 * fetches data from mysql table
+	 *
+	 * @return {Promise}
+	 *
+	 */
+	async fetchTotalRowCountAndMaxUpdated(params){
+		const oThis = this;
+
+		let lastProcessTime = params.lastProcessTime;
+
+		let fetchDataInstance = new oThis.constructor({});
+		fetchDataInstance = fetchDataInstance.select("count(1) as totalRowCount, max(updated_at) as maxUpdatedAt");
+
+		let query = oThis.fetchQueryWhereClause(fetchDataInstance, lastProcessTime);
+
+		return query.fire();
+	}
+
     /**
      * fetches data from mysql table
      *
@@ -143,17 +175,14 @@ class ModelBase extends MysqlQueryBuilders {
      */
     async fetchData(params){
         const oThis = this;
-        let lastCronRunTime = await oThis.getLastCronRunTime();
+        let lastProcessTime = params.lastProcessTime;
 
         let fetchDataInstance = new oThis.constructor({});
         fetchDataInstance = fetchDataInstance.select(oThis.columnsToFetchFromMysql());
 
-        let query = oThis.fetchQueryWhereClause(fetchDataInstance, lastCronRunTime);
-        query = query.order_by("id").limit(params.recordsToFetchOnce);
+        let query = oThis.fetchQueryWhereClause(fetchDataInstance, lastProcessTime);
+        query = query.order_by("id asc").limit(params.limit).offset(params.offset);
 
-        if (params.lastProcessedId !== undefined){
-            query = query.where(['id > ?', params.lastProcessedId]);
-        }
         return query.fire();
     }
 
@@ -163,16 +192,16 @@ class ModelBase extends MysqlQueryBuilders {
      * @return {@constructor}
      *
      */
-    fetchQueryWhereClause(fetchDataInstance, lastCronRunTime){
+    fetchQueryWhereClause(fetchDataInstance, lastProcessTime){
     	const oThis = this;
 			let query=undefined;
 
 			if(oThis.constructor.defaultFetchType == baseGC.createdTillYesterdayDataExtractionFetchType){
 				query = fetchDataInstance.where(['created_at < ?', dateUtil.getBeginnigOfDayInUTC()]).
-				where(['updated_at >= ? OR created_at >= ?', lastCronRunTime, dateUtil.getBeginnigOfDayInUTC(lastCronRunTime) ]);
+				where(['updated_at > ? OR created_at >= ?', lastProcessTime, dateUtil.getBeginnigOfDayInUTC(lastProcessTime) ]);
 
       } else if(oThis.constructor.defaultFetchType == baseGC.createdTillCurrentTimeDataExtractionFetchType){
-				query = fetchDataInstance.where(['updated_at >= ?', lastCronRunTime])
+				query = fetchDataInstance.where(['updated_at > ?', lastProcessTime])
       }
       else{
 				throw 'defaultFetchType not implemented'
@@ -188,7 +217,7 @@ class ModelBase extends MysqlQueryBuilders {
 	   *
 	   */
 	  static get defaultFetchType(){
-	  	return baseGC.createdTillYesterdayDataExtractionFetchType;
+	  	return baseGC.createdTillCurrentTimeDataExtractionFetchType;
 	  }
 
     /**
@@ -212,11 +241,10 @@ class ModelBase extends MysqlQueryBuilders {
      * @return {Promise}
      *
      */
-    async updateDataProcessingInfoTable(cronStartTime) {
+    async updateDataProcessingInfoTable(lastProcessingTimeStr) {
         const oThis = this;
-        let cronStartTimeStr = dateUtil.convertDateToString(cronStartTime, true);
         return await oThis.redshiftClient.parameterizedQuery("update " + dataProcessingInfoGC.getTableNameWithSchema +  " set value=$1 " +
-            "where property=$2", [cronStartTimeStr, oThis.getDataProcessingPropertyName]).then((res) => {
+            "where property=$2", [lastProcessingTimeStr, oThis.getDataProcessingPropertyName]).then((res) => {
             logger.log( oThis.getDataProcessingPropertyName + " value of the data_processing_info table updated successfully");
         });
     }

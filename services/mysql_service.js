@@ -7,7 +7,6 @@
 
 const rootPrefix = '..',
     Constants = require(rootPrefix + '/configs/constants'),
-    RedshiftClient = require(rootPrefix + '/lib/redshift'),
     shell = require("shelljs"),
     localWrite = require(rootPrefix + "/lib/localWrite"),
     ApplicationMailer = require(rootPrefix + '/lib/applicationMailer'),
@@ -40,13 +39,15 @@ class MysqlService {
      */
     constructor(params) {
         const oThis = this;
-
+        oThis.parallelProcessCount = 5;
+				oThis.dynamicMysqlHost = params.dynamicMysqlHost;
         oThis.Model = allModels[params.model];
         oThis.chainId = params.chainId || 0;
         oThis.chainType = params.chainType;
         oThis.applicationMailer = new ApplicationMailer();
-        oThis.redshiftClient = new RedshiftClient();
-        oThis.model = new oThis.Model({chainId: oThis.chainId, chainType: oThis.chainType});
+
+        // create new models always for direct query
+        oThis.model = new oThis.Model({chainId: oThis.chainId, chainType: oThis.chainType, dynamicMysqlHost: oThis.dynamicMysqlHost});
         oThis.s3UploadPath = `${Constants.SUB_ENVIRONMENT}${Constants.ENV_SUFFIX}/${oThis.chainId}/${Date.now()}/${oThis.model.getTableName}`;
         oThis.localDirFullFilePath = `${Constants.LOCAL_DIR_FILE_PATH}/${oThis.s3UploadPath}`;
     }
@@ -60,20 +61,23 @@ class MysqlService {
      */
     async process() {
         const oThis = this;
-        let cronStartTime = new Date();
+        let maxUpdatedAtStr = undefined;
 
         try {
-            await oThis.fetchDetailsAndWriteIntoLocalFile();
-            let r = await oThis.uploadLocalFilesToS3();
+            let r = await oThis.fetchAllRowsAndWriteIntoLocalFile();
 
-            if (!r.data.hasFiles) {
-              logger.log("No data found for model-", oThis.model.tableName);
+						if (!r.data.hasRows) {
+							logger.log("No data found for model-", oThis.model.tableName);
 							return Promise.resolve(r);
-            }
+						}else{
+							maxUpdatedAtStr = r.data.maxUpdatedAtStr;
+						}
+
+						r = await oThis.uploadLocalFilesToS3();
 
             await oThis.downloadFromS3ToTemp();
             await oThis.model.insertToMainFromTemp();
-            await oThis.model.updateDataProcessingInfoTable(cronStartTime);
+            await oThis.model.updateDataProcessingInfoTable(maxUpdatedAtStr);
         } catch (e) {
             logger.error(oThis.model.tableName , 'mysql service terminated due to exception-', e);
             let rH = responseHelper.error({
@@ -91,57 +95,132 @@ class MysqlService {
         return Promise.resolve(responseHelper.successWithData({}));
     }
 
+	  /**
+	   * Fetch records and write those records into Local File
+	   *
+	   */
+	  async fetchAllRowsAndWriteIntoLocalFile() {
+			const oThis = this;
+
+			let lastProcessTime = await oThis.fetchLastProcessTime();
+
+			console.info(oThis.model.tableName, "- lastProcessTime-", lastProcessTime);
+
+			let r = await oThis.fetchTotalRowCountAndMaxUpdated({lastProcessTime: lastProcessTime});
+
+
+			let totalRowCount = r[0].totalRowCount || 0;
+			let maxUpdatedAtStr = r[0].maxUpdatedAt || lastProcessTime;
+
+			console.info(oThis.model.tableName, "- totalRowCount-", totalRowCount);
+			console.info(oThis.model.tableName, "- maxUpdatedAtStr-", maxUpdatedAtStr);
+
+			if (totalRowCount == 0){
+				return responseHelper.successWithData({hasRows: false});
+			}
+
+			shell.mkdir("-p", oThis.localDirFullFilePath);
+
+			let perBatchSize = Math.ceil(totalRowCount/oThis.parallelProcessCount);
+
+			let startOffset = 0;
+			let endOffset = 0;
+
+			let promiseArray = [];
+			for(let batchNumber=1; batchNumber <= oThis.parallelProcessCount; batchNumber++){
+				endOffset = startOffset + perBatchSize;
+				let params = {
+					startOffset: startOffset, endOffset: endOffset,
+					lastProcessTime: lastProcessTime, batchNumber: batchNumber
+				};
+				let r = oThis.fetchDetailsAndWriteIntoLocalFile(params);
+				promiseArray.push(r);
+				if(endOffset >=  totalRowCount){
+					break;
+				}
+				startOffset = endOffset;
+      }
+
+      await Promise.all(promiseArray);
+			return responseHelper.successWithData({hasRows: true, maxUpdatedAtStr: maxUpdatedAtStr});
+	  }
 
     /**
      * Fetch records and write those records into Local File
      *
      */
-    async fetchDetailsAndWriteIntoLocalFile() {
+    async fetchDetailsAndWriteIntoLocalFile(params) {
         const oThis = this;
-        let lastProcessedId = undefined;
+
+        let startOffset = params.startOffset;
+				let endOffset = params.endOffset;
+				let batchNumber = params.batchNumber;
+				let lastProcessTime = params.lastProcessTime;
+				let fileName = oThis.localDirFullFilePath + "/" + batchNumber + "_" + Date.now() + '.csv';
+				let offset = startOffset;
+
+				console.info(oThis.model.tableName, "- started fetchDetailsAndWriteIntoLocalFile for batch", batchNumber);
+
         let records;
         let totalRecordProcessed = 0;
+
         let localWriteObj = new localWrite({separator: "|"});
         let arrayOfList = [];
-        let fileName = '';
-        const recordsToFetchOnce = 100,
-            recordsToWriteOnce = 1000;
+        const recordsToWriteOnce = 1000;
 
-        while (true) {
+        while (offset < endOffset) {
+
+					let limit = 100 > (endOffset - offset) ? (endOffset - offset) : 100;
+
             records = await oThis.model.fetchData({
-                recordsToFetchOnce: recordsToFetchOnce,
-                lastProcessedId: lastProcessedId
+								lastProcessTime: lastProcessTime,
+								limit: limit,
+                offset: offset
             });
-            if (records.length > 0 && lastProcessedId === undefined) {
-                shell.mkdir("-p", oThis.localDirFullFilePath);
+
+						totalRecordProcessed += records.length;
+
+            if (totalRecordProcessed >= recordsToWriteOnce) {
+                totalRecordProcessed = 0;
+                fileName = oThis.localDirFullFilePath + "/" + batchNumber + "_" + Date.now() + '.csv';
             }
 
-            totalRecordProcessed += records.length;
-            if (totalRecordProcessed >= recordsToWriteOnce || lastProcessedId === undefined) {
-                totalRecordProcessed = 0;
-                fileName = oThis.localDirFullFilePath + "/" + Date.now() + '.csv';
-            }
             let r = oThis.formatData(records);
+
             if (!r.success) {
                 return Promise.reject(r);
             }
 
             arrayOfList = r.data.arrayOfList;
-            if (arrayOfList.length === 0) {
-                return Promise.resolve(responseHelper.successWithData({hasRows: (lastProcessedId !== undefined)}));
+            if (arrayOfList.length > 0) {
+							await localWriteObj.writeArray(arrayOfList, fileName);
             }
 
-            await localWriteObj.writeArray(arrayOfList, fileName);
-
-            if (arrayOfList.length < recordsToFetchOnce) {
+            if (arrayOfList.length < limit) {
                 return Promise.resolve(responseHelper.successWithData({hasRows: true}));
             }
-            lastProcessedId = parseInt(records[records.length - 1].id);
-
+					offset += limit;
         }
 
     }
 
+	  /**
+	   * Fetch Last cron run time
+	   *
+	   */
+	  async fetchLastProcessTime() {
+	  	const oThis = this;
+	  	return Promise.resolve(oThis.model.getLastCronRunTime());
+	  }
+
+	  /**
+	   * Fetch total no of records
+	   *
+	   */
+	  async fetchTotalRowCountAndMaxUpdated(params) {
+	  	const oThis = this;
+	  	return Promise.resolve(oThis.model.fetchTotalRowCountAndMaxUpdated({lastProcessTime: params.lastProcessTime}));
+	  }
 
     /**
      * Upload local files to s3
@@ -159,23 +238,22 @@ class MysqlService {
 			return Promise.resolve(r);
     }
 
-	/**
-	 * Upload local files to s3
-	 *
-	 * @return {Promise}
-	 *
-	 */
-	async downloadFromS3ToTemp() {
-		const oThis = this;
+		/**
+		 * Upload local files to s3
+		 *
+		 * @return {Promise}
+		 *
+		 */
+		async downloadFromS3ToTemp() {
+			const oThis = this;
 
-			let downloadToTempObj = new DownloadToTemp({
-				tempTableName: oThis.model.getTempTableNameWithSchema,
-				columnList: oThis.model.getColumnList
-			});
-			let resp = await downloadToTempObj.copyFromS3ToTemp(`${oThis.s3UploadPath}`);
-			return Promise.resolve(resp);
-	}
-
+				let downloadToTempObj = new DownloadToTemp({
+					tempTableName: oThis.model.getTempTableNameWithSchema,
+					columnList: oThis.model.getColumnList
+				});
+				let resp = await downloadToTempObj.copyFromS3ToTemp(`${oThis.s3UploadPath}`);
+				return Promise.resolve(resp);
+		}
 
     /**
      * Format data

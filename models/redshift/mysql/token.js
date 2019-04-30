@@ -90,18 +90,6 @@ class Token extends ModelBase {
         return Constants.PRESTAGING_SCHEMA_NAME + '.temp_tokens'+ oThis.tableNameSuffix;
     };
 
-	  /**
-	   * Default Data Extraction Type
-	   *
-	   * @return {string}
-	   *
-	   */
-		static get defaultFetchType(){
-	      return baseGC.createdTillCurrentTimeDataExtractionFetchType;
-	  }
-
-
-
 }
 
 module.exports = Token;
