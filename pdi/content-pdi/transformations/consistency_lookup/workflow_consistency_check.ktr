@@ -850,7 +850,7 @@ UNION ALL
 select count(*) as value,
 'workflow_success_count' as metric_name
 FROM ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflows  as w where 
- w.id in (select distinct(workflow_id) from ost_warehouse_main_d40.workflow_steps where transaction_hash != '') 
+ w.id in (select distinct(workflow_id) from ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflow_steps where transaction_hash != '')
 and status = 2 
 and created_at &lt; '${END_DATE}'
 and created_at >= '${VERIFICATION_START_DATE}'
@@ -860,7 +860,7 @@ UNION ALL
 select count(*) as value,
 'workflow_failed_count' as metric_name
 FROM ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflows  as w where 
- w.id in (select distinct(workflow_id) from ost_warehouse_main_d40.workflow_steps where transaction_hash != '') 
+ w.id in (select distinct(workflow_id) from ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflow_steps where transaction_hash != '')
 and status in (3, 4) 
 and created_at &lt; '${END_DATE}'
 and created_at >= '${VERIFICATION_START_DATE}'
@@ -888,7 +888,7 @@ UNION ALL
 select count(*) as value,
 'all_workflows_count' as metric_name
 FROM ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflows  as w where 
- w.id in (select distinct(workflow_id) from ost_warehouse_main_d40.workflow_steps where transaction_hash != '') 
+ w.id in (select distinct(workflow_id) from ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflow_steps where transaction_hash != '')
 and created_at &lt; '${END_DATE}'
 and created_at >= '${VERIFICATION_START_DATE}'
 )
