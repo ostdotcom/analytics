@@ -3,8 +3,12 @@ const rootPrefix = "..",
     GetBlockScannerData = require(rootPrefix + "/services/get_block_scanner_data_service"),
     blockScannerGC = require(rootPrefix + "/lib/globalConstants/blockScanner"),
     ExtractBase = require(rootPrefix + "/executables/extract_base"),
-    MysqlServiceWrapper = require(rootPrefix + "/services/mysql_service_wrapper"),
-    CreateRDSInstance = require(rootPrefix + "/services/create_rds_instance");
+    CreateRDSInstance = require(rootPrefix + "/services/create_rds_instance"),
+    MysqlService = require(rootPrefix + "/services/mysql_service"),
+    CheckRDSInstance = require(rootPrefix + "/services/check_rds_instance"),
+    DeleteRDSInstance = require(rootPrefix + "/services/delete_rds_instance"),
+    RestoreDBInstance = require(rootPrefix + '/lib/RestoreRDSInstance')
+;
 
 
 // commander
@@ -66,18 +70,50 @@ class ExtractDataDaily extends ExtractBase {
     async extractMysqlData() {
         const oThis = this;
         let startTime = Date.now();
-        let mysqlServiceWrapper;
+        let promiseArray = [];
+        let createRDSInstance, checkRDSInstance, deleteRDSInstance, restoreDBInstance;
 
-        let createRDSInstance = new CreateRDSInstance();
-        let r = await createRDSInstance.perform();
+        createRDSInstance = new CreateRDSInstance();
+        checkRDSInstance = new CheckRDSInstance({});
+        deleteRDSInstance = new DeleteRDSInstance();
+        restoreDBInstance = new RestoreDBInstance();
+        //let r = await createRDSInstance.perform();
+        console.log(":::::::::::::-----**************************--------------:::::::::::::::::::::");
+        console.log(r);
+        console.log(":::::::::::::-----**************************--------------:::::::::::::::::::::");
         if (!r.success) {
+            console.log(":::::::::::::-------------------:::::::::::::::::::::");
+            console.log(r);
+            console.log(":::::::::::::-------------------:::::::::::::::::::::");
             return Promise.reject(r);
         }
-        mysqlServiceWrapper = new MysqlServiceWrapper({
-            chainId: oThis.chainId, tables: oThis.tables, chainType: oThis.chainType,
-            defaultConfig: false
+        let checkInstanceStatus = await checkRDSInstance.process();
+
+        console.log(":::::::::::::-------------------:::::::::::::::::::::");
+        console.log(checkInstanceStatus);
+        console.log(":::::::::::::-------------------:::::::::::::::::::::");
+        return;
+
+        for (let table of oThis.tables) {
+            let mysqlService = new MysqlService({
+                chainId: oThis.chainId, model: table, chainType: oThis.chainType,
+                dynamicMysqlHost: checkInstanceStatus.data.host
+            });
+            promiseArray.push(mysqlService.process());
+        }
+
+        return Promise.all(promiseArray).then(async (res) => {
+            let endTime = Date.now();
+            logger.log("processing finished at", endTime);
+            logger.log("Total time to process in milliseconds", (endTime - startTime));
+            await deleteRDSInstance.process({dbInstanceId: r.data.dbInstanceId});
+            await restoreDBInstance.updateInstanceRowInDB(r.data.dbInstanceId, {'cron_status': RDSInstanceLogsGC.processed});
+
+            return Promise.resolve({});
+        }).catch(async (e) => {
+            await deleteRDSInstance.process({dbInstanceId: r.data.dbInstanceId});
+            return Promise.reject(e);
         });
-        return await mysqlServiceWrapper.process();
 
     }
 }
