@@ -593,7 +593,7 @@ insert into temp_incremental_chain_transactions_${CHAIN_TYPE}${CHAIN_ID_SUFFIX}
       	gas_used,
       	gas_limit
  from ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.transactions_${CHAIN_TYPE}${CHAIN_ID_SUFFIX}
-where block_timestamp &lt;= (select max(created_at) from ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflows)
+where block_timestamp &lt;= (select extract(epoch from coalesce(max(created_at), 0)) from ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflows)
 and block_timestamp > ?
 );
 
