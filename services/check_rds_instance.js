@@ -29,23 +29,20 @@ class CheckRDSInstance {
 
         r = await oThis.validateRDSLogs();
 
-        console.log("rrrrrr",r);
-
         if (!r.success) {
             return Promise.reject(r);
         }
 
-        r = await oThis.checkAvailabilityOfRDSInstance();
-        if (!r.success) {
-            oThis.applicationMailer.perform({subject: 'RDSInstanceLogs table error', body: r});
-            return Promise.reject(r);
-        }
+        return new Promise(async (resolve, reject) => {
+            r = await oThis.checkAvailabilityOfRDSInstance();
+            if (!r.success) {
+                oThis.applicationMailer.perform({subject: 'RDSInstanceLogs table error', body: r});
+                return reject(r);
+            }
 
-        return Promise.resolve(responseHelper.successWithData({}));
-
-
+            return resolve(r);
+        });
     }
-
 
     /**
      * validate RDSInstanceLogs table
@@ -81,8 +78,9 @@ class CheckRDSInstance {
      * @return {responseHelper}
      */
     async checkAvailabilityOfRDSInstance() {
-        const oThis = this,
-            maxTimeInMinsToWait = 60,
+        const oThis = this;
+
+        const maxTimeInMinsToWait = 60,
             warningTimeInMinsToWait = 30;
         let currentTime = 0;
         let timeStep = 5;
@@ -90,31 +88,50 @@ class CheckRDSInstance {
         let isAvailable = false;
 
 
-        while (!(checkAvailability.success && isAvailable) && currentTime < maxTimeInMinsToWait) {
-            (function (currentTime) {
-                setTimeout(async function () {
-                    checkAvailability = await oThis.checkStatusAndSendWarningMail(currentTime, warningTimeInMinsToWait);
-                    isAvailable = checkAvailability.data.mappedAwsStatus === RDSInstanceLogsGC.availableStatus;
-                }, currentTime * 1000 * 60); //timeout is in milliseconds
+        while (true) {
+            if (checkAvailability.success && isAvailable) {
+                await oThis.restoreDBInstance.updateInstanceRowInDB(oThis.dbInstanceIdentifier, {
+                    'aws_status': checkAvailability.data.awsStatus,
+                    'host': checkAvailability.data.host
+                });
+                return responseHelper.successWithData({host: checkAvailability.data.host,
+                    dbInstanceIdentifier: oThis.dbInstanceIdentifier});
+            } else if (currentTime >= maxTimeInMinsToWait) {
+                let r = responseHelper.error({
+                    internal_error_identifier: 'msw_chri',
+                    api_error_identifier: 'api_error_identifier'
+                });
+                oThis.applicationMailer.perform({
+                    subject: 'Error: RDSInstanceLogs not available for long time',
+                    body: r
+                });
+                return r;
+            }
 
-            })(currentTime += timeStep);
+            oThis.sleep(currentTime * 1000 /** 60*/);
+            checkAvailability = await oThis.checkStatusAndSendWarningMail(currentTime, warningTimeInMinsToWait);
+            isAvailable = checkAvailability.data.mappedAwsStatus === RDSInstanceLogsGC.availableStatus;
+
+            //timeout is in milliseconds
+
+            currentTime += timeStep;
         }
+    }
 
-        if (checkAvailability.success && isAvailable) {
 
-            await oThis.restoreDBInstance.updateInstanceRowInDB(oThis.dbInstanceIdentifier, {
-                'aws_status': checkAvailability.data.awsStatus,
-                'host': checkAvailability.data.host
-            });
-            return responseHelper.successWithData({host: checkAvailability.data.host});
-        } else {
-            let r = responseHelper.error({
-                internal_error_identifier: 'msw_chri',
-                api_error_identifier: 'api_error_identifier'
-            });
-            oThis.applicationMailer.perform({subject: 'Error: RDSInstanceLogs not available for long time', body: r});
-            return r;
-        }
+    /**
+     * Sleep for particular time.
+     *
+     * @param {number} ms: time in ms
+     *
+     * @returns {Promise<any>}
+     */
+    sleep(ms) {
+        console.log('Sleeping for ', ms, ' ms');
+
+        return new Promise(function (resolve) {
+            setTimeout(resolve, ms);
+        });
     }
 
 
@@ -126,7 +143,7 @@ class CheckRDSInstance {
     async checkStatusAndSendWarningMail(currentTime, warningTimeInMinsToWait) {
         const oThis = this;
         let checkRDSStatus = await oThis.restoreDBInstance.checkStatus({dbInstanceIdentifier: oThis.dbInstanceIdentifier});
-        if (currentTime >= warningTimeInMinsToWait) {
+        if (currentTime == warningTimeInMinsToWait) {
             oThis.applicationMailer.perform({
                 subject: 'Warning: RDSInstanceLogs not able to delete since long time',
                 body: {}

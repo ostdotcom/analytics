@@ -22,7 +22,6 @@ program
 class RestoreRDSInstance{
 
     constructor() {
-
         const oThis = this;
         oThis.redshiftClient = new RedshiftClient();
     }

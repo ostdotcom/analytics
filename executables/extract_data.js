@@ -3,7 +3,8 @@ const rootPrefix = "..",
     MysqlService = require(rootPrefix + "/services/mysql_service"),
     GetBlockScannerData = require(rootPrefix + "/services/get_block_scanner_data_service"),
     blockScannerGC = require(rootPrefix + "/lib/globalConstants/blockScanner"),
-    ExtractBase = require(rootPrefix + "/executables/extract_base");
+    ExtractBase = require(rootPrefix + "/executables/extract_base"),
+    logger = require(rootPrefix + "/helpers/custom_console_logger");
 
 
 // commander
