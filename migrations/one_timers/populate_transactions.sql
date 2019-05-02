@@ -1,9 +1,9 @@
-WbVarDef ENV_SUFFIX=_d7;
+WbVarDef ENV_SUFFIX=_d35;
 WbVarDef SUB_ENV=main;
 WbVarDef PRESTAGING_REDSHIFT_SCHEMA_PREFIX=ost_warehouse;
 WbVarDef TRANSACTION_DDB_TABLENAME=s6_m_a_202_1_transactions;
 WbVarDef TRANSFERS_DDB_TABLENAME=s6_m_a_202_1_token_transfers;
-WbVarDef MAX_BLOCK_NUMBER=800000;
+WbVarDef MAX_BLOCK_NUMBER=1600000;
 WbVarDef AWS_ACCESS_KEY_ID=AKIAIG7G5KJ53INDY36A;
 WbVarDef AWS_SECRET_ACCESS_KEY=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;
 WbVarDef CHAIN_TYPE='aux';
@@ -56,9 +56,9 @@ copy  $[TRANSACTION_DDB_TABLENAME] from 'dynamodb://$[TRANSACTION_DDB_TABLENAME]
 commit;
 
 
-truncate $[CHAIN_TYPE]_transactions$[CHAIN_ID_SUFFIX];
+truncate transactions_$[CHAIN_TYPE]$[CHAIN_ID_SUFFIX];
 
-insert into $[CHAIN_TYPE]_transactions$[CHAIN_ID_SUFFIX](
+insert into transactions_$[CHAIN_TYPE]$[CHAIN_ID_SUFFIX](
 tx_uuid,
 tx_hash,
 gas_used,
@@ -128,9 +128,9 @@ COMMIT;
    readratio 80;
 commit;
 
-truncate $[CHAIN_TYPE]_transfers$[CHAIN_ID_SUFFIX];
+truncate transfers_$[CHAIN_TYPE]$[CHAIN_ID_SUFFIX];
 
-insert into $[CHAIN_TYPE]_transfers$[CHAIN_ID_SUFFIX](
+insert into transfers_$[CHAIN_TYPE]$[CHAIN_ID_SUFFIX](
 tx_hash,
 event_index,
 block_number,

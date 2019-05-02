@@ -1,0 +1,93 @@
+const rootPrefix = '..',
+    MysqlService = require(rootPrefix + "/mysql_service"),
+    RedshiftClient = require(rootPrefix + "/lib/redshift"),
+    RDSInstanceLogsGC = require(rootPrefix + "/lib/globalConstants/redshift/RDSInstanceLogsGC"),
+    responseHelper = require(rootPrefix + '/lib/formatter/response'),
+    ApplicationMailer = require(rootPrefix + '/lib/applicationMailer'),
+    RestoreDBInstance = require(rootPrefix + '/lib/RestoreRDSInstance');
+
+class CreateRDSInstance {
+
+    constructor(params) {
+        const oThis = this;
+        oThis.redshiftClient = new RedshiftClient();
+        oThis.applicationMailer = new ApplicationMailer();
+        oThis.restoreDBInstance = new RestoreDBInstance();
+    }
+
+    /**
+     * validate rds_instance_logs_table while creation
+     *
+     * @return {Promise}
+     */
+    validateRDSInstanceLogs() {
+        const oThis = this;
+        let query = `SELECT * FROM ${RDSInstanceLogsGC.getTableNameWithSchema} where aws_status != '${RDSInstanceLogsGC.deletedStatus}'`;
+        return oThis.redshiftClient.query(query).then(async (res) => {
+            if (res.rows.length > 0) {
+                return responseHelper.error({
+                    internal_error_identifier: 'msw_vril_1',
+                    api_error_identifier: 'api_error_identifier'
+                });
+            } else {
+                return responseHelper.successWithData({});
+            }
+        });
+    }
+
+
+    /**
+     * create rds instance
+     *
+     * @return {Promise}
+     */
+    async perform() {
+        const oThis = this;
+        let restoreTime = Date.now()/1000 - 2 * 60 * 60, // 2 hours before current time
+        r = await oThis.validateRDSInstanceLogs();
+
+        if (!r.success) {
+            return r;
+        }
+
+        oThis.restoreDBInstance.create({restoreTime: restoreTime }).then(async (res)=>{
+            let dbInstanceData = res.data.DBInstance;
+            if (res.success){
+                let paramsToSaveToDB = new Map [
+                    ['aws_status', dbInstanceData.DBInstanceStatus],
+                    ['restore_time',restoreTime],
+                    ['instance_identifier', dbInstanceData.DBInstanceIdentifier],
+                    ['cron_status', RDSInstanceLogsGC.cronStatusPending],
+                    ['last_action_time', restoreTime]
+                ];
+                return await oThis.createEntryInRDSInstanceLogs(paramsToSaveToDB);
+            }
+
+        });
+
+
+
+    }
+
+    /**
+     * create entry in rds instance logs table
+     * @params {paramsToSaveToDB} Map
+     * @return {Promise}
+     */
+
+    createEntryInRDSInstanceLogs(paramsToSaveToDB) {
+
+        const oThis = this;
+        let valuesToInsert = Array.from(paramsToSaveToDB.values()).join(", ");
+        let keysToInsert = Array.from(paramsToSaveToDB.keys()).join(", ");
+        let insertQuery = Util.format('INSERT into %s (%s, created_at, updated_at) (%s, getdate(), getdate());',
+            RDSInstanceLogsGC.getTableName, keysToInsert, valuesToInsert);
+        return oThis.redshiftClient.query(insertQuery).then(async (res) => {
+            return responseHelper.successWithData({});
+        })
+    }
+}
+
+
+
+module.exports = CreateRDSInstance;

@@ -1,10 +1,10 @@
 const rootPrefix = "..",
     program = require("commander"),
-    MysqlService = require(rootPrefix + "/services/mysql_service"),
-    logger = require(rootPrefix + "/helpers/custom_console_logger"),
     GetBlockScannerData = require(rootPrefix + "/services/get_block_scanner_data_service"),
     blockScannerGC = require(rootPrefix + "/lib/globalConstants/blockScanner"),
-    ExtractBase = require(rootPrefix + "/executables/extract_base");
+    ExtractBase = require(rootPrefix + "/executables/extract_base"),
+    MysqlServiceWrapper = require(rootPrefix + "/services/mysql_service_wrapper"),
+    CreateRDSInstance = require(rootPrefix + "/services/create_rds_instance");
 
 
 // commander
@@ -25,7 +25,7 @@ program
  * table name in cron should be comma separated value without space
  * node executables/extract_data_daily.js --mysql true --tables Token,ChainAddresses,TokenAddresses,StakerWhitelistedAddresses,Workflows,WorkflowSteps  --originChainId 3
  */
-class ExtractDataDaily extends ExtractBase{
+class ExtractDataDaily extends ExtractBase {
 
     constructor() {
         super();
@@ -36,17 +36,17 @@ class ExtractDataDaily extends ExtractBase{
         oThis.endBlock = program.endBlock;
         oThis.mysqlParam = program.mysql;
         oThis.blockScannerParam = program.blockScanner;
-        oThis.tables =  program.tables ? program.tables.split(",") : ["Token", "TokenAddresses", "Workflows",
+        oThis.tables = program.tables ? program.tables.split(",") : ["Token", "TokenAddresses", "Workflows",
             "WorkflowSteps", "StakerWhitelistedAddresses", "ChainAddresses"];
     }
 
-    perform(){
+    perform() {
         const oThis = this;
         return super.perform('cron_extract_data_c_' + parseInt(oThis.chainId) + "_" + parseInt(oThis.startBlock) + "_" +
-            parseInt(oThis.endBlock) + "_" );
+            parseInt(oThis.endBlock) + "_");
     }
 
-    async start(){
+    async start() {
         const oThis = this;
         if (oThis.mysqlParam !== 'false' && oThis.mysqlParam != undefined) {
             await oThis.extractMysqlData();
@@ -66,26 +66,20 @@ class ExtractDataDaily extends ExtractBase{
     async extractMysqlData() {
         const oThis = this;
         let startTime = Date.now();
-        let promiseArray = [];
-        let mysqlService;
-        for (let table of oThis.tables) {
-            mysqlService = new MysqlService({chainId: oThis.chainId, model: table, chainType: oThis.chainType});
-            promiseArray.push(mysqlService.process());
-        }
+        let mysqlServiceWrapper;
 
-        return Promise.all(promiseArray).then((res) => {
-            let endTime = Date.now();
-            logger.log("processing finished at", endTime);
-            logger.log("Total time to process in milliseconds", (endTime - startTime));
-            return Promise.resolve({});
-        }).catch((e) => {
-            return Promise.reject(e);
+        let createRDSInstance = new CreateRDSInstance();
+        let r = await createRDSInstance.perform();
+        if (!r.success) {
+            return Promise.reject(r);
+        }
+        mysqlServiceWrapper = new MysqlServiceWrapper({
+            chainId: oThis.chainId, tables: oThis.tables, chainType: oThis.chainType,
+            defaultConfig: false
         });
+        return await mysqlServiceWrapper.process();
 
     }
-
-
-
 }
 
 
