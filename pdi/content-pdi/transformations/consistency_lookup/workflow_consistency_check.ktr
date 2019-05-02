@@ -973,7 +973,7 @@ where address_type_sk = (select address_type_sk from ${PENTAHO_REDSHIFT_SCHEMA_P
 )
 UNION ALL
 (
-select count(*) as value, 
+select sum(total_transactions) as value,
 'unknown_workflow_kind_or_address_type_count' AS metric_name  
 FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflow_facts 
 where workflow_kind_sk = 0
