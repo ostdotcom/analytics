@@ -19,29 +19,24 @@ class DeleteRDSInstance {
     /**
      * Processing rds instance if default is not used, and calls mysql services
      *
-     * @return {Promise}
+     * @return {responseHelper}
      */
     async process(params) {
 
         const oThis = this;
-        let r = {};
+        let r ;
         oThis.dbInstanceIdentifier = params.dbInstanceIdentifier;
 
-        r = await oThis.restoreDBInstance.validateRDSLogs();
-
-        if (!r.success) {
-            return r;
-        }
         r = await oThis.deleteMysqlInstance({dbInstanceIdentifier: params.dbInstanceIdentifier});
 
         if (!r.success) {
             oThis.applicationMailer.perform({subject: 'RDSInstance could not be deleted', body: r});
-            return Promise.reject(r);
+            return r;
         }
 
-        return Promise.resolve(responseHelper.successWithData({
+        return responseHelper.successWithData({
             dbInstanceIdentifier: oThis.dbInstanceIdentifier
-        }));
+        });
     }
 
     /**
@@ -49,7 +44,7 @@ class DeleteRDSInstance {
      *
      * @param {params} params required for deletion
      *
-     * @return {Promise}
+     * @return {responseHelper}
      */
 
     async deleteMysqlInstance(params) {
@@ -57,7 +52,7 @@ class DeleteRDSInstance {
         let isDeleted;
         let r = await oThis.restoreDBInstance.delete(params);
         //todo: or condition remove
-        if (r.success || (r.success === false && r.debugOptions.error && r.debugOptions.error.code === RDSInstanceLogs.errorCodeDBInstanceNotFound ) ) {
+        if (r.success) {
 
             let describeDBInstances = await oThis.restoreDBInstance.describeDBInstances(params);
 
@@ -73,15 +68,15 @@ class DeleteRDSInstance {
             }
         } else {
             oThis.applicationMailer.perform({subject: 'Not able to delete instance', body: r});
-            return Promise.reject(responseHelper.error({
+            return responseHelper.error({
                 internal_error_identifier: 'd_rds_i_d_m_i_1',
                 api_error_identifier: 'api_error_identifier'
-            }));
+            });
         }
-        return Promise.reject(responseHelper.error({
+        return responseHelper.error({
             internal_error_identifier: 'd_rds_i_d_m_i_2',
             api_error_identifier: 'api_error_identifier'
-        }));
+        });
     }
 
 
@@ -103,8 +98,8 @@ class DeleteRDSInstance {
         while (true) {
             describeDBInstances = await oThis.restoreDBInstance.describeDBInstances({dbInstanceIdentifier: oThis.dbInstanceIdentifier});
 
-            isDeleted = describeDBInstances.debugOptions.error &&
-                describeDBInstances.debugOptions.error.code === RDSInstanceLogs.errorCodeDBInstanceNotFound;
+            isDeleted = describeDBInstances.debug_options.error &&
+                describeDBInstances.debug_options.error.code === RDSInstanceLogs.errorCodeDBInstanceNotFound;
 
 
             if (describeDBInstances.success === false && isDeleted) {

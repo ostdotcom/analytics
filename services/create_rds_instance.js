@@ -4,7 +4,8 @@ const rootPrefix = '..',
     RDSInstanceLogs = require(rootPrefix + "/lib/globalConstants/redshift/RDSInstanceLogs"),
     responseHelper = require(rootPrefix + '/lib/formatter/response'),
     ApplicationMailer = require(rootPrefix + '/lib/applicationMailer'),
-    RestoreDBInstance = require(rootPrefix + '/lib/RestoreRDSInstance');
+    RestoreDBInstance = require(rootPrefix + '/lib/RestoreRDSInstance'),
+    logger = require(rootPrefix + "/helpers/custom_console_logger");
 class CreateRDSInstance {
 
     constructor(params) {
@@ -18,19 +19,21 @@ class CreateRDSInstance {
     /**
      * create rds instance
      *
-     * @return {Promise}
+     * @return {responseHelper}
      */
     async perform() {
         const oThis = this;
-        let restoreTime = Math.floor((Date.now() / 1000) - 1 * 60), // 1 minute before current time
+        let restoreTime = Math.floor((Date.now() / 1000) - 10 * 60), // 5 minute before current time
             r = await oThis.validateRDSInstanceLogs();
 
         if (!r.success) {
-            // application mailer
+            oThis.applicationMailer.perform({subject: 'RDSInstanceLogs table error in create RDS instance service', body: r});
             return r;
         }
 
         return oThis.restoreDBInstance.create({RestoreTime: restoreTime}).then(async (res) => {
+
+            logger.log(res.data, "DBInstanceStatusDBInstanceStatusDBInstanceStatus");
             let dbInstanceData = res.data.DBInstance;
             if (res.success) {
                 let paramsToSaveToDB = new Map ([
@@ -38,15 +41,16 @@ class CreateRDSInstance {
                         ['restore_time', restoreTime],
                         ['instance_identifier', dbInstanceData.DBInstanceIdentifier],
                         ['cron_status', RDSInstanceLogs.cronStatusPending],
-                        ['last_action_time', restoreTime]
+                        ['last_action_time',  Math.floor(Date.now() / 1000)]
                     ]);
                 return await oThis.createEntryInRDSInstanceLogs(paramsToSaveToDB);
             } else {
+                oThis.applicationMailer.perform({subject: 'Error while creating RDS instance', body: res});
                 return res;
             }
 
         }).catch((err) => {
-
+            oThis.applicationMailer.perform({subject: 'Error while creating RDS instance', body: err});
             return responseHelper.error({
                 internal_error_identifier: 'c_rds_i',
                 api_error_identifier: 'api_error_identifier',
@@ -58,7 +62,7 @@ class CreateRDSInstance {
     /**
      * validate rds_instance_logs_table while creation
      *
-     * @return {Promise}
+     * @return {responseHelper}
      */
     validateRDSInstanceLogs() {
         const oThis = this;
@@ -82,7 +86,7 @@ class CreateRDSInstance {
     /**
      * create entry in rds instance logs table
      * @params {paramsToSaveToDB} Map
-     * @return {Promise}
+     * @return {responseHelper}
      */
 
     createEntryInRDSInstanceLogs(paramsToSaveToDB) {
@@ -92,8 +96,6 @@ class CreateRDSInstance {
         let keysToInsert = Array.from(paramsToSaveToDB.keys()).join(", ");
         let insertQuery = Util.format('INSERT into %s (%s, created_at, updated_at) values ($1, getdate(), getdate());',
             RDSInstanceLogs.getTableNameWithSchema, keysToInsert);
-
-        console.log(insertQuery, "insertQueryinsertQueryinsertQueryinsertQuery");
         return oThis.redshiftClient.parameterizedQuery(insertQuery,[valuesToInsert]).then(async (res) => {
             return responseHelper.successWithData({});
         })

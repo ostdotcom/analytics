@@ -80,11 +80,15 @@ class ExtractDataDaily extends ExtractBase {
         deleteRDSInstance = new DeleteRDSInstance();
         restoreDBInstance = new RestoreDBInstance();
         let r = await createRDSInstance.perform();
-        console.log(r);
+        logger.log(r);
         if (!r.success) {
             return Promise.reject(r);
         }
         let checkInstanceStatus = await checkRDSInstance.process();
+
+        if(!r.success){
+            return Promise.reject(r);
+        }
 
         for (let table of oThis.tables) {
             let mysqlService = new MysqlService({
@@ -98,13 +102,20 @@ class ExtractDataDaily extends ExtractBase {
             let endTime = Date.now();
             logger.log("processing finished at", endTime);
             logger.log("Total time to process in milliseconds", (endTime - startTime));
-            let p = await restoreDBInstance.updateInstanceRowInDB(checkInstanceStatus.data.dbInstanceIdentifier, {'cron_status': RDSInstanceLogs.cronStatusProcessed});
+            await restoreDBInstance.updateInstanceRowInDB(checkInstanceStatus.data.dbInstanceIdentifier, {'cron_status': RDSInstanceLogs.cronStatusProcessed});
 
             let r = await deleteRDSInstance.process({dbInstanceIdentifier: checkInstanceStatus.data.dbInstanceIdentifier});
+
+            if (!r.success){
+                return Promise.reject(r);
+            }
             return Promise.resolve({});
         }).catch(async (e) => {
-            console.log(e);
-            await deleteRDSInstance.process({dbInstanceIdentifier: checkInstanceStatus.data.dbInstanceIdentifier});
+            let res = await deleteRDSInstance.process({dbInstanceIdentifier: checkInstanceStatus.data.dbInstanceIdentifier});
+            if (!res.success){
+                return Promise.reject(res);
+            }
+
             return Promise.reject(e);
         });
 
