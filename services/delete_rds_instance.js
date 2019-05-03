@@ -64,7 +64,7 @@ class DeleteRDSInstance {
                 await oThis.restoreDBInstance.updateInstanceRowInDB(params.dbInstanceIdentifier, {'aws_status': checkRDSStatus.data.awsStatus});
             }
 
-            isDeleted = await oThis.checkIfDeleted({maxTimeInMinsToWait: 10});
+            isDeleted = await oThis.checkIfDeleted();
 
             if (isDeleted.success) {
                 await oThis.restoreDBInstance.updateInstanceRowInDB(oThis.dbInstanceIdentifier, {'aws_status': RDSInstanceLogsGC.deletedStatus});
@@ -92,9 +92,9 @@ class DeleteRDSInstance {
     async checkIfDeleted(params) {
 
         const oThis = this,
-            maxTimeInMinsToWait = params.maxTimeInMinsToWait;
+            maxTimeInMinsToWait = params.maxTimeInMinsToWait || 10; //default wait for 10 mins to delete instance
         let currentTime = 0;
-        let timeStep = 2;
+        let timeStep = 1; // check status of instance on every timestep minute
         let checkRDSStatus = {};
         let isDeleted = false;
 

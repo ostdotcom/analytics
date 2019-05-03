@@ -81,10 +81,10 @@ class CheckRDSInstance {
     async checkAvailabilityOfRDSInstance() {
         const oThis = this;
 
-        const maxTimeInMinsToWait = 60,
-            warningTimeInMinsToWait = 30;
+        const maxTimeInMinsToWait = 60, // wait for that much time to change status of instance to available before sending error
+            warningTimeInMinsToWait = 30; // wait for that much time to send warning mail
         let currentTime = 0;
-        let timeStep = 5;
+        let timeStep = 5; // check after every that much time
         let checkAvailability = {};
         let isAvailable = false;
 
@@ -111,12 +111,11 @@ class CheckRDSInstance {
                 return r;
             }
 
-            sleep(currentTime * 1000 * 60);
+            sleep(currentTime * 1000 * 60); // sleep is in milliseconds
             checkAvailability = await oThis.checkStatusAndSendWarningMail(currentTime, warningTimeInMinsToWait);
             isAvailable = checkAvailability.data.mappedAwsStatus === RDSInstanceLogsGC.availableStatus;
 
             //timeout is in milliseconds
-
             currentTime += timeStep;
         }
     }
