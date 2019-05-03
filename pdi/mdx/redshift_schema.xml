@@ -110,11 +110,22 @@
 
   </Cube>
 
-
-  <Role name="Power User">
+  <Role name="Developer">
     <SchemaGrant access="none">
       <CubeGrant cube="Gas Billing Cube" access="all">
       </CubeGrant>
+    </SchemaGrant>
+  </Role>
+
+  <Role name="Product Manager">
+    <SchemaGrant access="none">
+      <CubeGrant cube="Gas Billing Cube" access="all">
+      </CubeGrant>
+    </SchemaGrant>
+  </Role>
+
+  <Role name="Lead">
+    <SchemaGrant access="all">
     </SchemaGrant>
   </Role>
 
