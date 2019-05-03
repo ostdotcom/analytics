@@ -1,7 +1,7 @@
 const rootPrefix = '..',
     RedshiftClient = require(rootPrefix + "/lib/redshift"),
     sleep = require(rootPrefix + '/lib/sleep'),
-    RDSInstanceLogsGC = require(rootPrefix + "/lib/globalConstants/redshift/RDSInstanceLogsGC"),
+    RDSInstanceLogs = require(rootPrefix + "/lib/globalConstants/redshift/RDSInstanceLogs"),
     responseHelper = require(rootPrefix + '/lib/formatter/response'),
     ApplicationMailer = require(rootPrefix + '/lib/applicationMailer'),
     RestoreDBInstance = require(rootPrefix + '/lib/RestoreRDSInstance');
@@ -54,8 +54,10 @@ class CheckRDSInstance {
      */
     validateRDSLogs() {
         const oThis = this;
-        let query = `SELECT * FROM ${RDSInstanceLogsGC.getTableNameWithSchema} where aws_status != '${RDSInstanceLogsGC.deletedStatus}'`;
-        return oThis.redshiftClient.query(query).then((res) => {
+
+        let query = Util.format("SELECT * FROM %s where aws_status != $1", RDSInstanceLogs.getTableNameWithSchema);
+
+        return oThis.redshiftClient.parameterizedQuery(query, [RDSInstanceLogs.deletedStatus]).then((res) => {
             let resultRow = res.rows[0];
             if (res.rows.length != 1) {
                 //check aws status of row to be not available

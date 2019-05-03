@@ -9,7 +9,7 @@ const rootPrefix = "..",
     DeleteRDSInstance = require(rootPrefix + "/services/delete_rds_instance"),
     RestoreDBInstance = require(rootPrefix + '/lib/RestoreRDSInstance'),
     logger = require(rootPrefix + "/helpers/custom_console_logger"),
-    RDSInstanceLogsGC = require(rootPrefix + "/lib/globalConstants/redshift/RDSInstanceLogsGC");
+    RDSInstanceLogs = require(rootPrefix + "/lib/globalConstants/redshift/RDSInstanceLogs");
 ;
 
 
@@ -98,7 +98,7 @@ class ExtractDataDaily extends ExtractBase {
             let endTime = Date.now();
             logger.log("processing finished at", endTime);
             logger.log("Total time to process in milliseconds", (endTime - startTime));
-            let p = await restoreDBInstance.updateInstanceRowInDB(checkInstanceStatus.data.dbInstanceIdentifier, {'cron_status': RDSInstanceLogsGC.cronStatusProcessed});
+            let p = await restoreDBInstance.updateInstanceRowInDB(checkInstanceStatus.data.dbInstanceIdentifier, {'cron_status': RDSInstanceLogs.cronStatusProcessed});
 
             let r = await deleteRDSInstance.process({dbInstanceIdentifier: checkInstanceStatus.data.dbInstanceIdentifier});
             return Promise.resolve({});

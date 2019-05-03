@@ -1,7 +1,7 @@
 const rootPrefix = '..',
     RedshiftClient = require(rootPrefix + "/lib/redshift"),
     sleep = require(rootPrefix + '/lib/sleep'),
-    RDSInstanceLogsGC = require(rootPrefix + "/lib/globalConstants/redshift/RDSInstanceLogsGC"),
+    RDSInstanceLogs = require(rootPrefix + "/lib/globalConstants/redshift/RDSInstanceLogs"),
     responseHelper = require(rootPrefix + '/lib/formatter/response'),
     ApplicationMailer = require(rootPrefix + '/lib/applicationMailer'),
     RestoreDBInstance = require(rootPrefix + '/lib/RestoreRDSInstance');
@@ -57,18 +57,18 @@ class DeleteRDSInstance {
         let isDeleted;
         let r = await oThis.restoreDBInstance.delete(params);
         //todo: or condition remove
-        if (r.success || (r.success === false && r.debugOptions.error && r.debugOptions.error.code === RDSInstanceLogsGC.errorCodeDBInstanceNotFound ) ) {
+        if (r.success || (r.success === false && r.debugOptions.error && r.debugOptions.error.code === RDSInstanceLogs.errorCodeDBInstanceNotFound ) ) {
 
-            let checkRDSStatus = await oThis.restoreDBInstance.checkStatus(params);
+            let describeDBInstances = await oThis.restoreDBInstance.describeDBInstances(params);
 
-            if (checkRDSStatus.success) {
-                await oThis.restoreDBInstance.updateInstanceRowInDB(params.dbInstanceIdentifier, {'aws_status': checkRDSStatus.data.awsStatus});
+            if (describeDBInstances.success) {
+                await oThis.restoreDBInstance.updateInstanceRowInDB(params.dbInstanceIdentifier, {'aws_status': describeDBInstances.data.awsStatus});
             }
 
-            isDeleted = await oThis.checkIfDeleted();
+            isDeleted = await oThis.checkIfDeleted({});
 
             if (isDeleted.success) {
-                await oThis.restoreDBInstance.updateInstanceRowInDB(oThis.dbInstanceIdentifier, {'aws_status': RDSInstanceLogsGC.deletedStatus});
+                await oThis.restoreDBInstance.updateInstanceRowInDB(oThis.dbInstanceIdentifier, {'aws_status': RDSInstanceLogs.deletedStatus});
                 return isDeleted;
             }
         } else {
@@ -96,20 +96,20 @@ class DeleteRDSInstance {
             maxTimeInMinsToWait = params.maxTimeInMinsToWait || 10; //default wait for 10 mins to delete instance
         let currentTime = 0;
         let timeStep = 1; // check status of instance on every timestep minute
-        let checkRDSStatus = {};
+        let describeDBInstances = {};
         let isDeleted = false;
 
 
         while (true) {
-            checkRDSStatus = await oThis.restoreDBInstance.checkStatus({dbInstanceIdentifier: oThis.dbInstanceIdentifier});
+            describeDBInstances = await oThis.restoreDBInstance.describeDBInstances({dbInstanceIdentifier: oThis.dbInstanceIdentifier});
 
-            isDeleted = checkRDSStatus.debugOptions.error &&
-                checkRDSStatus.debugOptions.error.code === RDSInstanceLogsGC.errorCodeDBInstanceNotFound;
+            isDeleted = describeDBInstances.debugOptions.error &&
+                describeDBInstances.debugOptions.error.code === RDSInstanceLogs.errorCodeDBInstanceNotFound;
 
 
-            if (checkRDSStatus.success === false && isDeleted) {
+            if (describeDBInstances.success === false && isDeleted) {
                 return responseHelper.successWithData({
-                    host: checkRDSStatus.data.host,
+                    host: describeDBInstances.data.host,
                     dbInstanceIdentifier: oThis.dbInstanceIdentifier
                 });
             } else if (currentTime >= maxTimeInMinsToWait) {
