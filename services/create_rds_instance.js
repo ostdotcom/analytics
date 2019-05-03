@@ -27,7 +27,7 @@ class CreateRDSInstance {
             r = await oThis.validateRDSInstanceLogs();
 
         if (!r.success) {
-            oThis.applicationMailer.perform({subject: 'RDSInstanceLogs table error in create RDS instance service', body: r});
+            oThis.applicationMailer.perform({subject: 'Error in create RDS instance service-validateRDSInstanceLogs ', body: r});
             return r;
         }
 
@@ -50,7 +50,7 @@ class CreateRDSInstance {
             }
 
         }).catch((err) => {
-            oThis.applicationMailer.perform({subject: 'Error while creating RDS instance', body: err});
+            oThis.applicationMailer.perform({subject: 'Exception in creating RDS instance', body: err});
             return responseHelper.error({
                 internal_error_identifier: 'c_rds_i',
                 api_error_identifier: 'api_error_identifier',
