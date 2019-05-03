@@ -95,9 +95,9 @@ class DeleteRDSInstance {
     async checkIfDeleted(params) {
 
         const oThis = this,
-            maxTimeInMinsToWait = params.maxTimeInMinsToWait || 2; //default wait for 10 mins to delete instance
+            maxTimeInMinsToWait = params.maxTimeInMinsToWait || 10; //default wait for 10 mins to delete instance
         let currentTime = 0;
-        let timeStep = 1; // check status of instance on every timestep minute
+        let timeStep = 2; // check status of instance on every timestep minute
         let describeDBInstancesResp = {};
         let isDeletedResp = false;
 
