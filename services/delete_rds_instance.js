@@ -64,7 +64,7 @@ class DeleteRDSInstance {
                 await oThis.restoreDBInstance.updateInstanceRowInDB(params.dbInstanceIdentifier, {'aws_status': checkRDSStatus.data.awsStatus});
             }
 
-            isDeleted = await oThis.checkIfDeleted({maxTimeInMinsToWait: 5});
+            isDeleted = await oThis.checkIfDeleted({maxTimeInMinsToWait: 10});
 
             if (isDeleted.success) {
                 await oThis.restoreDBInstance.updateInstanceRowInDB(oThis.dbInstanceIdentifier, {'aws_status': RDSInstanceLogsGC.deletedStatus});
