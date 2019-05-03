@@ -1,9 +1,10 @@
 const rootPrefix = "..",
     program = require("commander"),
-    MysqlServiceWrapper = require(rootPrefix + "/services/mysql_service_wrapper"),
+    MysqlService = require(rootPrefix + "/services/mysql_service"),
     GetBlockScannerData = require(rootPrefix + "/services/get_block_scanner_data_service"),
     blockScannerGC = require(rootPrefix + "/lib/globalConstants/blockScanner"),
-    ExtractBase = require(rootPrefix + "/executables/extract_base");
+    ExtractBase = require(rootPrefix + "/executables/extract_base"),
+    logger = require(rootPrefix + "/helpers/custom_console_logger");
 
 
 // commander
@@ -63,14 +64,23 @@ class ExtractData extends ExtractBase {
     async extractMysqlData() {
         const oThis = this;
         let startTime = Date.now();
-        let mysqlServiceWrapper;
+        let promiseArray = [];
+        let mysqlService;
 
-        mysqlServiceWrapper = new MysqlServiceWrapper({
-            chainId: oThis.chainId, tables: oThis.tables, chainType: oThis.chainType,
-            defaultConfig: true
+
+        for (let table of oThis.tables) {
+            mysqlService = new MysqlService({chainId: oThis.chainId, model: table, chainType: oThis.chainType});
+            promiseArray.push(mysqlService.process());
+        }
+
+        return Promise.all(promiseArray).then((res) => {
+            let endTime = Date.now();
+            logger.log("processing finished at", endTime);
+            logger.log("Total time to process in milliseconds", (endTime - startTime));
+            return Promise.resolve({});
+        }).catch((e) => {
+            return Promise.reject(e);
         });
-
-        return await mysqlServiceWrapper.process();
 
     }
 
@@ -79,3 +89,5 @@ class ExtractData extends ExtractBase {
 
 const extractData = new ExtractData();
 extractData.perform();
+
+
