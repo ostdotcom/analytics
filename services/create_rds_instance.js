@@ -68,17 +68,6 @@ class CreateRDSInstance {
         let query = `SELECT * FROM ${RDSInstanceLogsGC.getTableNameWithSchema} where aws_status != '${RDSInstanceLogsGC.deletedStatus}'`;
         return oThis.redshiftClient.query(query).then(async (res) => {
             if (res.rows.length > 0) {
-
-                let rows = res.rows.filter((row) => {
-                    return row.aws_status == RDSInstanceLogsGC.deletingStatus
-                });
-
-                if (rows.length > 0 && (rows.length == res.rows.length)) {
-                    isDeleted = await oThis.deleteRDSInstance.checkIfDeleted({maxTimeInMinsToWait: 10});
-                    if (isDeleted.success) {
-                        return responseHelper.successWithData({});
-                    }
-                }
                 return responseHelper.error({
                     internal_error_identifier: 'msw_vril_1',
                     api_error_identifier: 'api_error_identifier'
