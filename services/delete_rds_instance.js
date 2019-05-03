@@ -1,18 +1,19 @@
 const rootPrefix = '..',
-    RedshiftClient = require(rootPrefix + "/lib/redshift"),
     sleep = require(rootPrefix + '/lib/sleep'),
     RDSInstanceLogs = require(rootPrefix + "/lib/globalConstants/redshift/RDSInstanceLogs"),
     responseHelper = require(rootPrefix + '/lib/formatter/response'),
     ApplicationMailer = require(rootPrefix + '/lib/applicationMailer'),
-    RestoreDBInstance = require(rootPrefix + '/lib/RestoreRDSInstance');
+    RDSInstanceOperations = require(rootPrefix + '/lib/RDSInstanceOperations'),
+    RDSInstanceLogsModel = require(rootPrefix + '/models/redshift/mysql/rdsInstanceLogs');
+;
 
 class DeleteRDSInstance {
 
     constructor() {
         const oThis = this;
-        oThis.redshiftClient = new RedshiftClient();
         oThis.applicationMailer = new ApplicationMailer();
-        oThis.restoreDBInstance = new RestoreDBInstance();
+        oThis.rdsInstanceOperations = new RDSInstanceOperations();
+        oThis.rdsInstanceLogsModel = new RDSInstanceLogsModel();
         oThis.dbInstanceIdentifier = '';
     }
 
@@ -24,10 +25,10 @@ class DeleteRDSInstance {
     async process(params) {
 
         const oThis = this;
-        let r ;
+        let r;
         oThis.dbInstanceIdentifier = params.dbInstanceIdentifier;
 
-        r = await oThis.deleteMysqlInstance({dbInstanceIdentifier: params.dbInstanceIdentifier});
+        r = await oThis.deleteMysqlInstance(params);
 
         if (!r.success) {
             oThis.applicationMailer.perform({subject: 'RDSInstance could not be deleted', body: r});
@@ -50,27 +51,27 @@ class DeleteRDSInstance {
     async deleteMysqlInstance(params) {
         const oThis = this;
         let isDeletedResp;
-        let r = await oThis.restoreDBInstance.delete(params);
+        let r = await oThis.rdsInstanceOperations.delete(params);
         if (r.success) {
 
-            let describeDBInstancesResp = await oThis.restoreDBInstance.describeDBInstances(params);
+            let describeDBInstancesResp = await oThis.rdsInstanceOperations.describeDBInstances(params);
 
-            if (!describeDBInstancesResp.success){
-					      return describeDBInstancesResp;
-            }else if(describeDBInstancesResp.data.awsStatus === RDSInstanceLogs.awsDeletingStatus){
-						    await oThis.restoreDBInstance.updateInstanceRowInDB(params.dbInstanceIdentifier, {'aws_status': describeDBInstancesResp.data.awsStatus});
-					  }else{
-							return responseHelper.error({
-								internal_error_identifier: 'd_rds_i_d_m_i_1',
-								api_error_identifier: 'api_error_identifier',
-								debug_options: {describeDBInstancesResp: describeDBInstancesResp}
-							});
-						}
+            if (!describeDBInstancesResp.success) {
+                return describeDBInstancesResp;
+            } else if (describeDBInstancesResp.data.awsStatus === RDSInstanceLogs.awsDeletingStatus) {
+                await oThis.rdsInstanceLogsModel.updateInstanceRowInDB(params.recordId, {'aws_status': describeDBInstancesResp.data.awsStatus});
+            } else {
+                return responseHelper.error({
+                    internal_error_identifier: 'd_rds_i_d_m_i_1',
+                    api_error_identifier: 'api_error_identifier',
+                    debug_options: {describeDBInstancesResp: describeDBInstancesResp}
+                });
+            }
 
             isDeletedResp = await oThis.checkIfDeleted({});
 
             if (isDeletedResp.success) {
-                await oThis.restoreDBInstance.updateInstanceRowInDB(oThis.dbInstanceIdentifier, {'aws_status': RDSInstanceLogs.deletedStatus});
+                await oThis.rdsInstanceLogsModel.updateInstanceRowInDB(params.recordId, {'aws_status': RDSInstanceLogs.deletedStatus});
                 return isDeletedResp;
             }
         } else {
@@ -94,7 +95,7 @@ class DeleteRDSInstance {
     async checkIfDeleted(params) {
 
         const oThis = this,
-            maxTimeInMinsToWait = params.maxTimeInMinsToWait || 10; //default wait for 10 mins to delete instance
+            maxTimeInMinsToWait = params.maxTimeInMinsToWait || 2; //default wait for 10 mins to delete instance
         let currentTime = 0;
         let timeStep = 1; // check status of instance on every timestep minute
         let describeDBInstancesResp = {};
@@ -102,9 +103,9 @@ class DeleteRDSInstance {
 
 
         while (true) {
-            describeDBInstancesResp = await oThis.restoreDBInstance.describeDBInstances({dbInstanceIdentifier: oThis.dbInstanceIdentifier});
+            describeDBInstancesResp = await oThis.rdsInstanceOperations.describeDBInstances({dbInstanceIdentifier: oThis.dbInstanceIdentifier});
 
-            isDeletedResp = describeDBInstancesResp.debug_options.error &&
+            isDeletedResp = describeDBInstancesResp.debug_options &&
                 describeDBInstancesResp.debug_options.error.code === RDSInstanceLogs.errorCodeDBInstanceNotFound;
 
 
@@ -127,7 +128,7 @@ class DeleteRDSInstance {
 
             //timeout is in milliseconds
             currentTime += timeStep;
-            sleep(currentTime * 1000 * 60); // in minutes
+            await sleep(currentTime * 1000 * 60); // in minutes
 
         }
     }

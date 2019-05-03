@@ -1,10 +1,12 @@
 const rootPrefix = '..',
+    Util = require('util'),
     RedshiftClient = require(rootPrefix + "/lib/redshift"),
     sleep = require(rootPrefix + '/lib/sleep'),
     RDSInstanceLogs = require(rootPrefix + "/lib/globalConstants/redshift/RDSInstanceLogs"),
     responseHelper = require(rootPrefix + '/lib/formatter/response'),
     ApplicationMailer = require(rootPrefix + '/lib/applicationMailer'),
-    RestoreDBInstance = require(rootPrefix + '/lib/RestoreRDSInstance');
+    RDSInstanceOperations = require(rootPrefix + '/lib/RDSInstanceOperations'),
+    RDSInstanceLogsModel = require(rootPrefix + '/models/redshift/mysql/rdsInstanceLogs');
 
 class CheckRDSInstance {
 
@@ -12,8 +14,9 @@ class CheckRDSInstance {
         const oThis = this;
         oThis.params = params;
         oThis.redshiftClient = new RedshiftClient();
+        oThis.rdsInstanceLogsModel = new RDSInstanceLogsModel();
         oThis.applicationMailer = new ApplicationMailer();
-        oThis.restoreDBInstance = new RestoreDBInstance();
+        oThis.rdsInstanceOperations = new RDSInstanceOperations();
         oThis.dbInstanceIdentifier = '';
     }
 
@@ -25,29 +28,31 @@ class CheckRDSInstance {
     async process() {
 
         const oThis = this;
-        let r = {};
+        let r , validateResp;
 
-        r = await oThis.validateRDSLogs();
+        validateResp = await oThis.validateRDSLogs();
+
+        if (!validateResp.success) {
+            oThis.applicationMailer.perform({
+                subject: 'Error in CheckRDSInstance-validateRDSLogs',
+                body: {err: validateResp}
+            });
+            return validateResp;
+        }
+
+        r = await oThis.checkAvailabilityOfRDSInstance(validateResp.data);
 
         if (!r.success) {
             oThis.applicationMailer.perform({
-                subject: 'Error in CheckRDSInstance-validateRDSLogs',
-                body: {err: r}
+                subject: 'Error in CheckRDSInstance-checkAvailabilityOfRDSInstance',
+                body: r
             });
             return r;
         }
-
-        r = await oThis.checkAvailabilityOfRDSInstance(r.data);
-
-        if (!r.success) {
-            oThis.applicationMailer.perform({subject: 'Error in CheckRDSInstance-checkAvailabilityOfRDSInstance', body: r});
-            return r;
-        }
-
-			  await oThis.restoreDBInstance.updateInstanceRowInDB(oThis.dbInstanceIdentifier, {
-				    'aws_status': r.data.awsStatus,
-				    'host': r.data.host
-			  });
+        await oThis.rdsInstanceLogsModel.updateInstanceRowInDB(validateResp.data.recordId, {
+            'aws_status': r.data.awsStatus,
+            'host': r.data.host
+        });
 
         return r;
     }
@@ -74,14 +79,14 @@ class CheckRDSInstance {
                 });
                 return r;
 
-            } else if (RDSInstanceLogsGC.mappingOfAwsStatus[resultRow.aws_status] != RDSInstanceLogsGC.mappedNotAvailableStatus) {
+            } else if (RDSInstanceLogs.mappingOfAwsStatus[resultRow.aws_status] != RDSInstanceLogs.mappedNotAvailableStatus) {
                 return responseHelper.error({
                     internal_error_identifier: 'msw_v_rds_l_2',
                     api_error_identifier: 'api_error_identifier',
                     debug_options: resultRow
                 });
 
-            } else if ((Math.floor(Date.now()/1000) - resultRow.restore_time) > 4 * 60 * 60) {
+            } else if ((Math.floor(Date.now() / 1000) - resultRow.restore_time) > 4 * 60 * 60) {
 
                 // checks if restore time is greater than 4 hours
                 return responseHelper.error({
@@ -92,10 +97,8 @@ class CheckRDSInstance {
 
             } else {
                 oThis.dbInstanceIdentifier = resultRow.instance_identifier;
-                return responseHelper.successWithData({lastActionTime: resultRow.last_action_time})
+                return responseHelper.successWithData({lastActionTime: resultRow.last_action_time, recordId: resultRow.id})
             }
-
-
         });
     }
 
@@ -119,25 +122,25 @@ class CheckRDSInstance {
 
         while (true) {
 
-					//timeout is in milliseconds
-					let currentTime = Math.floor(Date.now() / 1000);
-
-            checkAvailabilityResp = oThis.restoreDBInstance.checkStatus({dbInstanceIdentifier: oThis.dbInstanceIdentifier});
-            isAvailable = checkAvailabilityResp.data.mappedAwsStatus === RDSInstanceLogsGC.awsAvailableStatus;
+            //timeout is in milliseconds
+            let currentTime = Math.floor(Date.now() / 1000);
+            checkAvailabilityResp = await oThis.rdsInstanceOperations.describeDBInstances({dbInstanceIdentifier: oThis.dbInstanceIdentifier});
+            isAvailable = checkAvailabilityResp.data && checkAvailabilityResp.data.mappedAwsStatus === RDSInstanceLogs.awsAvailableStatus;
 
 
             if (checkAvailabilityResp.success && isAvailable) {
                 return responseHelper.successWithData({
                     host: checkAvailabilityResp.data.host,
                     dbInstanceIdentifier: oThis.dbInstanceIdentifier,
-									  awsStatus: checkAvailabilityResp.data.awsStatus
+                    awsStatus: checkAvailabilityResp.data.awsStatus,
+                    recordId: params.recordId
                 });
             } else if (!warnEmailSent && (((currentTime - lastActionTime) / 60) >= warningTimeInMinsToWait)) {
                 oThis.applicationMailer.perform({
                     subject: 'Warning: RDSInstanceLogs not available for more than 30 mins',
                     body: checkAvailabilityResp
                 });
-							  warnEmailSent = true;
+                warnEmailSent = true;
             } else if (((currentTime - lastActionTime) / 60) >= maxTimeInMinsToWait) {
                 let r = responseHelper.error({
                     internal_error_identifier: 'msw_chri',
@@ -151,7 +154,7 @@ class CheckRDSInstance {
             }
 
             timeToWait += timeStep;
-            sleep(timeToWait * 1000 * 60); // sleep is in minutes
+            await sleep(timeToWait * 1000 * 60); // sleep is in minutes
 
         }
     }

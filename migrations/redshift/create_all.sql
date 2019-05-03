@@ -313,6 +313,7 @@ DROP TABLE IF EXISTS rds_instance_logs;
 
 CREATE TABLE rds_instance_logs
 (
+  id                    BIGINT NOT NULL IDENTITY(1,1),
   restore_time          BIGINT NOT NULL,
   instance_identifier   VARCHAR(255) NOT NULL,
   host                  VARCHAR(255),

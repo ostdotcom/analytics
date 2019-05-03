@@ -4,15 +4,17 @@ const rootPrefix = '..',
     RDSInstanceLogs = require(rootPrefix + "/lib/globalConstants/redshift/RDSInstanceLogs"),
     responseHelper = require(rootPrefix + '/lib/formatter/response'),
     ApplicationMailer = require(rootPrefix + '/lib/applicationMailer'),
-    RestoreDBInstance = require(rootPrefix + '/lib/RestoreRDSInstance'),
-    logger = require(rootPrefix + "/helpers/custom_console_logger");
+    RDSInstanceOperations = require(rootPrefix + '/lib/RDSInstanceOperations'),
+    logger = require(rootPrefix + "/helpers/custom_console_logger"),
+    RDSInstanceLogsModel = require(rootPrefix + '/models/redshift/mysql/rdsInstanceLogs');
 class CreateRDSInstance {
 
     constructor(params) {
         const oThis = this;
         oThis.redshiftClient = new RedshiftClient();
         oThis.applicationMailer = new ApplicationMailer();
-        oThis.restoreDBInstance = new RestoreDBInstance();
+        oThis.rdsInstanceOperations = new RDSInstanceOperations();
+        oThis.rdsInstanceLogsModel = new RDSInstanceLogsModel();
     }
 
 
@@ -23,7 +25,7 @@ class CreateRDSInstance {
      */
     async perform() {
         const oThis = this;
-        let restoreTime = Math.floor((Date.now() / 1000) - 10 * 60), // 5 minute before current time
+        let restoreTime = Math.floor((Date.now() / 1000) - 10 * 60), // 10 minute before current time
             r = await oThis.validateRDSInstanceLogs();
 
         if (!r.success) {
@@ -31,19 +33,17 @@ class CreateRDSInstance {
             return r;
         }
 
-        return oThis.restoreDBInstance.create({RestoreTime: restoreTime}).then(async (res) => {
-
-            logger.log(res.data, "DBInstanceStatusDBInstanceStatusDBInstanceStatus");
+        return oThis.rdsInstanceOperations.create({RestoreTime: restoreTime}).then(async (res) => {
             let dbInstanceData = res.data.DBInstance;
             if (res.success) {
                 let paramsToSaveToDB = new Map ([
-                    ['aws_status', dbInstanceData.DBInstanceStatus],
+                        ['aws_status', dbInstanceData.DBInstanceStatus],
                         ['restore_time', restoreTime],
                         ['instance_identifier', dbInstanceData.DBInstanceIdentifier],
                         ['cron_status', RDSInstanceLogs.cronStatusPending],
                         ['last_action_time',  Math.floor(Date.now() / 1000)]
                     ]);
-                return await oThis.createEntryInRDSInstanceLogs(paramsToSaveToDB);
+                return await oThis.rdsInstanceLogsModel.createEntryInRDSInstanceLogs(paramsToSaveToDB);
             } else {
                 oThis.applicationMailer.perform({subject: 'Error while creating RDS instance', body: res});
                 return res;
@@ -67,10 +67,10 @@ class CreateRDSInstance {
     validateRDSInstanceLogs() {
         const oThis = this;
         let isDeleted;
-        //todo: use parameterized
         let query = Util.format("SELECT * FROM %s where aws_status != $1", RDSInstanceLogs.getTableNameWithSchema);
 
         return oThis.redshiftClient.parameterizedQuery(query, [RDSInstanceLogs.deletedStatus]).then(async (res) => {
+
             if (res.rows.length > 0) {
                 return responseHelper.error({
                     internal_error_identifier: 'msw_vril_1',
@@ -80,25 +80,6 @@ class CreateRDSInstance {
                 return responseHelper.successWithData({});
             }
         });
-    }
-
-
-    /**
-     * create entry in rds instance logs table
-     * @params {paramsToSaveToDB} Map
-     * @return {responseHelper}
-     */
-
-    createEntryInRDSInstanceLogs(paramsToSaveToDB) {
-
-        const oThis = this;
-        let valuesToInsert = Array.from(paramsToSaveToDB.values()).join(", ");
-        let keysToInsert = Array.from(paramsToSaveToDB.keys()).join(", ");
-        let insertQuery = Util.format('INSERT into %s (%s, created_at, updated_at) values ($1, getdate(), getdate());',
-            RDSInstanceLogs.getTableNameWithSchema, keysToInsert);
-        return oThis.redshiftClient.parameterizedQuery(insertQuery,[valuesToInsert]).then(async (res) => {
-            return responseHelper.successWithData({});
-        })
     }
 }
 

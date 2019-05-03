@@ -7,10 +7,9 @@ const rootPrefix = "..",
     MysqlService = require(rootPrefix + "/services/mysql_service"),
     CheckRDSInstance = require(rootPrefix + "/services/check_rds_instance"),
     DeleteRDSInstance = require(rootPrefix + "/services/delete_rds_instance"),
-    RestoreDBInstance = require(rootPrefix + '/lib/RestoreRDSInstance'),
     logger = require(rootPrefix + "/helpers/custom_console_logger"),
-    RDSInstanceLogs = require(rootPrefix + "/lib/globalConstants/redshift/RDSInstanceLogs");
-;
+    RDSInstanceLogs = require(rootPrefix + "/lib/globalConstants/redshift/RDSInstanceLogs"),
+    RDSInstanceLogsModel = require(rootPrefix + '/models/redshift/mysql/rdsInstanceLogs');
 
 
 // commander
@@ -73,12 +72,12 @@ class ExtractDataDaily extends ExtractBase {
         const oThis = this;
         let startTime = Date.now();
         let promiseArray = [];
-        let createRDSInstance, checkRDSInstance, deleteRDSInstance, restoreDBInstance;
+        let createRDSInstance, checkRDSInstance, deleteRDSInstance, rdsInstanceLogsModel;
 
         createRDSInstance = new CreateRDSInstance();
         checkRDSInstance = new CheckRDSInstance({});
         deleteRDSInstance = new DeleteRDSInstance();
-        restoreDBInstance = new RestoreDBInstance();
+        rdsInstanceLogsModel = new RDSInstanceLogsModel();
         let r = await createRDSInstance.perform();
         logger.log(r);
         if (!r.success) {
@@ -102,16 +101,18 @@ class ExtractDataDaily extends ExtractBase {
             let endTime = Date.now();
             logger.log("processing finished at", endTime);
             logger.log("Total time to process in milliseconds", (endTime - startTime));
-            await restoreDBInstance.updateInstanceRowInDB(checkInstanceStatus.data.dbInstanceIdentifier, {'cron_status': RDSInstanceLogs.cronStatusProcessed});
+            await rdsInstanceLogsModel.updateInstanceRowInDB(checkInstanceStatus.data.recordId, {'cron_status': RDSInstanceLogs.cronStatusProcessed});
 
-            let r = await deleteRDSInstance.process({dbInstanceIdentifier: checkInstanceStatus.data.dbInstanceIdentifier});
+            let r = await deleteRDSInstance.process({dbInstanceIdentifier: checkInstanceStatus.data.dbInstanceIdentifier,
+                recordId:checkInstanceStatus.data.recordId});
 
             if (!r.success){
                 return Promise.reject(r);
             }
             return Promise.resolve({});
         }).catch(async (e) => {
-            let res = await deleteRDSInstance.process({dbInstanceIdentifier: checkInstanceStatus.data.dbInstanceIdentifier});
+            let res = await deleteRDSInstance.process({dbInstanceIdentifier: checkInstanceStatus.data.dbInstanceIdentifier,
+                recordId:checkInstanceStatus.data.recordId});
             if (!res.success){
                 return Promise.reject(res);
             }

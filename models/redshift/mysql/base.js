@@ -3,6 +3,7 @@
  * @file - Base file for all the MySQL Models
  */
 const rootPrefix = '../../..',
+    Constant = require(rootPrefix + "/configs/constants"),
     MysqlQueryBuilders = require(rootPrefix + '/lib/queryBuilders/mysql'),
     mysqlWrapper = require(rootPrefix + '/lib/mysqlWrapper'),
     Util = require('util'),
@@ -10,7 +11,7 @@ const rootPrefix = '../../..',
     responseHelper = require(rootPrefix + '/lib/formatter/response'),
     ApplicationMailer = require(rootPrefix + '/lib/applicationMailer'),
     dataProcessingInfoGC = require(rootPrefix + "/lib/globalConstants/redshift/dataProcessingInfo"),
-	  baseGC = require(rootPrefix + '/lib/globalConstants/redshift/base'),
+    baseGC = require(rootPrefix + '/lib/globalConstants/redshift/base'),
     dateUtil = require(rootPrefix + "/lib/dateUtil"),
     blockScannerGC = require(rootPrefix + "/lib/globalConstants/blockScanner"),
     RedshiftClient = require(rootPrefix + "/lib/redshift");
@@ -33,13 +34,17 @@ class ModelBase extends MysqlQueryBuilders {
         const oThis = this;
         oThis.object = params.object || {};
         oThis.dynamicMysqlHost = params.dynamicMysqlHost;
+
+        if(Constant.ENVIRONMENT == 'development'){
+            oThis.dynamicMysqlHost = Constant.KIT_SAAS_SUBENV_MYSQL_HOST;
+        }
         oThis.chainId = params.chainId;
         oThis.chainType = params.chainType;
         oThis.tableNameSuffix = "";
         oThis.dbName = params.dbName;
         oThis.applicationMailer = new ApplicationMailer();
         oThis.redshiftClient = new RedshiftClient();
-        if(oThis.chainType == blockScannerGC.auxChainType){
+        if (oThis.chainType == blockScannerGC.auxChainType) {
             oThis.tableNameSuffix = `_${oThis.chainId}`
         }
     }
@@ -50,14 +55,14 @@ class ModelBase extends MysqlQueryBuilders {
      * @return {*}
      */
     onReadConnection() {
-			const oThis = this;
+        const oThis = this;
         // At present, following is not being used. But when we implement replication,
         // following connection pool will be used for slave connections.
-      if (oThis.dynamicMysqlHost){
-				return mysqlWrapper.getPoolForDynamicHost(oThis.dbName, 'master', undefined , {host: oThis.dynamicMysqlHost});
-			} else{
-				return mysqlWrapper.getPoolFor(oThis.dbName, 'master');
-			}
+        if (oThis.dynamicMysqlHost) {
+            return mysqlWrapper.getPoolForDynamicHost(oThis.dbName, 'master', undefined, {host: oThis.dynamicMysqlHost});
+        } else {
+            return mysqlWrapper.getPoolFor(oThis.dbName, 'master');
+        }
     }
 
     /**
@@ -66,14 +71,14 @@ class ModelBase extends MysqlQueryBuilders {
      * @return {*}
      */
     onWriteConnection() {
-			const oThis = this;
-			// At present, following is not being used. But when we implement replication,
-			// following connection pool will be used for slave connections.
-			if (oThis.dynamicMysqlHost){
-				return mysqlWrapper.getPoolForDynamicHost(oThis.dbName, 'master', undefined , {host: oThis.dynamicMysqlHost});
-			} else{
-				return mysqlWrapper.getPoolFor(oThis.dbName, 'master');
-			}
+        const oThis = this;
+        // At present, following is not being used. But when we implement replication,
+        // following connection pool will be used for slave connections.
+        if (oThis.dynamicMysqlHost) {
+            return mysqlWrapper.getPoolForDynamicHost(oThis.dbName, 'master', undefined, {host: oThis.dynamicMysqlHost});
+        } else {
+            return mysqlWrapper.getPoolFor(oThis.dbName, 'master');
+        }
     }
 
     /**
@@ -84,13 +89,13 @@ class ModelBase extends MysqlQueryBuilders {
     fire() {
         const oThis = this;
 
-        return new Promise(function(onResolve, onReject) {
+        return new Promise(function (onResolve, onReject) {
             const queryGenerator = oThis.generate();
 
             let preQuery = Date.now();
             let qry = oThis
                 .onWriteConnection()
-                .query(queryGenerator.data.query, queryGenerator.data.queryData, function(err, result, fields) {
+                .query(queryGenerator.data.query, queryGenerator.data.queryData, function (err, result, fields) {
                     logger.info('(' + (Date.now() - preQuery) + ' ms)', qry.sql);
                     if (err) {
                         onReject(err);
@@ -101,7 +106,7 @@ class ModelBase extends MysqlQueryBuilders {
         });
     }
 
-    get getTableName(){
+    get getTableName() {
         const oThis = this;
         return oThis.tableName;
     }
@@ -116,7 +121,8 @@ class ModelBase extends MysqlQueryBuilders {
         ;
 
         const deleteDuplicateIds = Util.format('DELETE from %s WHERE %s IN (SELECT %s from %s);', oThis.getTableNameWithSchema, oThis.getTablePrimaryKey, oThis.getTablePrimaryKey, oThis.getTempTableNameWithSchema)
-            , insertRemainingEntries = Util.format('INSERT into %s (%s) (select %s from %s);', oThis.getTableNameWithSchema, oThis.getColumnList,oThis.getColumnList, oThis.getTempTableNameWithSchema)
+            ,
+            insertRemainingEntries = Util.format('INSERT into %s (%s) (select %s from %s);', oThis.getTableNameWithSchema, oThis.getColumnList, oThis.getColumnList, oThis.getTempTableNameWithSchema)
         ;
 
         logger.info("Deletion of duplicate rows started", deleteDuplicateIds);
@@ -148,24 +154,24 @@ class ModelBase extends MysqlQueryBuilders {
     }
 
 
-	/**
-	 * fetches data from mysql table
-	 *
-	 * @return {Promise}
-	 *
-	 */
-	async fetchTotalRowCountAndMaxUpdated(params){
-		const oThis = this;
+    /**
+     * fetches data from mysql table
+     *
+     * @return {Promise}
+     *
+     */
+    async fetchTotalRowCountAndMaxUpdated(params) {
+        const oThis = this;
 
-		let lastProcessTime = params.lastProcessTime;
+        let lastProcessTime = params.lastProcessTime;
 
-		let fetchDataInstance = new oThis.constructor({});
-		fetchDataInstance = fetchDataInstance.select("count(1) as totalRowCount, max(updated_at) as maxUpdatedAt");
+        let fetchDataInstance = new oThis.constructor({});
+        fetchDataInstance = fetchDataInstance.select("count(1) as totalRowCount, max(updated_at) as maxUpdatedAt");
 
-		let query = oThis.fetchQueryWhereClause(fetchDataInstance, lastProcessTime);
+        let query = oThis.fetchQueryWhereClause(fetchDataInstance, lastProcessTime);
 
-		return query.fire();
-	}
+        return query.fire();
+    }
 
     /**
      * fetches data from mysql table
@@ -173,7 +179,7 @@ class ModelBase extends MysqlQueryBuilders {
      * @return {Promise}
      *
      */
-    async fetchData(params){
+    async fetchData(params) {
         const oThis = this;
         let lastProcessTime = params.lastProcessTime;
 
@@ -192,33 +198,31 @@ class ModelBase extends MysqlQueryBuilders {
      * @return {@constructor}
      *
      */
-    fetchQueryWhereClause(fetchDataInstance, lastProcessTime){
-    	const oThis = this;
-			let query=undefined;
+    fetchQueryWhereClause(fetchDataInstance, lastProcessTime) {
+        const oThis = this;
+        let query = undefined;
 
-			if(oThis.constructor.defaultFetchType == baseGC.createdTillYesterdayDataExtractionFetchType){
-				query = fetchDataInstance.where(['created_at < ?', dateUtil.getBeginnigOfDayInUTC()]).
-				where(['updated_at > ? OR created_at >= ?', lastProcessTime, dateUtil.getBeginnigOfDayInUTC(lastProcessTime) ]);
+        if (oThis.constructor.defaultFetchType == baseGC.createdTillYesterdayDataExtractionFetchType) {
+            query = fetchDataInstance.where(['created_at < ?', dateUtil.getBeginnigOfDayInUTC()]).where(['updated_at > ? OR created_at >= ?', lastProcessTime, dateUtil.getBeginnigOfDayInUTC(lastProcessTime)]);
 
-      } else if(oThis.constructor.defaultFetchType == baseGC.createdTillCurrentTimeDataExtractionFetchType){
-				query = fetchDataInstance.where(['updated_at > ?', lastProcessTime])
-      }
-      else{
-				throw 'defaultFetchType not implemented'
-      }
+        } else if (oThis.constructor.defaultFetchType == baseGC.createdTillCurrentTimeDataExtractionFetchType) {
+            query = fetchDataInstance.where(['updated_at > ?', lastProcessTime])
+        } else {
+            throw 'defaultFetchType not implemented'
+        }
 
-      return query;
+        return query;
     }
 
-	  /**
-	   * Default Data Extraction Type
-	   *
-	   * @return {string}
-	   *
-	   */
-	  static get defaultFetchType(){
-	  	return baseGC.createdTillCurrentTimeDataExtractionFetchType;
-	  }
+    /**
+     * Default Data Extraction Type
+     *
+     * @return {string}
+     *
+     */
+    static get defaultFetchType() {
+        return baseGC.createdTillCurrentTimeDataExtractionFetchType;
+    }
 
     /**
      * columns to be fetched from Mysql
@@ -226,10 +230,10 @@ class ModelBase extends MysqlQueryBuilders {
      * @return {string}
      *
      */
-    columnsToFetchFromMysql(){
+    columnsToFetchFromMysql() {
         const oThis = this;
         let columns = [];
-        for (let column of oThis.constructor.mapping){
+        for (let column of oThis.constructor.mapping) {
             columns.push(column[1].name);
         }
         return columns;
@@ -243,9 +247,9 @@ class ModelBase extends MysqlQueryBuilders {
      */
     async updateDataProcessingInfoTable(lastProcessingTimeStr) {
         const oThis = this;
-        return await oThis.redshiftClient.parameterizedQuery("update " + dataProcessingInfoGC.getTableNameWithSchema +  " set value=$1 " +
+        return await oThis.redshiftClient.parameterizedQuery("update " + dataProcessingInfoGC.getTableNameWithSchema + " set value=$1 " +
             "where property=$2", [lastProcessingTimeStr, oThis.getDataProcessingPropertyName]).then((res) => {
-            logger.log( oThis.getDataProcessingPropertyName + " value of the data_processing_info table updated successfully");
+            logger.log(oThis.getDataProcessingPropertyName + " value of the data_processing_info table updated successfully");
         });
     }
 
