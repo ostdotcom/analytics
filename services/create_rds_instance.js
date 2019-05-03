@@ -4,9 +4,7 @@ const rootPrefix = '..',
     RDSInstanceLogsGC = require(rootPrefix + "/lib/globalConstants/redshift/RDSInstanceLogsGC"),
     responseHelper = require(rootPrefix + '/lib/formatter/response'),
     ApplicationMailer = require(rootPrefix + '/lib/applicationMailer'),
-    RestoreDBInstance = require(rootPrefix + '/lib/RestoreRDSInstance'),
-    DeleteRDSInstance = require(rootPrefix + '/services/delete_rds_instance');
-
+    RestoreDBInstance = require(rootPrefix + '/lib/RestoreRDSInstance');
 class CreateRDSInstance {
 
     constructor(params) {
@@ -14,7 +12,6 @@ class CreateRDSInstance {
         oThis.redshiftClient = new RedshiftClient();
         oThis.applicationMailer = new ApplicationMailer();
         oThis.restoreDBInstance = new RestoreDBInstance();
-        oThis.deleteRDSInstance = new DeleteRDSInstance();
     }
 
 
@@ -25,10 +22,11 @@ class CreateRDSInstance {
      */
     async perform() {
         const oThis = this;
-        let restoreTime = Math.floor(Date.now() / 1000 - 2 * 60 * 60), // 2 hours before current time
+        let restoreTime = Math.floor((Date.now() / 1000) - 1 * 60), // 1 minute before current time
             r = await oThis.validateRDSInstanceLogs();
 
         if (!r.success) {
+            // application mailer
             return r;
         }
 
@@ -65,6 +63,7 @@ class CreateRDSInstance {
     validateRDSInstanceLogs() {
         const oThis = this;
         let isDeleted;
+        //todo: use parameterized
         let query = `SELECT * FROM ${RDSInstanceLogsGC.getTableNameWithSchema} where aws_status != '${RDSInstanceLogsGC.deletedStatus}'`;
         return oThis.redshiftClient.query(query).then(async (res) => {
             if (res.rows.length > 0) {

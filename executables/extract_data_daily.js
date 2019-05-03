@@ -98,10 +98,9 @@ class ExtractDataDaily extends ExtractBase {
             let endTime = Date.now();
             logger.log("processing finished at", endTime);
             logger.log("Total time to process in milliseconds", (endTime - startTime));
-            let r = await deleteRDSInstance.process({dbInstanceIdentifier: checkInstanceStatus.data.dbInstanceIdentifier});
-
             let p = await restoreDBInstance.updateInstanceRowInDB(checkInstanceStatus.data.dbInstanceIdentifier, {'cron_status': RDSInstanceLogsGC.cronStatusProcessed});
 
+            let r = await deleteRDSInstance.process({dbInstanceIdentifier: checkInstanceStatus.data.dbInstanceIdentifier});
             return Promise.resolve({});
         }).catch(async (e) => {
             console.log(e);

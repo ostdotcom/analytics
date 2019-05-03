@@ -56,6 +56,7 @@ class DeleteRDSInstance {
         const oThis = this;
         let isDeleted;
         let r = await oThis.restoreDBInstance.delete(params);
+        //todo: or condition remove
         if (r.success || (r.success === false && r.debugOptions.error && r.debugOptions.error.code === RDSInstanceLogsGC.errorCodeDBInstanceNotFound ) ) {
 
             let checkRDSStatus = await oThis.restoreDBInstance.checkStatus(params);
@@ -100,6 +101,12 @@ class DeleteRDSInstance {
 
 
         while (true) {
+            checkRDSStatus = await oThis.restoreDBInstance.checkStatus({dbInstanceIdentifier: oThis.dbInstanceIdentifier});
+
+            isDeleted = checkRDSStatus.debugOptions.error &&
+                checkRDSStatus.debugOptions.error.code === RDSInstanceLogsGC.errorCodeDBInstanceNotFound;
+
+
             if (checkRDSStatus.success === false && isDeleted) {
                 return responseHelper.successWithData({
                     host: checkRDSStatus.data.host,
@@ -116,16 +123,10 @@ class DeleteRDSInstance {
                 });
                 return r;
             }
-            sleep(currentTime * 1000 * 60);
-            checkRDSStatus = await oThis.restoreDBInstance.checkStatus({dbInstanceIdentifier: oThis.dbInstanceIdentifier});
-
-            isDeleted = checkRDSStatus.debugOptions.error &&
-                checkRDSStatus.debugOptions.error.code === RDSInstanceLogsGC.errorCodeDBInstanceNotFound;
-
 
             //timeout is in milliseconds
-
             currentTime += timeStep;
+            sleep(currentTime * 1000 * 60); // in minutes
 
         }
     }

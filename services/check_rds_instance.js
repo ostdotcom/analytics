@@ -25,12 +25,13 @@ class CheckRDSInstance {
     async process() {
 
         const oThis = this;
-        let promiseArray = [];
         let r = {};
 
         r = await oThis.validateRDSLogs();
 
         if (!r.success) {
+            //return result base and check in cron
+            //mail
             return Promise.reject(r);
         }
 
@@ -56,12 +57,16 @@ class CheckRDSInstance {
         let query = `SELECT * FROM ${RDSInstanceLogsGC.getTableNameWithSchema} where aws_status != '${RDSInstanceLogsGC.deletedStatus}'`;
         return oThis.redshiftClient.query(query).then((res) => {
             let resultRow = res.rows[0];
-            if (res.rows.length > 1) {
+            if (res.rows.length != 1) {
+                //check aws status of row to be not available
+                //check point in time
+
                 let r = responseHelper.error({
                     internal_error_identifier: 'msw_v_rds_l',
                     api_error_identifier: 'api_error_identifier'
                 });
-                oThis.applicationMailer.perform({subject: 'More than one not deleted instances available', body: r});
+                oThis.applicationMailer.perform({subject: 'Invalid number of non deleted instances in table',
+                    body: {err: r, res: res}});
                 return r;
             } else {
                 oThis.dbInstanceIdentifier = resultRow.instance_identifier;
@@ -81,6 +86,7 @@ class CheckRDSInstance {
     async checkAvailabilityOfRDSInstance() {
         const oThis = this;
 
+        //use last action time
         const maxTimeInMinsToWait = 60, // wait for that much time to change status of instance to available before sending error
             warningTimeInMinsToWait = 30; // wait for that much time to send warning mail
         let currentTime = 0;
@@ -90,6 +96,11 @@ class CheckRDSInstance {
 
 
         while (true) {
+
+            checkAvailability = await oThis.checkStatusAndSendWarningMail(currentTime, warningTimeInMinsToWait);
+            isAvailable = checkAvailability.data.mappedAwsStatus === RDSInstanceLogsGC.availableStatus;
+
+
             if (checkAvailability.success && isAvailable) {
                 await oThis.restoreDBInstance.updateInstanceRowInDB(oThis.dbInstanceIdentifier, {
                     'aws_status': checkAvailability.data.awsStatus,
@@ -99,6 +110,7 @@ class CheckRDSInstance {
                     host: checkAvailability.data.host,
                     dbInstanceIdentifier: oThis.dbInstanceIdentifier
                 });
+            //    send warning mail
             } else if (currentTime >= maxTimeInMinsToWait) {
                 let r = responseHelper.error({
                     internal_error_identifier: 'msw_chri',
@@ -111,12 +123,10 @@ class CheckRDSInstance {
                 return r;
             }
 
-            sleep(currentTime * 1000 * 60); // sleep is in milliseconds
-            checkAvailability = await oThis.checkStatusAndSendWarningMail(currentTime, warningTimeInMinsToWait);
-            isAvailable = checkAvailability.data.mappedAwsStatus === RDSInstanceLogsGC.availableStatus;
-
             //timeout is in milliseconds
             currentTime += timeStep;
+            sleep(currentTime * 1000 * 60); // sleep is in minutes
+
         }
     }
 
