@@ -1,5 +1,6 @@
 const rootPrefix = '..',
     RedshiftClient = require(rootPrefix + "/lib/redshift"),
+    sleep = require(rootPrefix + '/lib/sleep'),
     RDSInstanceLogsGC = require(rootPrefix + "/lib/globalConstants/redshift/RDSInstanceLogsGC"),
     responseHelper = require(rootPrefix + '/lib/formatter/response'),
     ApplicationMailer = require(rootPrefix + '/lib/applicationMailer'),
@@ -94,8 +95,10 @@ class CheckRDSInstance {
                     'aws_status': checkAvailability.data.awsStatus,
                     'host': checkAvailability.data.host
                 });
-                return responseHelper.successWithData({host: checkAvailability.data.host,
-                    dbInstanceIdentifier: oThis.dbInstanceIdentifier});
+                return responseHelper.successWithData({
+                    host: checkAvailability.data.host,
+                    dbInstanceIdentifier: oThis.dbInstanceIdentifier
+                });
             } else if (currentTime >= maxTimeInMinsToWait) {
                 let r = responseHelper.error({
                     internal_error_identifier: 'msw_chri',
@@ -108,7 +111,7 @@ class CheckRDSInstance {
                 return r;
             }
 
-            oThis.sleep(currentTime * 1000 /** 60*/);
+            sleep(currentTime * 1000 * 60);
             checkAvailability = await oThis.checkStatusAndSendWarningMail(currentTime, warningTimeInMinsToWait);
             isAvailable = checkAvailability.data.mappedAwsStatus === RDSInstanceLogsGC.availableStatus;
 
@@ -119,20 +122,6 @@ class CheckRDSInstance {
     }
 
 
-    /**
-     * Sleep for particular time.
-     *
-     * @param {number} ms: time in ms
-     *
-     * @returns {Promise<any>}
-     */
-    sleep(ms) {
-        console.log('Sleeping for ', ms, ' ms');
-
-        return new Promise(function (resolve) {
-            setTimeout(resolve, ms);
-        });
-    }
 
 
     /**

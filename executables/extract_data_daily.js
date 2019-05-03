@@ -86,12 +86,6 @@ class ExtractDataDaily extends ExtractBase {
         }
         let checkInstanceStatus = await checkRDSInstance.process();
 
-
-
-        console.log(":::::::::::::-------------------:::::::::::::::::::::");
-        console.log(checkInstanceStatus.data, checkInstanceStatus.data.host);
-        console.log(":::::::::::::-------------------:::::::::::::::::::::");
-
         for (let table of oThis.tables) {
             let mysqlService = new MysqlService({
                 chainId: oThis.chainId, model: table, chainType: oThis.chainType,
@@ -104,8 +98,9 @@ class ExtractDataDaily extends ExtractBase {
             let endTime = Date.now();
             logger.log("processing finished at", endTime);
             logger.log("Total time to process in milliseconds", (endTime - startTime));
-            await deleteRDSInstance.process({dbInstanceIdentifier: checkInstanceStatus.data.dbInstanceIdentifier});
-            await restoreDBInstance.updateInstanceRowInDB(checkInstanceStatus.data.dbInstanceIdentifier, {'cron_status': RDSInstanceLogsGC.cronStatusProcessed});
+            let r = await deleteRDSInstance.process({dbInstanceIdentifier: checkInstanceStatus.data.dbInstanceIdentifier});
+
+            let p = await restoreDBInstance.updateInstanceRowInDB(checkInstanceStatus.data.dbInstanceIdentifier, {'cron_status': RDSInstanceLogsGC.cronStatusProcessed});
 
             return Promise.resolve({});
         }).catch(async (e) => {
@@ -116,7 +111,6 @@ class ExtractDataDaily extends ExtractBase {
 
     }
 }
-
 
 const extractDataDaily = new ExtractDataDaily();
 extractDataDaily.perform();

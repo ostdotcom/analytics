@@ -1,5 +1,6 @@
 const rootPrefix = '..',
     RedshiftClient = require(rootPrefix + "/lib/redshift"),
+    sleep = require(rootPrefix + '/lib/sleep'),
     RDSInstanceLogsGC = require(rootPrefix + "/lib/globalConstants/redshift/RDSInstanceLogsGC"),
     responseHelper = require(rootPrefix + '/lib/formatter/response'),
     ApplicationMailer = require(rootPrefix + '/lib/applicationMailer'),
@@ -39,8 +40,7 @@ class DeleteRDSInstance {
         }
 
         return Promise.resolve(responseHelper.successWithData({
-            host: oThis.dynamicHost,
-            dbInstanceIdentifier: r.data.dbInstanceId
+            dbInstanceIdentifier: oThis.dbInstanceIdentifier
         }));
     }
 
@@ -56,8 +56,7 @@ class DeleteRDSInstance {
         const oThis = this;
         let isDeleted;
         let r = await oThis.restoreDBInstance.delete(params);
-
-        if (r.success) {
+        if (r.success || (r.success === false && r.debugOptions.error && r.debugOptions.error.code === RDSInstanceLogsGC.errorCodeDBInstanceNotFound ) ) {
 
             let checkRDSStatus = await oThis.restoreDBInstance.checkStatus(params);
 
@@ -68,7 +67,8 @@ class DeleteRDSInstance {
             isDeleted = await oThis.checkIfDeleted({maxTimeInMinsToWait: 5});
 
             if (isDeleted.success) {
-                return oThis.restoreDBInstance.updateInstanceRowInDB(oThis.dbInstanceIdentifier, {'aws_status': RDSInstanceLogsGC.deletedStatus});
+                await oThis.restoreDBInstance.updateInstanceRowInDB(oThis.dbInstanceIdentifier, {'aws_status': RDSInstanceLogsGC.deletedStatus});
+                return isDeleted;
             }
         } else {
             oThis.applicationMailer.perform({subject: 'Not able to delete instance', body: r});
@@ -116,31 +116,18 @@ class DeleteRDSInstance {
                 });
                 return r;
             }
-            oThis.sleep(currentTime * 1000 * 60);
+            sleep(currentTime * 1000 * 60);
             checkRDSStatus = await oThis.restoreDBInstance.checkStatus({dbInstanceIdentifier: oThis.dbInstanceIdentifier});
-            isDeleted = checkRDSStatus.debugOptions.code === RDSInstanceLogsGC.errorCodeDBInstanceNotFound;
+
+            isDeleted = checkRDSStatus.debugOptions.error &&
+                checkRDSStatus.debugOptions.error.code === RDSInstanceLogsGC.errorCodeDBInstanceNotFound;
+
 
             //timeout is in milliseconds
 
             currentTime += timeStep;
 
         }
-    }
-
-
-    /**
-     * Sleep for particular time.
-     *
-     * @param {number} ms: time in ms
-     *
-     * @returns {Promise<any>}
-     */
-    sleep(ms) {
-        console.log('Sleeping for ', ms, ' ms');
-
-        return new Promise(function (resolve) {
-            setTimeout(resolve, ms);
-        });
     }
 
 
