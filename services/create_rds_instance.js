@@ -25,8 +25,7 @@ class CreateRDSInstance {
      */
     async perform() {
         const oThis = this;
-        let restoreTime = Math.floor((Date.now() / 1000) - 10 * 60), // 10 minute before current time
-            r = await oThis.validateRDSInstanceLogs();
+        let r = await oThis.validateRDSInstanceLogs();
 
         if (!r.success) {
             oThis.applicationMailer.perform({subject: 'Error in create RDS instance service-validateRDSInstanceLogs ', body: r});
@@ -36,12 +35,13 @@ class CreateRDSInstance {
         return oThis.rdsInstanceOperations.create({RestoreTime: restoreTime}).then(async (res) => {
             let dbInstanceData = res.data.DBInstance;
             if (res.success) {
+                let creationTime = Math.floor(Date.now() / 1000);
                 let paramsToSaveToDB = new Map ([
                         ['aws_status', dbInstanceData.DBInstanceStatus],
-                        ['restore_time', restoreTime],
+                        ['creation_time', creationTime],
                         ['instance_identifier', dbInstanceData.DBInstanceIdentifier],
                         ['cron_status', RDSInstanceLogs.cronStatusPending],
-                        ['last_action_time',  Math.floor(Date.now() / 1000)]
+                        ['last_action_time',  creationTime]
                     ]);
                 return await oThis.rdsInstanceLogsModel.createEntryInRDSInstanceLogs(paramsToSaveToDB);
             } else {

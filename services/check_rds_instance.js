@@ -86,9 +86,9 @@ class CheckRDSInstance {
                     debug_options: resultRow
                 });
 
-            } else if ((Math.floor(Date.now() / 1000) - resultRow.restore_time) > 4 * 60 * 60) {
+            } else if ((Math.floor(Date.now() / 1000) - resultRow.creation_time) > 4 * 60 * 60) {
 
-                // checks if restore time is greater than 4 hours
+                // checks if creation_time is greater than 4 hours
                 return responseHelper.error({
                     internal_error_identifier: 'msw_v_rds_l_3',
                     api_error_identifier: 'api_error_identifier',
