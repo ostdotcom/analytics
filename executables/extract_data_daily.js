@@ -85,8 +85,8 @@ class ExtractDataDaily extends ExtractBase {
         }
         let checkInstanceStatus = await checkRDSInstance.process();
 
-        if(!r.success){
-            return Promise.reject(r);
+        if(!checkInstanceStatus.success){
+            return Promise.reject(checkInstanceStatus);
         }
 
         for (let table of oThis.tables) {

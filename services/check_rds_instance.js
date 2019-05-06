@@ -2,7 +2,7 @@ const rootPrefix = '..',
     Util = require('util'),
     RedshiftClient = require(rootPrefix + "/lib/redshift"),
     sleep = require(rootPrefix + '/lib/sleep'),
-    RDSInstanceLogs = require(rootPrefix + "/lib/globalConstants/redshift/RDSInstanceLogs"),
+    RDSInstanceLogsGC = require(rootPrefix + "/lib/globalConstants/redshift/RDSInstanceLogs"),
     responseHelper = require(rootPrefix + '/lib/formatter/response'),
     ApplicationMailer = require(rootPrefix + '/lib/applicationMailer'),
     RDSInstanceOperations = require(rootPrefix + '/lib/RDSInstanceOperations'),
@@ -66,9 +66,9 @@ class CheckRDSInstance {
     validateRDSLogs() {
         const oThis = this;
         let r;
-        let query = Util.format("SELECT * FROM %s where aws_status != $1", RDSInstanceLogs.getTableNameWithSchema);
+        let query = Util.format("SELECT * FROM %s where aws_status != $1", RDSInstanceLogsModel.getTableNameWithSchema);
 
-        return oThis.redshiftClient.parameterizedQuery(query, [RDSInstanceLogs.deletedStatus]).then((res) => {
+        return oThis.redshiftClient.parameterizedQuery(query, [RDSInstanceLogsGC.awsDeletedStatus]).then((res) => {
             let resultRow = res.rows[0];
             if (res.rows.length != 1) {
 
@@ -79,7 +79,7 @@ class CheckRDSInstance {
                 });
                 return r;
 
-            } else if (RDSInstanceLogs.mappingOfAwsStatus[resultRow.aws_status] != RDSInstanceLogs.mappedNotAvailableStatus) {
+            } else if (RDSInstanceLogsGC.mappingOfAwsStatus[resultRow.aws_status] != RDSInstanceLogsGC.mappedNotAvailableStatus) {
                 return responseHelper.error({
                     internal_error_identifier: 'msw_v_rds_l_2',
                     api_error_identifier: 'api_error_identifier',
@@ -88,7 +88,7 @@ class CheckRDSInstance {
 
             } else if ((Math.floor(Date.now() / 1000) - resultRow.creation_time) > 4 * 60 * 60) {
 
-                // checks if creation_time is greater than 4 hours
+                // checks if creation_time is lesser than 4 hours
                 return responseHelper.error({
                     internal_error_identifier: 'msw_v_rds_l_3',
                     api_error_identifier: 'api_error_identifier',
@@ -97,7 +97,7 @@ class CheckRDSInstance {
 
             } else {
                 oThis.dbInstanceIdentifier = resultRow.instance_identifier;
-                return responseHelper.successWithData({lastActionTime: resultRow.last_action_time, recordId: resultRow.id})
+                return responseHelper.successWithData({creationTime: resultRow.creation_time, recordId: resultRow.id})
             }
         });
     }
@@ -112,7 +112,7 @@ class CheckRDSInstance {
         const oThis = this;
         const maxTimeInMinsToWait = 60, // wait for that much time to change status of instance to available before sending error
             warningTimeInMinsToWait = 30; // wait for that much time to send warning mail
-        let lastActionTime = params.lastActionTime;
+        let creationTime = params.creationTime;
         let warnEmailSent = false;
         let timeStep = 5; // check after every that much time
         let timeToWait = 0;
@@ -135,7 +135,7 @@ class CheckRDSInstance {
                     awsStatus: checkAvailabilityResp.data.awsStatus,
                     recordId: params.recordId
                 });
-            } else if (!warnEmailSent && (((currentTime - lastActionTime) / 60) >= warningTimeInMinsToWait)) {
+            } else if (!warnEmailSent && (((currentTime - creationTime) / 60) >= warningTimeInMinsToWait)) {
                 oThis.applicationMailer.perform({
                     subject: 'Warning: RDSInstanceLogs not available for more than 30 mins',
                     body: checkAvailabilityResp

@@ -10,7 +10,17 @@ class RDSInstanceLogs {
         oThis.redshiftClient = new RedshiftClient();
     }
 
-    /**
+	  /**
+	   * Get temp table name
+	   *
+	   * @returns {String}
+	   */
+	  get getTableNameWithSchema() {
+	  	const oThis = this;
+	  	return RDSInstanceLogsGC.getTableNameWithSchema;
+	  };
+
+	/**
      * Update row in rds_instance_logs table
      *
      * @param {recordId} recordId
@@ -23,6 +33,9 @@ class RDSInstanceLogs {
         let arr = [];
         let valArray = [];
         let i = 1;
+			  if (params['aws_status']) {
+					params['last_action_time'] = Math.floor(Date.now() / 1000);
+			  }
 
         for (let param in params) {
             arr.push(`${param} = $${i}`);
@@ -33,12 +46,8 @@ class RDSInstanceLogs {
         valArray.push(parseInt(recordId));
 
 
-        if (params['aws_status']) {
-            arr.push(`last_action_time = ${Math.floor(Date.now() / 1000)}`);
-        }
-
         let query = Util.format("UPDATE %s SET %s, updated_at = getdate() where id = %s;",
-            RDSInstanceLogsGC.getTableNameWithSchema, arr.join(", "), `$${i}`);
+            oThis.getTableNameWithSchema, arr.join(", "), `$${i}`);
 
         return oThis.redshiftClient.parameterizedQuery(query, valArray).then(async (res) => {
             return responseHelper.successWithData({});
@@ -57,7 +66,7 @@ class RDSInstanceLogs {
         let valuesToInsert = Array.from(paramsToSaveToDB.values());
         let keysToInsert = Array.from(paramsToSaveToDB.keys()).join(", ");
         let insertQuery = Util.format('INSERT into %s (%s, created_at, updated_at) values ($1,$2,$3,$4,$5, getdate(), getdate());',
-            RDSInstanceLogsGC.getTableNameWithSchema, keysToInsert);
+					oThis.getTableNameWithSchema, keysToInsert);
         return oThis.redshiftClient.parameterizedQuery(insertQuery, valuesToInsert).then(async (res) => {
             return responseHelper.successWithData({});
         })

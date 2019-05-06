@@ -1,6 +1,6 @@
 const rootPrefix = '..',
     sleep = require(rootPrefix + '/lib/sleep'),
-    RDSInstanceLogs = require(rootPrefix + "/lib/globalConstants/redshift/RDSInstanceLogs"),
+    RDSInstanceLogsGC = require(rootPrefix + "/lib/globalConstants/redshift/RDSInstanceLogs"),
     responseHelper = require(rootPrefix + '/lib/formatter/response'),
     ApplicationMailer = require(rootPrefix + '/lib/applicationMailer'),
     RDSInstanceOperations = require(rootPrefix + '/lib/RDSInstanceOperations'),
@@ -53,25 +53,12 @@ class DeleteRDSInstance {
         let isDeletedResp;
         let r = await oThis.rdsInstanceOperations.delete(params);
         if (r.success) {
+					await oThis.rdsInstanceLogsModel.updateInstanceRowInDB(params.recordId, {'aws_status': RDSInstanceLogsGC.awsDeletingStatus});
 
-            let describeDBInstancesResp = await oThis.rdsInstanceOperations.describeDBInstances(params);
-
-            if (!describeDBInstancesResp.success) {
-                return describeDBInstancesResp;
-            } else if (describeDBInstancesResp.data.awsStatus === RDSInstanceLogs.awsDeletingStatus) {
-                await oThis.rdsInstanceLogsModel.updateInstanceRowInDB(params.recordId, {'aws_status': describeDBInstancesResp.data.awsStatus});
-            } else {
-                return responseHelper.error({
-                    internal_error_identifier: 'd_rds_i_d_m_i_1',
-                    api_error_identifier: 'api_error_identifier',
-                    debug_options: {describeDBInstancesResp: describeDBInstancesResp}
-                });
-            }
-
-            isDeletedResp = await oThis.checkIfDeleted({});
+					isDeletedResp = await oThis.checkIfDeleted({});
 
             if (isDeletedResp.success) {
-                await oThis.rdsInstanceLogsModel.updateInstanceRowInDB(params.recordId, {'aws_status': RDSInstanceLogs.deletedStatus});
+                await oThis.rdsInstanceLogsModel.updateInstanceRowInDB(params.recordId, {'aws_status': RDSInstanceLogsGC.awsDeletedStatus});
                 return isDeletedResp;
             }
         } else {
@@ -106,7 +93,7 @@ class DeleteRDSInstance {
             describeDBInstancesResp = await oThis.rdsInstanceOperations.describeDBInstances({dbInstanceIdentifier: oThis.dbInstanceIdentifier});
 
             isDeletedResp = describeDBInstancesResp.debug_options &&
-                describeDBInstancesResp.debug_options.error.code === RDSInstanceLogs.errorCodeDBInstanceNotFound;
+                describeDBInstancesResp.debug_options.error.code === RDSInstanceLogsGC.errorCodeDBInstanceNotFound;
 
 
             if (describeDBInstancesResp.success === false && isDeletedResp) {

@@ -1,7 +1,7 @@
 const rootPrefix = '..',
     Util = require('util'),
     RedshiftClient = require(rootPrefix + "/lib/redshift"),
-    RDSInstanceLogs = require(rootPrefix + "/lib/globalConstants/redshift/RDSInstanceLogs"),
+    RDSInstanceLogsGC = require(rootPrefix + "/lib/globalConstants/redshift/RDSInstanceLogs"),
     responseHelper = require(rootPrefix + '/lib/formatter/response'),
     ApplicationMailer = require(rootPrefix + '/lib/applicationMailer'),
     RDSInstanceOperations = require(rootPrefix + '/lib/RDSInstanceOperations'),
@@ -31,17 +31,16 @@ class CreateRDSInstance {
             oThis.applicationMailer.perform({subject: 'Error in create RDS instance service-validateRDSInstanceLogs ', body: r});
             return r;
         }
-
-        return oThis.rdsInstanceOperations.create({RestoreTime: restoreTime}).then(async (res) => {
+        return oThis.rdsInstanceOperations.create().then(async (res) => {
             let dbInstanceData = res.data.DBInstance;
             if (res.success) {
-                let creationTime = Math.floor(Date.now() / 1000);
+                let currentTime = Math.floor(Date.now() / 1000);
                 let paramsToSaveToDB = new Map ([
                         ['aws_status', dbInstanceData.DBInstanceStatus],
-                        ['creation_time', creationTime],
+                        ['creation_time', currentTime],
                         ['instance_identifier', dbInstanceData.DBInstanceIdentifier],
-                        ['cron_status', RDSInstanceLogs.cronStatusPending],
-                        ['last_action_time',  creationTime]
+                        ['cron_status', RDSInstanceLogsGC.cronStatusPending],
+                        ['last_action_time',  currentTime]
                     ]);
                 return await oThis.rdsInstanceLogsModel.createEntryInRDSInstanceLogs(paramsToSaveToDB);
             } else {
@@ -67,9 +66,10 @@ class CreateRDSInstance {
     validateRDSInstanceLogs() {
         const oThis = this;
         let isDeleted;
-        let query = Util.format("SELECT * FROM %s where aws_status != $1", RDSInstanceLogs.getTableNameWithSchema);
 
-        return oThis.redshiftClient.parameterizedQuery(query, [RDSInstanceLogs.deletedStatus]).then(async (res) => {
+        let query = Util.format("SELECT * FROM %s where aws_status != $1", RDSInstanceLogsModel.getTableNameWithSchema);
+
+        return oThis.redshiftClient.parameterizedQuery(query, [RDSInstanceLogsGC.awsDeletedStatus]).then(async (res) => {
 
             if (res.rows.length > 0) {
                 return responseHelper.error({

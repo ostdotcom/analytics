@@ -323,6 +323,6 @@ CREATE TABLE rds_instance_logs
   last_action_time      BIGINT NOT NULL,
   created_at            datetime NOT NULL,
   updated_at            datetime NOT NULL
-);
+)DISTKEY(id) SORTKEY(aws_status);
 
 COMMIT;
