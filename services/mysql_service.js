@@ -44,6 +44,7 @@ class MysqlService {
         oThis.Model = allModels[params.model];
         oThis.chainId = params.chainId || 0;
         oThis.chainType = params.chainType;
+        oThis.mysqlLimit = 100;
         oThis.applicationMailer = new ApplicationMailer();
 
         // create new models always for direct query
@@ -121,14 +122,14 @@ class MysqlService {
 
 			shell.mkdir("-p", oThis.localDirFullFilePath);
 
-			let perBatchSize = Math.ceil(totalRowCount/oThis.parallelProcessCount);
+			let perBatchSize = Math.ceil(totalRowCount/(oThis.mysqlLimit * oThis.parallelProcessCount));
 
 			let startOffset = 0;
 			let endOffset = 0;
 
 			let promiseArray = [];
 			for(let batchNumber=1; batchNumber <= oThis.parallelProcessCount; batchNumber++){
-				endOffset = startOffset + perBatchSize;
+				endOffset = startOffset + (oThis.mysqlLimit * perBatchSize);
 				let params = {
 					startOffset: startOffset, endOffset: endOffset,
 					lastProcessTime: lastProcessTime, batchNumber: batchNumber
@@ -172,7 +173,7 @@ class MysqlService {
 
         while (offset < endOffset) {
 
-					let limit = 100 > (endOffset - offset) ? (endOffset - offset) : 100;
+					let limit = oThis.mysqlLimit > (endOffset - offset) ? (endOffset - offset) : oThis.mysqlLimit;
 
             records = await oThis.model.fetchData({
 								lastProcessTime: lastProcessTime,
