@@ -19,6 +19,10 @@ do
             VERIFY_ONLY=true
             shift # past argument
             ;;
+        --restart-only)
+            RESTART_ONLY=true
+            shift # past argument
+            ;;
         *)    # unknown option
             echo $usage_str;
             exit 1
@@ -27,10 +31,11 @@ do
 done
 
 # Set variable default values
-if [[ -z $EXTRACT_ONLY && -z $TRANSFORM_ONLY && -z $VERIFY_ONLY ]]; then
+if [[ -z $EXTRACT_ONLY && -z $TRANSFORM_ONLY && -z $VERIFY_ONLY && -z $RESTART_ONLY ]]; then
     EXTRACT_ONLY=true
     TRANSFORM_ONLY=true
     VERIFY_ONLY=true
+    RESTART_ONLY=true
 fi
 
 # Command line variables
@@ -217,6 +222,28 @@ if [[ ! -z $VERIFY_ONLY ]]; then
 
     echo "******************************** Verify Transformation Ended [$(date '+%Y-%m-%d %H:%M:%S')] ********************************"
     echo ""
+fi
+
+# Restart Pentaho BI Server
+if [[ ! -z $RESTART_ONLY ]]; then
+    cd $BI_SERVER_HOME;
+    echo "Stoping Pentaho BI Server..."
+    sh stop-pentaho.sh
+    if [[ $? != 0 ]]; then
+        echo "Error while stoping Pentaho BI Server"
+    fi
+    echo "Stopped Pentaho BI Server"
+
+    sleep_time=5
+    echo "Sleeping for ${sleep_time} sec..."
+    sleep $sleep_time
+
+    echo "Starting Pentaho BI Server..."
+    sh start-pentaho.sh
+    if [[ $? != 0 ]]; then
+        echo "Error while starting Pentaho BI Server"
+    fi
+    echo "Started Pentaho BI Server"
 fi
 
 echo ""
