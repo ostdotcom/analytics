@@ -1,11 +1,11 @@
-<!-- DB_SCHEMA=ost_pentaho_main_s6 -->
-<!-- AUX_CHAIN_1=202 -->
+<!-- DB_SCHEMA_PREFIX=ost_pentaho_main_s6 -->
+<!-- AUX_CHAIN_1=205 -->
 
-<Schema name="MAIN MYSQL">
+<Schema name="mysql_main_s4">
 
   <Dimension type="TimeDimension" visible="true" highCardinality="false" name="Dates">
     <Hierarchy name="Date" visible="true" hasAll="true" primaryKey="date_sk">
-      <Table name="dim_dates" schema="{DB_SCHEMA}">
+      <Table name="dim_dates" schema="ost_analytics_{DB_SCHEMA_PREFIX}">
       </Table>
       <Level name="Year" visible="true" column="year" type="Numeric" uniqueMembers="false" levelType="TimeYears" hideMemberIf="Never">
       </Level>
@@ -22,7 +22,7 @@
 
   <Dimension type="TimeDimension" visible="true" highCardinality="false" name="Hours">
     <Hierarchy name="Hour" visible="true" hasAll="true" primaryKey="time_sk">
-      <Table name="dim_times" schema="{DB_SCHEMA}">
+      <Table name="dim_times" schema="ost_analytics_{DB_SCHEMA_PREFIX}">
       </Table>
       <Level name="Hour" visible="true" column="hour" type="Numeric" uniqueMembers="true" levelType="TimeHours" hideMemberIf="Never">
       </Level>
@@ -31,7 +31,7 @@
 
   <Dimension type="StandardDimension" visible="true" highCardinality="false" name="MetaTypes">
     <Hierarchy visible="true" hasAll="true" primaryKey="meta_type_sk">
-      <Table name="dim_meta_types" schema="ost_analytics_main_s6">
+      <Table name="dim_meta_types" schema="ost_analytics_{DB_SCHEMA_PREFIX}">
       </Table>
       <Level name="Meta Type" visible="true" column="meta_type" type="String" uniqueMembers="false" levelType="Regular" hideMemberIf="Never">
       </Level>
@@ -40,7 +40,7 @@
 
   <Dimension type="StandardDimension" visible="true" highCardinality="false" name="MetaNames_{AUX_CHAIN_1}">
     <Hierarchy visible="true" hasAll="true" primaryKey="meta_name_sk">
-      <Table name="dim_meta_names_{AUX_CHAIN_1}" schema="ost_analytics_main_s6">
+      <Table name="dim_meta_names_{AUX_CHAIN_1}" schema="ost_analytics_{DB_SCHEMA_PREFIX}">
       </Table>
       <Level name="Meta Name" visible="true" column="meta_name" type="String" uniqueMembers="false" levelType="Regular" hideMemberIf="Never">
       </Level>
@@ -49,7 +49,7 @@
 
   <Dimension visible="true" highCardinality="false" name="Tokens_{AUX_CHAIN_1}">
     <Hierarchy visible="true" hasAll="true" primaryKey="token_sk">
-      <Table name="dim_tokens_{AUX_CHAIN_1}" schema="ost_analytics_main_s6">
+      <Table name="dim_tokens_{AUX_CHAIN_1}" schema="ost_analytics_{DB_SCHEMA_PREFIX}">
       </Table>
       <Level name="Name" visible="true" column="name" type="String" uniqueMembers="true" levelType="Regular" hideMemberIf="Never" description="Token Name">
       </Level>
@@ -60,7 +60,7 @@
 
 
   <Cube name="Transfers Cube {AUX_CHAIN_1}" visible="true" cache="true" enabled="true">
-    <Table name="token_transfer_facts_aux_{AUX_CHAIN_1}" schema="ost_analytics_main_s6">
+    <Table name="token_transfer_facts_aux_{AUX_CHAIN_1}" schema="ost_analytics_{DB_SCHEMA_PREFIX}">
     </Table>
 
     <DimensionUsage source="Dates" name="Dates" description="Transaction Mined at" visible="true" foreignKey="date_sk" highCardinality="false">
