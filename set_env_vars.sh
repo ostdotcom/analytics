@@ -32,28 +32,13 @@ export RESTORE_RDS_API_VERSION='2014-10-31'
 export RESTORE_RDS_REGION_ACCESS_SECRET='GaramSppI5tRzMYprD//HAr+YKvGYkMTQtb3wLI+'
 export RESTORE_RDS_REGION_ACCESS_KEY='AKIA2IE3EXDCONIPVQEL'
 export RESTORE_RDS_REGION='us-east-1'
+export USE_POINT_IN_TIME_RDS_INSTANCE='false'
 
-export RDS_RESTORE_INSTANCE_PARAMS_JSON='{
-            "TargetDBInstanceIdentifier": "t-r-a-25-analytics",
-            "AutoMinorVersionUpgrade": false,
-            "CopyTagsToSnapshot": true,
-            "DBInstanceClass": "db.t2.small",
-            "DBParameterGroupName": "ost-staging",
-            "DBSubnetGroupName": "ost-kit-saas-all",
-            "DeletionProtection": false,
-            "Engine": "mysql",
-            "LicenseModel": "general-public-license",
-            "MultiAZ": false,
-            "Port": 3306,
-            "PubliclyAccessible": false,
-            "UseLatestRestorableTime": true,
-            "SourceDBInstanceIdentifier": "s6-kit-all",
-            "StorageType": "gp2",
-            "VpcSecurityGroupIds": [
-                "sg-0e828f41c1c0a1b11",
-                "sg-0b76ede7472254bb0"
-            ]
-        }'
+export RDS_DB_INSTANCE_CLASS='db.t2.small'
+export RDS_DB_PARAMETER_GROUP_NAME='ost-staging'
+export RDS_DB_SUBNET_GROUP_NAME='ost-kit-saas-all'
+export RDS_SOURCE_DB_INSTANCE_IDENTIFIER='s6-kit-all'
+export RDS_VPC_SECURITY_GROUP_IDS='sg-0e828f41c1c0a1b11 sg-0b76ede7472254bb0' #space separated  values
 
 export LOCAL_DIR_FILE_PATH='/tmp/analytics_prestaging_data'
 export AUX_BLOCK_SCANNER_CONFIG_FILE_PATH=''

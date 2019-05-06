@@ -45,7 +45,28 @@ define("RESTORE_RDS_API_VERSION",process.env.RESTORE_RDS_API_VERSION );
 define("RESTORE_RDS_REGION", process.env.RESTORE_RDS_REGION);
 define("RESTORE_RDS_REGION_ACCESS_KEY", process.env.RESTORE_RDS_REGION_ACCESS_KEY );
 define("RESTORE_RDS_REGION_ACCESS_SECRET", process.env.RESTORE_RDS_REGION_ACCESS_SECRET);
-define("RDS_RESTORE_INSTANCE_PARAMS", JSON.parse(process.env.RDS_RESTORE_INSTANCE_PARAMS_JSON));
+define("USE_POINT_IN_TIME_RDS_INSTANCE", process.env.USE_POINT_IN_TIME_RDS_INSTANCE);
+
+
+define("RDS_RESTORE_INSTANCE_PARAMS", {
+                        "TargetDBInstanceIdentifier": "t-r-a-" + process.env.RDS_SOURCE_DB_INSTANCE_IDENTIFIER,
+                        "AutoMinorVersionUpgrade": false,
+                        "CopyTagsToSnapshot": true,
+                        "DBInstanceClass": process.env.RDS_DB_INSTANCE_CLASS,
+                        "DBParameterGroupName": process.env.RDS_DB_PARAMETER_GROUP_NAME,
+                        "DBSubnetGroupName": process.env.RDS_DB_SUBNET_GROUP_NAME,
+                        "DeletionProtection": false,
+                        "Engine": "mysql",
+                        "LicenseModel": "general-public-license",
+                        "MultiAZ": false,
+                        "Port": 3306,
+                        "PubliclyAccessible": false,
+                        "UseLatestRestorableTime": true,
+                        "SourceDBInstanceIdentifier":  process.env.RDS_SOURCE_DB_INSTANCE_IDENTIFIER,
+                        "StorageType": "gp2",
+                        "VpcSecurityGroupIds": process.env.RDS_VPC_SECURITY_GROUP_IDS.split(" ")
+                        }
+);
 
 
 

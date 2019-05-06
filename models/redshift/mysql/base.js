@@ -35,7 +35,7 @@ class ModelBase extends MysqlQueryBuilders {
         oThis.object = params.object || {};
         oThis.dynamicMysqlHost = params.dynamicMysqlHost;
 
-        if(Constant.ENVIRONMENT == 'development'){
+        if(Constant.USE_POINT_IN_TIME_RDS_INSTANCE != 'true'){
             oThis.dynamicMysqlHost = Constant.KIT_SAAS_SUBENV_MYSQL_HOST;
         }
         oThis.chainId = params.chainId;
