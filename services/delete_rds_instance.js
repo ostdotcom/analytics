@@ -1,5 +1,6 @@
 const rootPrefix = '..',
     sleep = require(rootPrefix + '/lib/sleep'),
+	  Constants = require(rootPrefix + "/configs/constants"),
     RDSInstanceLogsGC = require(rootPrefix + "/lib/globalConstants/redshift/RDSInstanceLogs"),
     responseHelper = require(rootPrefix + '/lib/formatter/response'),
     ApplicationMailer = require(rootPrefix + '/lib/applicationMailer'),
@@ -28,14 +29,19 @@ class DeleteRDSInstance {
         let r;
         oThis.dbInstanceIdentifier = params.dbInstanceIdentifier;
 
-        r = await oThis.deleteMysqlInstance(params);
+			  if(Constants.ENVIRONMENT != 'development'){
+					r = await oThis.deleteMysqlInstance(params);
 
-        if (!r.success) {
-            oThis.applicationMailer.perform({subject: 'RDSInstance could not be deleted', body: r});
-            return r;
+					if (!r.success) {
+						oThis.applicationMailer.perform({subject: 'RDSInstance could not be deleted', body: r});
+						return r;
+					}
         }
 
-        return responseHelper.successWithData({
+        await oThis.rdsInstanceLogsModel.updateInstanceRowInDB(params.recordId, {'aws_status': RDSInstanceLogsGC.awsDeletedStatus});
+
+
+			  return responseHelper.successWithData({
             dbInstanceIdentifier: oThis.dbInstanceIdentifier
         });
     }
@@ -58,7 +64,6 @@ class DeleteRDSInstance {
 					isDeletedResp = await oThis.checkIfDeleted({});
 
             if (isDeletedResp.success) {
-                await oThis.rdsInstanceLogsModel.updateInstanceRowInDB(params.recordId, {'aws_status': RDSInstanceLogsGC.awsDeletedStatus});
                 return isDeletedResp;
             }
         } else {
