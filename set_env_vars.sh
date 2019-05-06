@@ -34,7 +34,28 @@ export RESTORE_RDS_API_VERSION='2014-10-31'
 export RESTORE_RDS_REGION_ACCESS_SECRET='GaramSppI5tRzMYprD//HAr+YKvGYkMTQtb3wLI+'
 export RESTORE_RDS_REGION_ACCESS_KEY='AKIA2IE3EXDCONIPVQEL'
 export RESTORE_RDS_REGION='us-east-1'
-export RESTORE_RDS_DB_IDENTIFIER='t-r-a-25-analytics'
+
+export RDS_RESTORE_INSTANCE_PARAMS_JSON='{
+            TargetDBInstanceIdentifier: "t-r-a-25-analytics",
+            AutoMinorVersionUpgrade: false,
+            CopyTagsToSnapshot: true,
+            DBInstanceClass: "db.t2.small",
+            DBParameterGroupName: "ost-staging",
+            DBSubnetGroupName: "ost-kit-saas-all",
+            DeletionProtection: false,
+            Engine: "mysql",
+            LicenseModel: "general-public-license",
+            MultiAZ: false,
+            Port: 3306,
+            PubliclyAccessible: false,
+            UseLatestRestorableTime: true,
+            SourceDBInstanceIdentifier: "s6-kit-all",
+            StorageType: "gp2",
+            VpcSecurityGroupIds: [
+                "sg-0e828f41c1c0a1b11",
+                "sg-0b76ede7472254bb0"
+            ]
+        }'
 
 export LOCAL_DIR_FILE_PATH='/tmp/analytics_prestaging_data'
 export AUX_BLOCK_SCANNER_CONFIG_FILE_PATH=''
