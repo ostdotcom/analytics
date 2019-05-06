@@ -141,7 +141,9 @@ class MysqlService {
 				startOffset = endOffset;
       }
 
-      await Promise.all(promiseArray);
+      await Promise.all(promiseArray).catch((err)=>{
+      	return Promise.reject(err);
+			});
 			return responseHelper.successWithData({hasRows: true, maxUpdatedAtStr: maxUpdatedAtStr});
 	  }
 
@@ -188,7 +190,7 @@ class MysqlService {
             let r = oThis.formatData(records);
 
             if (!r.success) {
-                return Promise.reject(r);
+                return r;
             }
 
             arrayOfList = r.data.arrayOfList;
