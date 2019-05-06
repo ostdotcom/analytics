@@ -1,6 +1,6 @@
 export ENVIRONMENT='development'
 export SUB_ENVIRONMENT='main'
-export ENV_SUFFIX='_d6'
+export ENV_SUFFIX='_d35'
 export SAAS_MYSQL_DATABASE_ENVIRONMENT='staging'
 
 export KIT_MYSQL_CONNECTION_POOL_SIZE='3'
@@ -15,8 +15,6 @@ export PRESTAGING_REDSHIFT_PASSWORD='gdhsD56Sw248jljt68dfTRaxMn'
 export PRESTAGING_REDSHIFT_PORT='5439'
 export PRESTAGING_REDSHIFT_HOST='redshift-instance.cl2x2qyuekxx.us-east-1.redshift.amazonaws.com'
 export PRESTAGING_SCHEMA_PREFIX='ost_warehouse_'
-
-
 
 export TRANSFERS_BATCH_SIZE=80
 export TRANSACTION_BATCH_SIZE=60
@@ -36,22 +34,22 @@ export RESTORE_RDS_REGION_ACCESS_KEY='AKIA2IE3EXDCONIPVQEL'
 export RESTORE_RDS_REGION='us-east-1'
 
 export RDS_RESTORE_INSTANCE_PARAMS_JSON='{
-            TargetDBInstanceIdentifier: "t-r-a-25-analytics",
-            AutoMinorVersionUpgrade: false,
-            CopyTagsToSnapshot: true,
-            DBInstanceClass: "db.t2.small",
-            DBParameterGroupName: "ost-staging",
-            DBSubnetGroupName: "ost-kit-saas-all",
-            DeletionProtection: false,
-            Engine: "mysql",
-            LicenseModel: "general-public-license",
-            MultiAZ: false,
-            Port: 3306,
-            PubliclyAccessible: false,
-            UseLatestRestorableTime: true,
-            SourceDBInstanceIdentifier: "s6-kit-all",
-            StorageType: "gp2",
-            VpcSecurityGroupIds: [
+            "TargetDBInstanceIdentifier": "t-r-a-25-analytics",
+            "AutoMinorVersionUpgrade": false,
+            "CopyTagsToSnapshot": true,
+            "DBInstanceClass": "db.t2.small",
+            "DBParameterGroupName": "ost-staging",
+            "DBSubnetGroupName": "ost-kit-saas-all",
+            "DeletionProtection": false,
+            "Engine": "mysql",
+            "LicenseModel": "general-public-license",
+            "MultiAZ": false,
+            "Port": 3306,
+            "PubliclyAccessible": false,
+            "UseLatestRestorableTime": true,
+            "SourceDBInstanceIdentifier": "s6-kit-all",
+            "StorageType": "gp2",
+            "VpcSecurityGroupIds": [
                 "sg-0e828f41c1c0a1b11",
                 "sg-0b76ede7472254bb0"
             ]

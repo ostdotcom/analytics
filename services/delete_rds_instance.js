@@ -5,6 +5,7 @@ const rootPrefix = '..',
     responseHelper = require(rootPrefix + '/lib/formatter/response'),
     ApplicationMailer = require(rootPrefix + '/lib/applicationMailer'),
     RDSInstanceOperations = require(rootPrefix + '/lib/RDSInstanceOperations'),
+	  logger = require(rootPrefix + "/helpers/custom_console_logger"),
     RDSInstanceLogsModel = require(rootPrefix + '/models/redshift/mysql/rdsInstanceLogs');
 ;
 
@@ -29,6 +30,7 @@ class DeleteRDSInstance {
         let r;
         oThis.dbInstanceIdentifier = params.dbInstanceIdentifier;
 
+			  logger.log("Perform DELETE RDS Instance");
 			  if(Constants.ENVIRONMENT != 'development'){
 					r = await oThis.deleteMysqlInstance(params);
 
@@ -40,7 +42,7 @@ class DeleteRDSInstance {
 
         await oThis.rdsInstanceLogsModel.updateInstanceRowInDB(params.recordId, {'aws_status': RDSInstanceLogsGC.awsDeletedStatus});
 
-
+			  logger.log("DELETE RDS Instance completed successfully");
 			  return responseHelper.successWithData({
             dbInstanceIdentifier: oThis.dbInstanceIdentifier
         });
@@ -58,24 +60,28 @@ class DeleteRDSInstance {
         const oThis = this;
         let isDeletedResp;
         let r = await oThis.rdsInstanceOperations.delete(params);
+
         if (r.success) {
 					await oThis.rdsInstanceLogsModel.updateInstanceRowInDB(params.recordId, {'aws_status': RDSInstanceLogsGC.awsDeletingStatus});
 
 					isDeletedResp = await oThis.checkIfDeleted({});
-
-            if (isDeletedResp.success) {
+					  if (isDeletedResp.success) {
                 return isDeletedResp;
-            }
-        } else {
-            return responseHelper.error({
-                internal_error_identifier: 'd_rds_i_d_m_i_2',
-                api_error_identifier: 'api_error_identifier'
-            });
+            }else {
+							return responseHelper.error({
+								internal_error_identifier: 'd_rds_i_d_m_i_2',
+								api_error_identifier: 'api_error_identifier',
+								debug_options: isDeletedResp
+							});
+						}
         }
-        return responseHelper.error({
-            internal_error_identifier: 'd_rds_i_d_m_i_3',
-            api_error_identifier: 'api_error_identifier'
-        });
+        else{
+					return responseHelper.error({
+						internal_error_identifier: 'd_rds_i_d_m_i_3',
+						api_error_identifier: 'api_error_identifier',
+						debug_options: r
+					});
+        }
     }
 
 
@@ -95,6 +101,7 @@ class DeleteRDSInstance {
 
 
         while (true) {
+					  logger.info("CHECK Deletion of RDS Instance with timeStep=", timeStep);
             describeDBInstancesResp = await oThis.rdsInstanceOperations.describeDBInstances({dbInstanceIdentifier: oThis.dbInstanceIdentifier});
 
             isDeletedResp = describeDBInstancesResp.debug_options &&
@@ -107,6 +114,7 @@ class DeleteRDSInstance {
                     dbInstanceIdentifier: oThis.dbInstanceIdentifier
                 });
             } else if (currentTime >= maxTimeInMinsToWait) {
+							  logger.error("MAX timeout reached for Deletion of RDS Instance");
                 let r = responseHelper.error({
                     internal_error_identifier: 'd_rds_i_c_i_d',
                     api_error_identifier: 'api_error_identifier'
@@ -121,7 +129,6 @@ class DeleteRDSInstance {
             //timeout is in milliseconds
             currentTime += timeStep;
             await sleep(currentTime * 1000 * 60); // in minutes
-
         }
     }
 

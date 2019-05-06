@@ -74,12 +74,14 @@ class ExtractDataDaily extends ExtractBase {
         let promiseArray = [];
         let createRDSInstance, checkRDSInstance, deleteRDSInstance, rdsInstanceLogsModel;
 
+        logger.log("START MYSQL EXTRACT");
+
         createRDSInstance = new CreateRDSInstance();
         checkRDSInstance = new CheckRDSInstance({});
         deleteRDSInstance = new DeleteRDSInstance();
         rdsInstanceLogsModel = new RDSInstanceLogsModel();
+
         let r = await createRDSInstance.perform();
-        logger.log(r);
         if (!r.success) {
             return Promise.reject(r);
         }
@@ -111,6 +113,7 @@ class ExtractDataDaily extends ExtractBase {
             }
             return Promise.resolve({});
         }).catch(async (e) => {
+					  logger.error("Exception in Extract data daily. Exception-", e);
             let res = await deleteRDSInstance.process({dbInstanceIdentifier: checkInstanceStatus.data.dbInstanceIdentifier,
                 recordId:checkInstanceStatus.data.recordId});
             if (!res.success){

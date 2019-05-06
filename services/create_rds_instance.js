@@ -25,6 +25,8 @@ class CreateRDSInstance {
      */
     async perform() {
         const oThis = this;
+
+        logger.log("Perform Create RDS Instance");
         let r = await oThis.validateRDSInstanceLogs();
 
         if (!r.success) {
@@ -67,14 +69,16 @@ class CreateRDSInstance {
         const oThis = this;
         let isDeleted;
 
-        let query = Util.format("SELECT * FROM %s where aws_status != $1", RDSInstanceLogsModel.getTableNameWithSchema);
+			  logger.log("Validating RDSInstanceLogs before create");
+        let query = Util.format("SELECT * FROM %s where aws_status != $1", oThis.rdsInstanceLogsModel.getTableNameWithSchema);
 
         return oThis.redshiftClient.parameterizedQuery(query, [RDSInstanceLogsGC.awsDeletedStatus]).then(async (res) => {
 
             if (res.rows.length > 0) {
                 return responseHelper.error({
                     internal_error_identifier: 'msw_vril_1',
-                    api_error_identifier: 'api_error_identifier'
+                    api_error_identifier: 'api_error_identifier',
+                    debug_options: {error_msg: "NON Deleted Rows Found For RDS Instance",res_rows: res.rows}
                 });
             } else {
                 return responseHelper.successWithData({});

@@ -6,6 +6,7 @@ const rootPrefix = '..',
     responseHelper = require(rootPrefix + '/lib/formatter/response'),
     ApplicationMailer = require(rootPrefix + '/lib/applicationMailer'),
     RDSInstanceOperations = require(rootPrefix + '/lib/RDSInstanceOperations'),
+	  logger = require(rootPrefix + "/helpers/custom_console_logger"),
     RDSInstanceLogsModel = require(rootPrefix + '/models/redshift/mysql/rdsInstanceLogs');
 
 class CheckRDSInstance {
@@ -30,6 +31,7 @@ class CheckRDSInstance {
         const oThis = this;
         let r , validateResp;
 
+			  logger.log("Perform CHECK RDS Instance");
         validateResp = await oThis.validateRDSLogs();
 
         if (!validateResp.success) {
@@ -40,6 +42,7 @@ class CheckRDSInstance {
             return validateResp;
         }
 
+			  logger.log("Starting to CHECK Availability of RDS Instance");
         r = await oThis.checkAvailabilityOfRDSInstance(validateResp.data);
 
         if (!r.success) {
@@ -54,6 +57,7 @@ class CheckRDSInstance {
             'host': r.data.host
         });
 
+			  logger.log("CHECK Availability of RDS Instance complete with success");
         return r;
     }
 
@@ -66,7 +70,7 @@ class CheckRDSInstance {
     validateRDSLogs() {
         const oThis = this;
         let r;
-        let query = Util.format("SELECT * FROM %s where aws_status != $1", RDSInstanceLogsModel.getTableNameWithSchema);
+        let query = Util.format("SELECT * FROM %s where aws_status != $1", oThis.rdsInstanceLogsModel.getTableNameWithSchema);
 
         return oThis.redshiftClient.parameterizedQuery(query, [RDSInstanceLogsGC.awsDeletedStatus]).then((res) => {
             let resultRow = res.rows[0];
@@ -122,10 +126,11 @@ class CheckRDSInstance {
 
         while (true) {
 
+					  logger.info("CHECK Availability of RDS Instance with timeStep=", timeStep);
             //timeout is in milliseconds
             let currentTime = Math.floor(Date.now() / 1000);
             checkAvailabilityResp = await oThis.rdsInstanceOperations.describeDBInstances({dbInstanceIdentifier: oThis.dbInstanceIdentifier});
-            isAvailable = checkAvailabilityResp.data && checkAvailabilityResp.data.mappedAwsStatus === RDSInstanceLogs.awsAvailableStatus;
+            isAvailable = checkAvailabilityResp.data && checkAvailabilityResp.data.mappedAwsStatus === RDSInstanceLogsGC.awsAvailableStatus;
 
 
             if (checkAvailabilityResp.success && isAvailable) {
@@ -136,21 +141,26 @@ class CheckRDSInstance {
                     recordId: params.recordId
                 });
             } else if (!warnEmailSent && (((currentTime - creationTime) / 60) >= warningTimeInMinsToWait)) {
+							logger.warn("CHECK Availability of RDS Instance Warning Timeout Reached");
                 oThis.applicationMailer.perform({
                     subject: 'Warning: RDSInstanceLogs not available for more than 30 mins',
                     body: checkAvailabilityResp
                 });
                 warnEmailSent = true;
-            } else if (((currentTime - lastActionTime) / 60) >= maxTimeInMinsToWait) {
+            } else if (((currentTime - creationTime) / 60) >= maxTimeInMinsToWait) {
+                logger.error("CHECK Availability of RDS Instance MAX Timeout Reached");
                 let r = responseHelper.error({
-                    internal_error_identifier: 'msw_chri',
-                    api_error_identifier: 'api_error_identifier'
+                    internal_error_identifier: 'msw_chri_1',
+                    api_error_identifier: 'api_error_identifier',
+                    debug_options: {error: "CHECK Availability of RDS Instance MAX Timeout Reached"}
                 });
                 oThis.applicationMailer.perform({
                     subject: 'Error: RDSInstanceLogs not available for long time',
                     body: checkAvailabilityResp
                 });
                 return r;
+            }else{
+							return checkAvailabilityResp;
             }
 
             timeToWait += timeStep;
