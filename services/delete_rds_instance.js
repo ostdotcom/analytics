@@ -31,7 +31,7 @@ class DeleteRDSInstance {
         oThis.dbInstanceIdentifier = params.dbInstanceIdentifier;
 
 			  logger.log("Perform DELETE RDS Instance");
-			  if(Constant.USE_POINT_IN_TIME_RDS_INSTANCE == 'true'){
+			  if(Constants.USE_POINT_IN_TIME_RDS_INSTANCE == 'true'){
 					r = await oThis.deleteMysqlInstance(params);
 
 					if (!r.success) {
