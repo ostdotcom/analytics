@@ -49,7 +49,7 @@ define("USE_POINT_IN_TIME_RDS_INSTANCE", process.env.USE_POINT_IN_TIME_RDS_INSTA
 
 
 define("RDS_RESTORE_INSTANCE_PARAMS", {
-                        "TargetDBInstanceIdentifier": "t-r-a-" + process.env.RDS_SOURCE_DB_INSTANCE_IDENTIFIER,
+                        "TargetDBInstanceIdentifier": process.env.RDS_DB_INSTANCE_PREFIX + process.env.RDS_SOURCE_DB_INSTANCE_IDENTIFIER,
                         "AutoMinorVersionUpgrade": false,
                         "CopyTagsToSnapshot": true,
                         "DBInstanceClass": process.env.RDS_DB_INSTANCE_CLASS,

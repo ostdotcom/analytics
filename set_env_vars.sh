@@ -34,6 +34,7 @@ export RESTORE_RDS_REGION_ACCESS_KEY='AKIA2IE3EXDCONIPVQEL'
 export RESTORE_RDS_REGION='us-east-1'
 export USE_POINT_IN_TIME_RDS_INSTANCE='false'
 
+export RDS_DB_INSTANCE_PREFIX='t-r-a-'
 export RDS_DB_INSTANCE_CLASS='db.t2.small'
 export RDS_DB_PARAMETER_GROUP_NAME='ost-staging'
 export RDS_DB_SUBNET_GROUP_NAME='ost-kit-saas-all'
