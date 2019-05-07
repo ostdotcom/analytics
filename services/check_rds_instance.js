@@ -132,8 +132,9 @@ class CheckRDSInstance {
             checkAvailabilityResp = await oThis.rdsInstanceOperations.describeDBInstances({dbInstanceIdentifier: oThis.dbInstanceIdentifier});
             isAvailable = checkAvailabilityResp.data && checkAvailabilityResp.data.mappedAwsStatus === RDSInstanceLogsGC.awsAvailableStatus;
 
-
-            if (checkAvailabilityResp.success && isAvailable) {
+					  if (!checkAvailabilityResp.success){
+					  	return checkAvailabilityResp;
+            } else if (checkAvailabilityResp.success && isAvailable) {
                 return responseHelper.successWithData({
                     host: checkAvailabilityResp.data.host,
                     dbInstanceIdentifier: oThis.dbInstanceIdentifier,
@@ -159,8 +160,6 @@ class CheckRDSInstance {
                     body: checkAvailabilityResp
                 });
                 return r;
-            }else{
-							return checkAvailabilityResp;
             }
 
             timeToWait += timeStep;
