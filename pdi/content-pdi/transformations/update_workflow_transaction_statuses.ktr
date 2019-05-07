@@ -575,7 +575,7 @@ join (select id, status from ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${EN
 on w.id = tx.workflow_id;
 
 update pentaho_processing_info
-set value = (select coalesce(extract(epoch from max(updated_at)::Date), 0) from ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflows)
+set value = (select coalesce(extract(epoch from max(updated_at)), 0) from ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflows)
 where property='last_updated_workflow';
 
 
