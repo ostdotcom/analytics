@@ -47,7 +47,7 @@ class ExtractDataDaily extends ExtractBase {
 
     perform() {
         const oThis = this;
-        return super.perform('cron_extract_data_c_' + parseInt(oThis.chainId) + "_" + parseInt(oThis.startBlock) + "_" +
+        return super.perform('cron_extract_data_daily_c_' + parseInt(oThis.chainId) + "_" + parseInt(oThis.startBlock) + "_" +
             parseInt(oThis.endBlock) + "_");
     }
 
