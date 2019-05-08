@@ -105,7 +105,7 @@
     <Measure name="Total Workflow Count" column="total_workflow_count" datatype="Numeric" formatString="#,##0" aggregator="sum" visible="true">
     </Measure>
 
-    <CalculatedMember name="Avg Gas Price" formatString="#0.0#%" description="Average Gas Price" formula="[Measures].[Total Gas Price]/[Measures].[Total Transactions]" dimension="Measures" visible="true">
+    <CalculatedMember name="Avg Gas Price" formatString="#0.0#" description="Average Gas Price" formula="[Measures].[Total Gas Price]/[Measures].[Total Transactions]" dimension="Measures" visible="true">
     </CalculatedMember>
 
   </Cube>

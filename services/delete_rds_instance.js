@@ -1,11 +1,11 @@
 const rootPrefix = '..',
     sleep = require(rootPrefix + '/lib/sleep'),
-	  Constants = require(rootPrefix + "/configs/constants"),
+    Constants = require(rootPrefix + "/configs/constants"),
     RDSInstanceLogsGC = require(rootPrefix + "/lib/globalConstants/redshift/RDSInstanceLogs"),
     responseHelper = require(rootPrefix + '/lib/formatter/response'),
     ApplicationMailer = require(rootPrefix + '/lib/applicationMailer'),
     RDSInstanceOperations = require(rootPrefix + '/lib/RDSInstanceOperations'),
-	  logger = require(rootPrefix + "/helpers/custom_console_logger"),
+    logger = require(rootPrefix + "/helpers/custom_console_logger"),
     RDSInstanceLogsModel = require(rootPrefix + '/models/redshift/mysql/rdsInstanceLogs');
 ;
 
@@ -30,20 +30,20 @@ class DeleteRDSInstance {
         let r;
         oThis.dbInstanceIdentifier = params.dbInstanceIdentifier;
 
-			  logger.log("Perform DELETE RDS Instance");
-			  if(Constants.USE_POINT_IN_TIME_RDS_INSTANCE == 'true'){
-					r = await oThis.deleteMysqlInstance(params);
+        logger.log("Perform DELETE RDS Instance");
+        if (Constants.USE_POINT_IN_TIME_RDS_INSTANCE == 'true') {
+            r = await oThis.deleteMysqlInstance(params);
 
-					if (!r.success) {
-						oThis.applicationMailer.perform({subject: 'RDSInstance could not be deleted', body: r});
-						return r;
-					}
+            if (!r.success) {
+                oThis.applicationMailer.perform({subject: 'RDSInstance could not be deleted', body: r});
+                return r;
+            }
         }
 
         await oThis.rdsInstanceLogsModel.updateInstanceRowInDB(params.recordId, {'aws_status': RDSInstanceLogsGC.awsDeletedStatus});
 
-			  logger.log("DELETE RDS Instance completed successfully");
-			  return responseHelper.successWithData({
+        logger.log("DELETE RDS Instance completed successfully");
+        return responseHelper.successWithData({
             dbInstanceIdentifier: oThis.dbInstanceIdentifier
         });
     }
@@ -62,25 +62,24 @@ class DeleteRDSInstance {
         let r = await oThis.rdsInstanceOperations.delete(params);
 
         if (r.success) {
-					await oThis.rdsInstanceLogsModel.updateInstanceRowInDB(params.recordId, {'aws_status': RDSInstanceLogsGC.awsDeletingStatus});
+            await oThis.rdsInstanceLogsModel.updateInstanceRowInDB(params.recordId, {'aws_status': RDSInstanceLogsGC.awsDeletingStatus});
 
-					isDeletedResp = await oThis.checkIfDeleted({});
-					  if (isDeletedResp.success) {
+            isDeletedResp = await oThis.checkIfDeleted({});
+            if (isDeletedResp.success) {
                 return isDeletedResp;
-            }else {
-							return responseHelper.error({
-								internal_error_identifier: 'd_rds_i_d_m_i_2',
-								api_error_identifier: 'api_error_identifier',
-								debug_options: isDeletedResp
-							});
-						}
-        }
-        else{
-					return responseHelper.error({
-						internal_error_identifier: 'd_rds_i_d_m_i_3',
-						api_error_identifier: 'api_error_identifier',
-						debug_options: r
-					});
+            } else {
+                return responseHelper.error({
+                    internal_error_identifier: 'd_rds_i_d_m_i_2',
+                    api_error_identifier: 'api_error_identifier',
+                    debug_options: isDeletedResp
+                });
+            }
+        } else {
+            return responseHelper.error({
+                internal_error_identifier: 'd_rds_i_d_m_i_3',
+                api_error_identifier: 'api_error_identifier',
+                debug_options: r
+            });
         }
     }
 
@@ -101,11 +100,10 @@ class DeleteRDSInstance {
 
 
         while (true) {
-					  logger.info("CHECK Deletion of RDS Instance with timeStep=", timeStep);
+            logger.info("CHECK Deletion of RDS Instance with timeStep=", timeStep);
             describeDBInstancesResp = await oThis.rdsInstanceOperations.describeDBInstances({dbInstanceIdentifier: oThis.dbInstanceIdentifier});
-
-            isDeletedResp = describeDBInstancesResp.debug_options &&
-                describeDBInstancesResp.debug_options.error.code === RDSInstanceLogsGC.errorCodeDBInstanceNotFound;
+            isDeletedResp = describeDBInstancesResp.debugOptions.error &&
+                describeDBInstancesResp.debugOptions.error.code === RDSInstanceLogsGC.errorCodeDBInstanceNotFound;
 
 
             if (describeDBInstancesResp.success === false && isDeletedResp) {
@@ -114,14 +112,10 @@ class DeleteRDSInstance {
                     dbInstanceIdentifier: oThis.dbInstanceIdentifier
                 });
             } else if (currentTime >= maxTimeInMinsToWait) {
-							  logger.error("MAX timeout reached for Deletion of RDS Instance");
+                logger.error("MAX timeout reached for Deletion of RDS Instance");
                 let r = responseHelper.error({
                     internal_error_identifier: 'd_rds_i_c_i_d',
                     api_error_identifier: 'api_error_identifier'
-                });
-                oThis.applicationMailer.perform({
-                    subject: 'Error: RDSInstanceLogs not deleted for long time',
-                    body: r
                 });
                 return r;
             }
