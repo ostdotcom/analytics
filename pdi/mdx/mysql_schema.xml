@@ -1,7 +1,7 @@
-<!-- DB_SCHEMA_PREFIX=ost_pentaho_main_s6 -->
+<!-- DB_SCHEMA_PREFIX=main_s6 -->
 <!-- AUX_CHAIN_1=205 -->
 
-<Schema name="mysql_main_s4">
+<Schema name="mysql_{DB_SCHEMA_PREFIX}">
 
   <Dimension type="TimeDimension" visible="true" highCardinality="false" name="Dates">
     <Hierarchy name="Date" visible="true" hasAll="true" primaryKey="date_sk">
