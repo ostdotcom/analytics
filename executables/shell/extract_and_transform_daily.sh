@@ -4,7 +4,7 @@ while [[ $# -gt 0 ]]
 do
     key="$1";
 
-    usage_str="Usage: ./extract_and_transform.sh --chain-id <Number> --start-block-no <Number> [Optional] --extract-only [Optional] --transform-only [Optional]";
+    usage_str="Usage: ./extract_and_transform_daily.sh --extract-only [Optional] --transform-only [Optional] --verify-only [Optional] --restart-only [Optional]";
     # Read parameters
     case $key in
         --extract-only)
@@ -234,7 +234,7 @@ if [[ ! -z $RESTART_ONLY ]]; then
     fi
     echo "Stopped Pentaho BI Server"
 
-    sleep_time=5
+    sleep_time=10
     echo "Sleeping for ${sleep_time} sec..."
     sleep $sleep_time
 
