@@ -59,6 +59,7 @@ class ModelBase extends MysqlQueryBuilders {
         // At present, following is not being used. But when we implement replication,
         // following connection pool will be used for slave connections.
         if (oThis.dynamicMysqlHost) {
+            logger.log(oThis.dynamicMysqlHost, "dynamicMysqlHost");
             return mysqlWrapper.getPoolForDynamicHost(oThis.dbName, 'master', undefined, {host: oThis.dynamicMysqlHost});
         } else {
             return mysqlWrapper.getPoolFor(oThis.dbName, 'master');
@@ -75,6 +76,7 @@ class ModelBase extends MysqlQueryBuilders {
         // At present, following is not being used. But when we implement replication,
         // following connection pool will be used for slave connections.
         if (oThis.dynamicMysqlHost) {
+            logger.log(oThis.dynamicMysqlHost, "dynamicMysqlHost");
             return mysqlWrapper.getPoolForDynamicHost(oThis.dbName, 'master', undefined, {host: oThis.dynamicMysqlHost});
         } else {
             return mysqlWrapper.getPoolFor(oThis.dbName, 'master');
