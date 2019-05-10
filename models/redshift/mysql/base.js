@@ -32,6 +32,7 @@ class ModelBase extends MysqlQueryBuilders {
         super(params);
 
         const oThis = this;
+        oThis.params = params;
         oThis.object = params.object || {};
         oThis.dynamicMysqlHost = params.dynamicMysqlHost;
 
@@ -59,7 +60,6 @@ class ModelBase extends MysqlQueryBuilders {
         // At present, following is not being used. But when we implement replication,
         // following connection pool will be used for slave connections.
         if (oThis.dynamicMysqlHost) {
-            logger.log(oThis.dynamicMysqlHost, "dynamicMysqlHost");
             return mysqlWrapper.getPoolForDynamicHost(oThis.dbName, 'master', undefined, {host: oThis.dynamicMysqlHost});
         } else {
             return mysqlWrapper.getPoolFor(oThis.dbName, 'master');
@@ -76,7 +76,6 @@ class ModelBase extends MysqlQueryBuilders {
         // At present, following is not being used. But when we implement replication,
         // following connection pool will be used for slave connections.
         if (oThis.dynamicMysqlHost) {
-            logger.log(oThis.dynamicMysqlHost, "dynamicMysqlHost");
             return mysqlWrapper.getPoolForDynamicHost(oThis.dbName, 'master', undefined, {host: oThis.dynamicMysqlHost});
         } else {
             return mysqlWrapper.getPoolFor(oThis.dbName, 'master');
@@ -167,7 +166,7 @@ class ModelBase extends MysqlQueryBuilders {
 
         let lastProcessTime = params.lastProcessTime;
 
-        let fetchDataInstance = new oThis.constructor({});
+        let fetchDataInstance = new oThis.constructor(oThis.params);
         fetchDataInstance = fetchDataInstance.select("count(1) as totalRowCount, max(updated_at) as maxUpdatedAt");
 
         let query = oThis.fetchQueryWhereClause(fetchDataInstance, lastProcessTime);
@@ -185,7 +184,7 @@ class ModelBase extends MysqlQueryBuilders {
         const oThis = this;
         let lastProcessTime = params.lastProcessTime;
 
-        let fetchDataInstance = new oThis.constructor({});
+        let fetchDataInstance = new oThis.constructor(oThis.params);
         fetchDataInstance = fetchDataInstance.select(oThis.columnsToFetchFromMysql());
 
         let query = oThis.fetchQueryWhereClause(fetchDataInstance, lastProcessTime);
