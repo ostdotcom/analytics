@@ -118,8 +118,8 @@ class CheckRDSInstance {
             warningTimeInMinsToWait = 30; // wait for that much time to send warning mail
         let creationTime = params.creationTime;
         let warnEmailSent = false;
-        let timeStep = 5; // check after every that much time
-        let timeToWait = 0;
+        let timeStep = 0;
+        let timeToWait = 2; // check after every that much time
         let checkAvailabilityResp;
         let isAvailable;
 
