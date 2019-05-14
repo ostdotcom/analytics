@@ -226,24 +226,30 @@ fi
 
 # Restart Pentaho BI Server
 if [[ ! -z $RESTART_ONLY ]]; then
-    cd $BI_SERVER_HOME;
-    echo "Stoping Pentaho BI Server..."
-    sh stop-pentaho.sh
-    if [[ $? != 0 ]]; then
-        echo "Error while stoping Pentaho BI Server"
-    fi
-    echo "Stopped Pentaho BI Server"
+    ls $BI_SERVER_HOME
+    if [[ $? -eq 0 ]]; then
+      cd $BI_SERVER_HOME;
+        echo "Stoping Pentaho BI Server..."
+        sh stop-pentaho.sh
+        sudo systemctl stop ostAnalytics
+        if [[ $? != 0 ]]; then
+            echo "Error while stoping Pentaho BI Server"
+        fi
+        echo "Stopped Pentaho BI Server"
 
-    sleep_time=10
-    echo "Sleeping for ${sleep_time} sec..."
-    sleep $sleep_time
+        sleep_time=10
+        echo "Sleeping for ${sleep_time} sec..."
+        sleep $sleep_time
 
-    echo "Starting Pentaho BI Server..."
-    sh start-pentaho.sh
-    if [[ $? != 0 ]]; then
-        echo "Error while starting Pentaho BI Server"
+        echo "Starting Pentaho BI Server..."
+        sudo systemctl start ostAnalytics
+        if [[ $? != 0 ]]; then
+            echo "Error while starting Pentaho BI Server"
+        fi
+        echo "Started Pentaho BI Server"
+    else
+        echo "No BI server found!"
     fi
-    echo "Started Pentaho BI Server"
 fi
 
 echo ""
