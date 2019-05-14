@@ -2,12 +2,14 @@
 /**
  * This is model for Token table.
  *
- * @module /models/mysql/token
+ * @module /models/redshift/mysql/token
  */
-const rootPrefix = '../..',
-    ModelBase = require(rootPrefix + '/models/mysql/base'),
+const rootPrefix = '../../..',
+    ModelBase = require(rootPrefix + '/models/redshift/mysql/base'),
     Constants = require(rootPrefix + '/configs/constants'),
-    tokensGC = require(rootPrefix + '/lib/globalConstants/redshift/tokens');
+    tokensGC = require(rootPrefix + '/lib/globalConstants/redshift/tokens'),
+		baseGC = require(rootPrefix + '/lib/globalConstants/redshift/base'),
+    dataProcessingInfoGC = require(rootPrefix + "/lib/globalConstants/redshift/dataProcessingInfo");
 
 // Declare variables.
 const dbName = 'kit_saas_' + Constants.SUB_ENVIRONMENT + '_' + Constants.SAAS_MYSQL_DATABASE_ENVIRONMENT;
@@ -24,9 +26,7 @@ class Token extends ModelBase {
      * @constructor
      */
     constructor(params) {
-        super({ dbName: dbName,
-            object: params.object || {},
-            chainId: params.chainId });
+        super({ ...params,dbName: dbName});
 
         const oThis = this;
 
@@ -42,6 +42,11 @@ class Token extends ModelBase {
         return tokensGC.mapping;
     }
 
+    /**
+     * Get fields to be move to analytics
+     *
+     * @return {Object}
+     */
     static get fieldsToBeMoveToAnalytics() {
         return tokensGC.fieldsToBeMoveToAnalytics;
     }
@@ -51,17 +56,27 @@ class Token extends ModelBase {
      *
      * @returns {String}
      */
-    getTableNameWithSchema() {
+    get getTableNameWithSchema() {
         const oThis = this;
-        return Constants.PRESTAGING_SCHEMA_NAME + '.tokens_'+ oThis.chainId;
+        return Constants.PRESTAGING_SCHEMA_NAME + '.tokens'+ oThis.tableNameSuffix;
     };
+
+    /**
+     * Get data processing property name
+     *
+     * @returns {String}
+     */
+    get getDataProcessingPropertyName(){
+        const oThis = this;
+        return dataProcessingInfoGC.tokenLastUpdatedAtProperty + oThis.tableNameSuffix;
+    }
 
     /**
      * Get table primary key
      *
      * @returns {String}
      */
-    getTablePrimaryKey() {
+    get getTablePrimaryKey() {
         return 'token_id'
     };
 
@@ -70,27 +85,9 @@ class Token extends ModelBase {
      *
      * @returns {String}
      */
-    getTempTableName() {
+    get getTempTableNameWithSchema() {
         const oThis = this;
-        return Constants.PRESTAGING_SCHEMA_NAME + '.temp_tokens_'+ oThis.chainId;
-    };
-
-    /**
-     * Get s3 file path
-     *
-     * @returns {String}
-     */
-    getS3FilePath() {
-        return `s3://${ Constants.S3_BUCKET_NAME}/`
-    };
-
-    /**
-     * Get Iam role
-     *
-     * @returns {String}
-     */
-    getIamRole() {
-        return Constants.S3_IAM_ROLE
+        return Constants.PRESTAGING_SCHEMA_NAME + '.temp_tokens'+ oThis.tableNameSuffix;
     };
 
 }

@@ -6,6 +6,7 @@ const rootPrefix = '../../..'
     , logger = require(rootPrefix + '/helpers/custom_console_logger.js')
     , ApplicationMailer = require(rootPrefix + '/lib/applicationMailer')
     , Util = require('util')
+    , blockScannerGC = require(rootPrefix + "/lib/globalConstants/blockScanner")
     , responseHelper = require(rootPrefix + '/lib/formatter/response')
 ;
 
@@ -24,18 +25,24 @@ class Transactions extends Base {
         return transactionsGC.fieldsToBeMoveToAnalytics;
     }
 
-    getTableNameWithSchema() {
+    get getTableNameWithSchema() {
         const oThis = this;
-        return constants.PRESTAGING_SCHEMA_NAME + '.aux_transactions_' + oThis.chainId;
+            return constants.PRESTAGING_SCHEMA_NAME + "." + oThis.getTableName;
     };
 
-    getTablePrimaryKey() {
+    get getTableName() {
+        const oThis = this;
+        return 'transactions' + oThis.tableNameSuffix;
+
+    };
+
+    get getTablePrimaryKey() {
         return 'tx_hash';
     };
 
-    getTempTableNameWithSchema() {
+    get getTempTableNameWithSchema() {
         const oThis = this;
-        return constants.PRESTAGING_SCHEMA_NAME + '.temp_aux_transactions_' + oThis.chainId;
+        return constants.PRESTAGING_SCHEMA_NAME + '.temp_transactions' + oThis.tableNameSuffix;
     };
 
     // handleBlockError(params) {
@@ -50,15 +57,14 @@ class Transactions extends Base {
     //     }));
     // }
 
-	handleBlockError(params) {
+    handleBlockError(params) {
 
-		logger.error("handle error for transactions");
+        logger.error("handle error for transactions");
 
 		const oThis = this,
 			deleteDuplicateQuery = Util.format("DELETE from %s WHERE tx_hash IN(SELECT tx_hash from %s where block_number >= $1 and block_number <= $2);",
-				oThis.getTempTableNameWithSchema(), oThis.getTableNameWithSchema());
-
-		oThis.initRedshift();
+				oThis.getTempTableNameWithSchema, oThis.getTableNameWithSchema)
+        ;
 
 		return oThis.redshiftClient.parameterizedQuery(deleteDuplicateQuery, [params.minBlock, params.maxBlock]).then((res) => {
 		    logger.warn("duplicate transactions are deleted");
@@ -66,7 +72,6 @@ class Transactions extends Base {
 				return oThis.insertToMainTable();
 	});
 	}
-
 
 
 }

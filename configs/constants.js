@@ -1,5 +1,6 @@
 "use strict";
 
+const rootPrefix = "..";
 const Constants = function () {
 };
 
@@ -40,6 +41,35 @@ define("S3_ACCESS_SECRET", process.env.S3_ACCESS_SECRET );
 define("S3_BUCKET_NAME", process.env.S3_BUCKET_NAME);
 define ("S3_IAM_ROLE", process.env.S3_IAM_ROLE);
 
+define("RESTORE_RDS_API_VERSION",process.env.RESTORE_RDS_API_VERSION );
+define("RESTORE_RDS_REGION", process.env.RESTORE_RDS_REGION);
+define("RESTORE_RDS_REGION_ACCESS_KEY", process.env.RESTORE_RDS_REGION_ACCESS_KEY );
+define("RESTORE_RDS_REGION_ACCESS_SECRET", process.env.RESTORE_RDS_REGION_ACCESS_SECRET);
+define("USE_POINT_IN_TIME_RDS_INSTANCE", process.env.USE_POINT_IN_TIME_RDS_INSTANCE);
+
+
+define("RDS_RESTORE_INSTANCE_PARAMS", {
+                        "TargetDBInstanceIdentifier": process.env.RDS_DB_INSTANCE_PREFIX + process.env.SUB_ENVIRONMENT + "-" + process.env.RDS_SOURCE_DB_INSTANCE_IDENTIFIER,
+                        "AutoMinorVersionUpgrade": false,
+                        "CopyTagsToSnapshot": true,
+                        "DBInstanceClass": process.env.RDS_DB_INSTANCE_CLASS,
+                        "DBParameterGroupName": process.env.RDS_DB_PARAMETER_GROUP_NAME,
+                        "DBSubnetGroupName": process.env.RDS_DB_SUBNET_GROUP_NAME,
+                        "DeletionProtection": false,
+                        "Engine": "mysql",
+                        "LicenseModel": "general-public-license",
+                        "MultiAZ": false,
+                        "Port": 3306,
+                        "PubliclyAccessible": false,
+                        "UseLatestRestorableTime": true,
+                        "SourceDBInstanceIdentifier":  process.env.RDS_SOURCE_DB_INSTANCE_IDENTIFIER,
+                        "StorageType": "gp2",
+                        "VpcSecurityGroupIds": process.env.RDS_VPC_SECURITY_GROUP_IDS.split(" ")
+                        }
+);
+
+
+
 define('TRANSFERS_BATCH_SIZE', process.env.TRANSFERS_BATCH_SIZE);
 define('TRANSACTION_BATCH_SIZE', process.env.TRANSACTION_BATCH_SIZE);
 
@@ -47,7 +77,11 @@ define('MAX_SPLIT_COUNT', process.env.MAX_SPLIT_COUNT);
 define('NO_OF_BLOCKS_TO_PROCESS_TOGETHER', process.env.NO_OF_BLOCKS_TO_PROCESS_TOGETHER);
 define('S3_WRITE_COUNT', process.env.S3_WRITE_COUNT);
 define("LOCAL_DIR_FILE_PATH", process.env.LOCAL_DIR_FILE_PATH);
-define("BLOCK_SCANNER_CONFIG_FILE_PATH", process.env.BLOCK_SCANNER_CONFIG_FILE_PATH);
+define("AUX_BLOCK_SCANNER_CONFIG_FILE", process.env.AUX_BLOCK_SCANNER_CONFIG_FILE_PATH ? require(process.env.AUX_BLOCK_SCANNER_CONFIG_FILE_PATH):
+    require( rootPrefix + "/aux_block_scanner_config.json"));
+define("ORIGIN_BLOCK_SCANNER_CONFIG_FILE", process.env.ORIGIN_BLOCK_SCANNER_CONFIG_FILE ? require(process.env.ORIGIN_BLOCK_SCANNER_CONFIG_FILE):
+    require( rootPrefix + "/origin_block_scanner_config.json"));
+
 
 define("PRESTAGING_SCHEMA_NAME",process.env.PRESTAGING_SCHEMA_PREFIX + process.env.SUB_ENVIRONMENT + process.env.ENV_SUFFIX);
 

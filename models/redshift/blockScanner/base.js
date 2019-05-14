@@ -1,11 +1,11 @@
 const rootPrefix = "../../.."
-    , Redshift = require('node-redshift')
+    , RedshiftClient = require(rootPrefix + '/lib/redshift')
     , responseHelper = require(rootPrefix + '/lib/formatter/response')
-    , constants = require(rootPrefix + '/configs/constants')
     , Util = require('util')
     , logger = require(rootPrefix + '/helpers/custom_console_logger.js')
-    , ValidateAndSanitize = require(rootPrefix + '/lib/validateAndSanatize')
     , ApplicationMailer = require(rootPrefix + '/lib/applicationMailer')
+    , blockScannerGC = require(rootPrefix + "/lib/globalConstants/blockScanner")
+    , dataProcessingInfoGC = require(rootPrefix + "/lib/globalConstants/redshift/dataProcessingInfo")
 ;
 
 /**
@@ -16,76 +16,18 @@ class Base {
     constructor(params) {
         const oThis = this;
         oThis.chainId = params.config.chainId;
+        oThis.chainType = params.config.chainType;
         oThis.object = params.object || {};
         oThis.applicationMailer = new ApplicationMailer();
-        oThis.validateAndSanitize = new ValidateAndSanitize({mapping: oThis.constructor.mapping,
-            fieldsToBeMoveToAnalytics: oThis.constructor.fieldsToBeMoveToAnalytics })
-    }
-
-    formatBlockScannerDataToArray() {
-        const oThis = this;
-        let r = oThis.validateAndSanitize.perform({ object: oThis.object });
-        if (!r.success) return r;
-        let formattedMap = r.data;
-        return responseHelper.successWithData({
-            data: Array.from(formattedMap.data.values())
-        });
-    }
-
-
-
-    initRedshift() {
-        const oThis = this;
-        oThis.redshiftClient = new Redshift(constants.PRESTAGING_REDSHIFT_CLIENT);
-    }
-
-
-    copyFromS3(fullFilePath) {
-
-        const oThis = this
-            , s3BucketPath = 's3://' + constants.S3_BUCKET_NAME + '/'
-            , copyTable = Util.format('copy %s (%s) from \'%s\' iam_role \'%s\' delimiter \'|\';', oThis.getTempTableNameWithSchema(), oThis.getColumnList, s3BucketPath + fullFilePath, oThis.getIamRole())
-            , truncateTempTable = Util.format('TRUNCATE TABLE %s;', oThis.getTempTableNameWithSchema())
-        ;
-        logger.log(s3BucketPath + fullFilePath);
-
-        logger.log("Temp table delete if exists", truncateTempTable);
-        return oThis.query(truncateTempTable)
-            .then(function () {
-                logger.log("Copying of table started", copyTable);
-                return oThis.query(copyTable);
-            }).then(function () {
-                logger.log("copy to Temp table done");
-                return responseHelper.successWithData({});
-            }).catch((e)=>{
-                logger.error(e);
-                return responseHelper.error({
-                    internal_error_identifier: 'm_r_b_b_cfs',
-                    api_error_identifier: 'copy to temp table failed',
-                    debug_options: {}
-                });
-            });
-    };
-
-
-    async query(commandString) {
-        const oThis = this;
-        logger.info("redshift query ::", commandString);
-        oThis.initRedshift();
-        return new Promise(function (resolve, reject) {
-            try {
-                oThis.redshiftClient.query(commandString, function (err, result) {
-                    if (err) {
-                        reject("Error in query " + err + commandString);
-                    } else {
-                        resolve(result);
-                    }
-                })
-            } catch (err) {
-                reject(err);
-            }
-        });
-
+        oThis.redshiftClient = new RedshiftClient();
+        oThis.tableNameSuffix = "";
+        if(oThis.chainType == blockScannerGC.auxChainType){
+            oThis.tableNameSuffix = "_aux_" + oThis.chainId
+        }else if(oThis.chainType == blockScannerGC.originChainType){
+            oThis.tableNameSuffix = "_origin"
+        }else {
+            throw 'Passed ChainType is incorrect.'
+        }
     }
 
     async validateAndMoveFromTempToMain(minBlockNumberForTempTable, maxAllowedEndblockInMain) {
@@ -102,8 +44,8 @@ class Base {
     insertToMainTable() {
         logger.log("insert to main table");
         const oThis = this;
-        const insertRemainingEntries = Util.format('INSERT into %s (%s, insertion_timestamp) (select %s, %s from %s);', oThis.getTableNameWithSchema(), oThis.getColumnList, oThis.getColumnList, oThis.getTimeStampInSecs, oThis.getTempTableNameWithSchema())
-        return oThis.query(insertRemainingEntries).then((res) => {
+        const insertRemainingEntries = Util.format('INSERT into %s (%s, insertion_timestamp) (select %s, %s from %s);', oThis.getTableNameWithSchema, oThis.getColumnList, oThis.getColumnList, oThis.getTimeStampInSecs, oThis.getTempTableNameWithSchema)
+        return oThis.redshiftClient.query(insertRemainingEntries).then(async (res) => {
             logger.log("data moved from temp to main table successfully");
             return Promise.resolve(res);
         }).catch((err)=>{
@@ -119,7 +61,7 @@ class Base {
     async validateTempTableData(minBlockNumberForTempTable, maxAllowedEndblockInMain) {
 
         const oThis = this,
-            maxBlockNumberFromMainQuery = await oThis.query(Util.format('select coalesce(max(block_number), -1) as max_block_number  from %s where block_number <= %s ', oThis.getTableNameWithSchema(), maxAllowedEndblockInMain));
+            maxBlockNumberFromMainQuery = await oThis.redshiftClient.query(Util.format('select coalesce(max(block_number), -1) as max_block_number  from %s where block_number <= %s ', oThis.getTableNameWithSchema, maxAllowedEndblockInMain));
 
         let maxBlockNumberFromMain = parseInt(maxBlockNumberFromMainQuery.rows[0].max_block_number);
 
@@ -137,29 +79,62 @@ class Base {
         }
     }
 
+
+    /**
+     * update last processed block
+     *
+     * * @return {promise}
+     *
+     */
+    async updateLastProcessedBlock(isStartBlockGiven, currentBatchEndBlock) {
+        const oThis = this;
+        if (isStartBlockGiven == false) {
+            logger.step("Starting updateLastProcessedBlock");
+            return oThis.redshiftClient.parameterizedQuery("update " + dataProcessingInfoGC.getTableNameWithSchema + " set value=$1 " +
+                "where property=$2", [currentBatchEndBlock, oThis.getDataProcessingPropertyName]).then((res) => {
+                logger.log("last processed block updated successfully");
+            });
+        }
+    }
+
     get getColumnList() {
         const oThis = this;
         return oThis.constructor.fieldsToBeMoveToAnalytics.join(", ");
     }
 
-    getModelImportString() {
-        throw 'getModelImportString not implemented'
+    /**
+     * Get data processing property name
+     *
+     * @returns {String}
+     */
+    get getDataProcessingPropertyName() {
+        const oThis = this;
+        let suffix  = oThis.tableNameSuffix;
+        return dataProcessingInfoGC.lastProcessedBlockProperty + suffix;
+    }
+
+    get chainSuffix(){
+        const oThis = this;
+        if (oThis.chainType == blockScannerGC.auxChainType) {
+            return "_" + oThis.chainId ;
+        } else if (oThis.chainType == blockScannerGC.originChainType) {
+            return "" ;
+        } else {
+            throw 'Passed ChainType is incorrect.'
+        }
+    }
+
+
+    get getTableNameWithSchema() {
+        throw 'getTableNameWithSchema not implemented'
     };
 
-    getTableNameWithSchema() {
-        throw 'getModelImportString not implemented'
-    };
-
-    getTablePrimaryKey() {
+    get getTablePrimaryKey() {
         throw 'getTablePrimaryKey not implemented'
     };
 
-    getTempTableNameWithSchema() {
+    get getTempTableNameWithSchema() {
         throw 'getTempTableNameWithSchema not implemented'
-    };
-
-    getIamRole() {
-        return constants.S3_IAM_ROLE
     };
 
     handleBlockError(){

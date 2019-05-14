@@ -86,37 +86,37 @@ echo ""
 subject="Data transformation completed in $(($duration / 60)) minutes and $(($duration % 60)) seconds."
 echo "${subject} [$(date '+%Y-%m-%d %H:%M:%S')]";
 
-echo ""
-echo "*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*"
-echo ""
-
-SECONDS=0;
-# Verify transformation
-echo "Started data verification for task: ${task} [$(date '+%Y-%m-%d %H:%M:%S')]";
-task=incremental_consistency
-/bin/bash ${KETTLE_CLIENT_PATH}/kitchen.sh -file ${job_dir}/${task}.kjb -level=Debug -param:CHAIN_ID=${CHAIN_ID} -param:SUB_ENV=${SUB_ENVIRONMENT} -param:ENV_SUFFIX=${ENV_SUFFIX} -param:CONSISTENCY_LOGS_PATH=${CONSISTENCY_LOGS_PATH};
-status=$?
-if [[ $status != 0 ]]; then
-    subject="Error while data verification for job: ${task}";
-    echo "${subject} [$(date '+%Y-%m-%d %H:%M:%S')]";
-    endLines
-    exit 1;
-else
-    echo "Ended data verification for task: ${task} [$(date '+%Y-%m-%d %H:%M:%S')]";
-fi
-duration=$SECONDS;
-
-# Check verification status
-if [[ ! -z ${CONSISTENCY_LOGS_PATH} ]]; then
-    file=${CONSISTENCY_LOGS_PATH}/incremental_data_difference.log
-    inconsistent_records=`cat ${file} | wc -l`
-    if [[ ${inconsistent_records} > 0 ]]; then
-        # Send email
-        subject="Inconsistent date after transformation [$(date '+%Y-%m-%d %H:%M:%S')]"
-        echo "${subject} [$(date '+%Y-%m-%d %H:%M:%S')]";
-        cat ${file} | mail -s "${email_subject_tag} ${subject}" "${email_addrs}"
-    fi
-fi
+#echo ""
+#echo "*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*"
+#echo ""
+#
+#SECONDS=0;
+## Verify transformation
+#echo "Started data verification for task: ${task} [$(date '+%Y-%m-%d %H:%M:%S')]";
+#task=incremental_consistency
+#/bin/bash ${KETTLE_CLIENT_PATH}/kitchen.sh -file ${job_dir}/${task}.kjb -level=Debug -param:CHAIN_ID=${CHAIN_ID} -param:SUB_ENV=${SUB_ENVIRONMENT} -param:ENV_SUFFIX=${ENV_SUFFIX} -param:CONSISTENCY_LOGS_PATH=${CONSISTENCY_LOGS_PATH};
+#status=$?
+#if [[ $status != 0 ]]; then
+#    subject="Error while data verification for job: ${task}";
+#    echo "${subject} [$(date '+%Y-%m-%d %H:%M:%S')]";
+#    endLines
+#    exit 1;
+#else
+#    echo "Ended data verification for task: ${task} [$(date '+%Y-%m-%d %H:%M:%S')]";
+#fi
+#duration=$SECONDS;
+#
+## Check verification status
+#if [[ ! -z ${CONSISTENCY_LOGS_PATH} ]]; then
+#    file=${CONSISTENCY_LOGS_PATH}/incremental_data_difference.log
+#    inconsistent_records=`cat ${file} | wc -l`
+#    if [[ ${inconsistent_records} > 0 ]]; then
+#        # Send email
+#        subject="Inconsistent date after transformation [$(date '+%Y-%m-%d %H:%M:%S')]"
+#        echo "${subject} [$(date '+%Y-%m-%d %H:%M:%S')]";
+#        cat ${file} | mail -s "${email_subject_tag} ${subject}" "${email_addrs}"
+#    fi
+#fi
 
 echo ""
 subject="Data verification completed in $(($duration / 60)) minutes and $(($duration % 60)) seconds."

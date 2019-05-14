@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <transformation>
   <info>
-    <name>incremental_load_dim_tokens</name>
+    <name>token_transformation</name>
     <description />
     <extended_description />
     <trans_version>1</trans_version>
@@ -9,11 +9,6 @@
     <trans_status>0</trans_status>
     <directory>/</directory>
     <parameters>
-      <parameter>
-        <name>CHAIN_ID</name>
-        <default_value />
-        <description />
-      </parameter>
       <parameter>
         <name>ENV_SUFFIX</name>
         <default_value />
@@ -29,7 +24,7 @@
       <trans-log-table>
         <connection />
         <schema />
-        <table>${KETTLE_TRANS_LOG_TABLE}_${CHAIN_ID}</table>
+        <table>${KETTLE_TRANS_LOG_TABLE}</table>
         <size_limit_lines />
         <interval />
         <timeout_days>${TRANSFORMATION_LOGS_RECORD_TIMEOUT}</timeout_days>
@@ -452,69 +447,6 @@
   <notepads>
   </notepads>
   <connection>
-    <name>analytics_mysql_connection</name>
-    <server />
-    <type>MYSQL</type>
-    <access>JNDI</access>
-    <database>analyticsMysqlConnection_${SUB_ENV}${ENV_SUFFIX}</database>
-    <port>1521</port>
-    <username />
-    <password>Encrypted </password>
-    <servername />
-    <data_tablespace />
-    <index_tablespace />
-    <attributes>
-      <attribute>
-        <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
-        <attribute>N</attribute>
-      </attribute>
-      <attribute>
-        <code>FORCE_IDENTIFIERS_TO_UPPERCASE</code>
-        <attribute>N</attribute>
-      </attribute>
-      <attribute>
-        <code>INITIAL_POOL_SIZE</code>
-        <attribute>10</attribute>
-      </attribute>
-      <attribute>
-        <code>IS_CLUSTERED</code>
-        <attribute>N</attribute>
-      </attribute>
-      <attribute>
-        <code>MAXIMUM_POOL_SIZE</code>
-        <attribute>20</attribute>
-      </attribute>
-      <attribute>
-        <code>PORT_NUMBER</code>
-        <attribute>1521</attribute>
-      </attribute>
-      <attribute>
-        <code>PRESERVE_RESERVED_WORD_CASE</code>
-        <attribute>Y</attribute>
-      </attribute>
-      <attribute>
-        <code>QUOTE_ALL_FIELDS</code>
-        <attribute>N</attribute>
-      </attribute>
-      <attribute>
-        <code>STREAM_RESULTS</code>
-        <attribute>Y</attribute>
-      </attribute>
-      <attribute>
-        <code>SUPPORTS_BOOLEAN_DATA_TYPE</code>
-        <attribute>Y</attribute>
-      </attribute>
-      <attribute>
-        <code>SUPPORTS_TIMESTAMP_DATA_TYPE</code>
-        <attribute>Y</attribute>
-      </attribute>
-      <attribute>
-        <code>USE_POOLING</code>
-        <attribute>Y</attribute>
-      </attribute>
-    </attributes>
-  </connection>
-  <connection>
     <name>analytics_redshift_connection</name>
     <server />
     <type>REDSHIFT</type>
@@ -540,16 +472,8 @@
         <attribute>N</attribute>
       </attribute>
       <attribute>
-        <code>INITIAL_POOL_SIZE</code>
-        <attribute>5</attribute>
-      </attribute>
-      <attribute>
         <code>IS_CLUSTERED</code>
         <attribute>N</attribute>
-      </attribute>
-      <attribute>
-        <code>MAXIMUM_POOL_SIZE</code>
-        <attribute>10</attribute>
       </attribute>
       <attribute>
         <code>PORT_NUMBER</code>
@@ -573,24 +497,83 @@
       </attribute>
       <attribute>
         <code>USE_POOLING</code>
-        <attribute>Y</attribute>
+        <attribute>N</attribute>
       </attribute>
     </attributes>
   </connection>
   <order>
     <hop>
-      <from>Get Last Timestamp</from>
-      <to>Get Updated Tokens</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>Get Updated Tokens</from>
-      <to>Insert/update tokens</to>
+      <from>Get Last Processed Timestamp</from>
+      <to>Execute SQL script</to>
       <enabled>Y</enabled>
     </hop>
   </order>
   <step>
-    <name>Get Last Timestamp</name>
+    <name>Execute SQL script</name>
+    <type>ExecSQL</type>
+    <description />
+    <distribute>Y</distribute>
+    <custom_distribution />
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name />
+    </partitioning>
+    <connection>analytics_redshift_connection</connection>
+    <execute_each_row>Y</execute_each_row>
+    <single_statement>N</single_statement>
+    <replace_variables>Y</replace_variables>
+    <quoteString>N</quoteString>
+    <sql>set search_path=${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX};
+
+update dim_tokens
+set token_id = pt.token_id,
+name = pt.name,
+symbol = pt.symbol,
+conversion_factor = pt.conversion_factor,
+number_of_decimal = pt.number_of_decimal
+from (select * from ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.tokens where updated_at >= '?')as pt
+join dim_tokens as t
+on t.token_id = pt.token_id;
+
+INSERT INTO dim_tokens (token_id, name, symbol, conversion_factor, number_of_decimal)
+(select token_id, name, symbol, conversion_factor, number_of_decimal from ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.tokens where  token_id > 
+(select coalesce(max(token_id), 0) from dim_tokens)
+);
+
+UPDATE pentaho_processing_info SET value = (select date_part(epoch, (select max(updated_at) from ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.tokens))) WHERE property = 'last_processed_token_timestamp';</sql>
+    <set_params>N</set_params>
+    <insert_field />
+    <update_field />
+    <delete_field />
+    <read_field />
+    <arguments>
+      <argument>
+        <name>last_processed_timestamp</name>
+      </argument>
+      <argument>
+        <name>last_processed_timestamp</name>
+      </argument>
+      <argument>
+        <name>last_processed_timestamp</name>
+      </argument>
+    </arguments>
+    <attributes />
+    <cluster_schema />
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>480</xloc>
+      <yloc>160</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>Get Last Processed Timestamp</name>
     <type>TableInput</type>
     <description />
     <distribute>Y</distribute>
@@ -601,8 +584,8 @@
       <schema_name />
     </partitioning>
     <connection>analytics_redshift_connection</connection>
-    <sql>select timestamp 'epoch' + (value * interval '1 second')  from  ${TEMP_PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.temp_pentaho_processing_info_${CHAIN_ID}
-where property='last_updated_token_timestamp'</sql>
+    <sql>select timestamp 'epoch' + value * interval '1 second' as last_processed_timestamp  from  ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.pentaho_processing_info
+where property='last_processed_token_timestamp';</sql>
     <limit>0</limit>
     <lookup />
     <execute_each_row>N</execute_each_row>
@@ -617,108 +600,8 @@ where property='last_updated_token_timestamp'</sql>
       </output>
     </remotesteps>
     <GUI>
-      <xloc>144</xloc>
-      <yloc>336</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>Get Updated Tokens</name>
-    <type>TableInput</type>
-    <description />
-    <distribute>Y</distribute>
-    <custom_distribution />
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name />
-    </partitioning>
-    <connection>analytics_redshift_connection</connection>
-    <sql>select token_id, name, symbol, conversion_factor, number_of_decimal from ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.tokens_${CHAIN_ID}
-where updated_at > ?;
-
-
-
-</sql>
-    <limit />
-    <lookup>Get Last Timestamp</lookup>
-    <execute_each_row>N</execute_each_row>
-    <variables_active>Y</variables_active>
-    <lazy_conversion_active>N</lazy_conversion_active>
-    <attributes />
-    <cluster_schema />
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>368</xloc>
-      <yloc>336</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>Insert/update tokens</name>
-    <type>InsertUpdate</type>
-    <description />
-    <distribute>Y</distribute>
-    <custom_distribution />
-    <copies>10</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name />
-    </partitioning>
-    <connection>analytics_mysql_connection</connection>
-    <commit>100</commit>
-    <update_bypassed>N</update_bypassed>
-    <lookup>
-      <schema />
-      <table>dim_tokens_${CHAIN_ID}</table>
-      <key>
-        <name>token_id</name>
-        <field>token_id</field>
-        <condition>=</condition>
-        <name2 />
-      </key>
-      <value>
-        <name>name</name>
-        <rename>name</rename>
-        <update>Y</update>
-      </value>
-      <value>
-        <name>symbol</name>
-        <rename>symbol</rename>
-        <update>Y</update>
-      </value>
-      <value>
-        <name>conversion_factor</name>
-        <rename>conversion_factor</rename>
-        <update>Y</update>
-      </value>
-      <value>
-        <name>decimal</name>
-        <rename>number_of_decimal</rename>
-        <update>Y</update>
-      </value>
-      <value>
-        <name>token_id</name>
-        <rename>token_id</rename>
-        <update>N</update>
-      </value>
-    </lookup>
-    <attributes />
-    <cluster_schema />
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>768</xloc>
-      <yloc>336</yloc>
+      <xloc>224</xloc>
+      <yloc>160</yloc>
       <draw>Y</draw>
     </GUI>
   </step>

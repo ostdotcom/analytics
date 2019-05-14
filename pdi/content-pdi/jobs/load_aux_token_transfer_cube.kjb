@@ -325,13 +325,13 @@
       <attributes_kjc />
     </entry>
     <entry>
-      <name>Incremental load dim tokens</name>
+      <name>Incremental load aux dim tokens</name>
       <description />
       <type>TRANS</type>
       <attributes />
       <specification_method>filename</specification_method>
       <trans_object_id />
-      <filename>${Internal.Job.Filename.Directory}/../transformations/incremental_load_dim_tokens.ktr</filename>
+      <filename>${Internal.Job.Filename.Directory}/../transformations/incremental_load_aux_dim_tokens.ktr</filename>
       <transname />
       <arg_from_previous>N</arg_from_previous>
       <params_from_previous>N</params_from_previous>
@@ -594,7 +594,7 @@
   <hops>
     <hop>
       <from>Start</from>
-      <to>Incremental load dim tokens</to>
+      <to>Incremental load aux dim tokens</to>
       <from_nr>0</from_nr>
       <to_nr>0</to_nr>
       <enabled>Y</enabled>
@@ -611,7 +611,7 @@
       <unconditional>N</unconditional>
     </hop>
     <hop>
-      <from>Incremental load dim tokens</from>
+      <from>Incremental load aux dim tokens</from>
       <to>incremental_aggregate_aux_transaction_data</to>
       <from_nr>0</from_nr>
       <to_nr>0</to_nr>

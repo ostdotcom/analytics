@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <job>
-  <name>Job Template</name>
-  <description>Job Template</description>
+  <name>Incremental Consistency Check</name>
+  <description>loads all dimensions</description>
   <extended_description />
   <job_version>1</job_version>
   <job_status>0</job_status>
@@ -12,12 +12,17 @@
   <modified_date>2019/03/14 21:27:34.694</modified_date>
   <parameters>
     <parameter>
-      <name>CHAIN_ID</name>
+      <name>CONSISTENCY_LOGS_PATH</name>
       <default_value />
       <description />
     </parameter>
     <parameter>
       <name>ENV_SUFFIX</name>
+      <default_value />
+      <description />
+    </parameter>
+    <parameter>
+      <name>START_FROM_BEGIN_DATE</name>
       <default_value />
       <description />
     </parameter>
@@ -32,7 +37,7 @@
   <job-log-table>
     <connection />
     <schema />
-    <table>${KETTLE_JOB_LOG_TABLE}_${CHAIN_ID}</table>
+    <table>${KETTLE_JOB_LOG_TABLE}</table>
     <size_limit_lines />
     <interval />
     <timeout_days>${JOB_LOGS_RECORD_TIMEOUT}</timeout_days>
@@ -320,18 +325,18 @@
       <parallel>N</parallel>
       <draw>Y</draw>
       <nr>0</nr>
-      <xloc>48</xloc>
-      <yloc>208</yloc>
+      <xloc>32</xloc>
+      <yloc>80</yloc>
       <attributes_kjc />
     </entry>
     <entry>
-      <name>transformation_template </name>
+      <name>all_aux_chains_token_transfers_facts_consistency</name>
       <description />
       <type>TRANS</type>
       <attributes />
       <specification_method>filename</specification_method>
       <trans_object_id />
-      <filename>${Internal.Job.Filename.Directory}/../transformations/transformation_template.ktr</filename>
+      <filename>${Internal.Job.Filename.Directory}/../../transformations/consistency_lookup/all_aux_chains_token_transfers_facts_consistency.ktr</filename>
       <transname />
       <arg_from_previous>N</arg_from_previous>
       <params_from_previous>N</params_from_previous>
@@ -358,20 +363,146 @@
       <parallel>N</parallel>
       <draw>Y</draw>
       <nr>0</nr>
-      <xloc>240</xloc>
-      <yloc>224</yloc>
+      <xloc>720</xloc>
+      <yloc>64</yloc>
+      <attributes_kjc />
+    </entry>
+    <entry>
+      <name>set_verification_start_date_variable</name>
+      <description />
+      <type>TRANS</type>
+      <attributes />
+      <specification_method>filename</specification_method>
+      <trans_object_id />
+      <filename>${Internal.Job.Filename.Directory}/../../transformations/consistency_lookup/set_verification_start_date_variable.ktr</filename>
+      <transname />
+      <arg_from_previous>N</arg_from_previous>
+      <params_from_previous>N</params_from_previous>
+      <exec_per_row>N</exec_per_row>
+      <clear_rows>N</clear_rows>
+      <clear_files>N</clear_files>
+      <set_logfile>N</set_logfile>
+      <logfile />
+      <logext />
+      <add_date>N</add_date>
+      <add_time>N</add_time>
+      <loglevel>Basic</loglevel>
+      <cluster>N</cluster>
+      <slave_server_name />
+      <set_append_logfile>N</set_append_logfile>
+      <wait_until_finished>Y</wait_until_finished>
+      <follow_abort_remote>N</follow_abort_remote>
+      <create_parent_folder>N</create_parent_folder>
+      <logging_remote_work>N</logging_remote_work>
+      <run_configuration />
+      <parameters>
+        <pass_all_parameters>Y</pass_all_parameters>
+      </parameters>
+      <parallel>N</parallel>
+      <draw>Y</draw>
+      <nr>0</nr>
+      <xloc>432</xloc>
+      <yloc>64</yloc>
+      <attributes_kjc />
+    </entry>
+    <entry>
+      <name>Delete files</name>
+      <description />
+      <type>DELETE_FILES</type>
+      <attributes />
+      <arg_from_previous>N</arg_from_previous>
+      <include_subfolders>N</include_subfolders>
+      <fields>
+        <field>
+          <name>${CONSISTENCY_LOGS_PATH}/all_incremental_data_difference.log</name>
+          <filemask />
+        </field>
+        <field>
+          <name>${CONSISTENCY_LOGS_PATH}/incremental_data_difference.log</name>
+          <filemask />
+        </field>
+      </fields>
+      <parallel>N</parallel>
+      <draw>Y</draw>
+      <nr>0</nr>
+      <xloc>224</xloc>
+      <yloc>64</yloc>
+      <attributes_kjc />
+    </entry>
+    <entry>
+      <name>workflow_facts_consistency</name>
+      <description />
+      <type>JOB</type>
+      <attributes />
+      <specification_method>filename</specification_method>
+      <job_object_id />
+      <filename>${Internal.Job.Filename.Directory}/workflow_facts_consistency.kjb</filename>
+      <jobname />
+      <directory />
+      <arg_from_previous>N</arg_from_previous>
+      <params_from_previous>N</params_from_previous>
+      <exec_per_row>N</exec_per_row>
+      <set_logfile>N</set_logfile>
+      <logfile />
+      <logext />
+      <add_date>N</add_date>
+      <add_time>N</add_time>
+      <loglevel>Nothing</loglevel>
+      <slave_server_name />
+      <wait_until_finished>Y</wait_until_finished>
+      <follow_abort_remote>N</follow_abort_remote>
+      <expand_remote_job>N</expand_remote_job>
+      <create_parent_folder>N</create_parent_folder>
+      <pass_export>N</pass_export>
+      <run_configuration />
+      <parameters>
+        <pass_all_parameters>Y</pass_all_parameters>
+      </parameters>
+      <set_append_logfile>N</set_append_logfile>
+      <parallel>N</parallel>
+      <draw>Y</draw>
+      <nr>0</nr>
+      <xloc>976</xloc>
+      <yloc>64</yloc>
       <attributes_kjc />
     </entry>
   </entries>
   <hops>
     <hop>
+      <from>set_verification_start_date_variable</from>
+      <to>all_aux_chains_token_transfers_facts_consistency</to>
+      <from_nr>0</from_nr>
+      <to_nr>0</to_nr>
+      <enabled>Y</enabled>
+      <evaluation>Y</evaluation>
+      <unconditional>N</unconditional>
+    </hop>
+    <hop>
       <from>Start</from>
-      <to>transformation_template </to>
+      <to>Delete files</to>
       <from_nr>0</from_nr>
       <to_nr>0</to_nr>
       <enabled>Y</enabled>
       <evaluation>Y</evaluation>
       <unconditional>Y</unconditional>
+    </hop>
+    <hop>
+      <from>Delete files</from>
+      <to>set_verification_start_date_variable</to>
+      <from_nr>0</from_nr>
+      <to_nr>0</to_nr>
+      <enabled>Y</enabled>
+      <evaluation>Y</evaluation>
+      <unconditional>N</unconditional>
+    </hop>
+    <hop>
+      <from>all_aux_chains_token_transfers_facts_consistency</from>
+      <to>workflow_facts_consistency</to>
+      <from_nr>0</from_nr>
+      <to_nr>0</to_nr>
+      <enabled>Y</enabled>
+      <evaluation>Y</evaluation>
+      <unconditional>N</unconditional>
     </hop>
   </hops>
   <notepads>

@@ -93,7 +93,7 @@ function send_email(){
 # Extract data
 echo "******************************** DATA Extraction Started [$(date '+%Y-%m-%d %H:%M:%S')] ********************************"
 SECONDS=0;
-timeout ${SCRIPT_TIMEOUT} /bin/node executables/extract_data.js --blockScanner true --token true --chainId ${CHAIN_ID} >> log/extract_data_${CHAIN_ID}.log 2>&1
+timeout ${SCRIPT_TIMEOUT} /bin/node executables/extract_data.js --blockScanner true --mysql true --chainId ${CHAIN_ID} >> log/extract_data_${CHAIN_ID}.log 2>&1
 status=$?
 error_handler ${status} "extraction" log/extract_data_${CHAIN_ID}.log
 

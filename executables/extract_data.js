@@ -1,13 +1,9 @@
 const rootPrefix = "..",
-    RedshiftClient = require("node-redshift"),
     program = require("commander"),
-    Constant = require(rootPrefix + "/configs/constants"),
-    dataProcessingInfoGC = require(rootPrefix + "/lib/globalConstants/redshift/dataProcessingInfo"),
-    cronConstants = require(rootPrefix + "/lib/globalConstants/cronConstants"),
-    BlockScannerService = require(rootPrefix + "/services/block_scanner_service.js"),
-    TokenService = require(rootPrefix + "/services/token"),
-    BlockScanner = require(rootPrefix + "/lib/blockScanner"),
-    ProcessLockerKlass = require(rootPrefix + '/lib/processLocker'),
+    MysqlService = require(rootPrefix + "/services/mysql_service"),
+    GetBlockScannerData = require(rootPrefix + "/services/get_block_scanner_data_service"),
+    blockScannerGC = require(rootPrefix + "/lib/globalConstants/blockScanner"),
+    ExtractBase = require(rootPrefix + "/executables/extract_base"),
     logger = require(rootPrefix + "/helpers/custom_console_logger");
 
 
@@ -18,160 +14,80 @@ program
     .option('--blockScanner <blockScanner>', 'Extract data from block scanner')
     .option('--startBlock <startBlock>', 'start block number')
     .option('--endBlock <endBlock>', 'end block number')
-    .option('--token <token>', 'Extract token data')
+    .option('--mysql <mysql>', 'Extract token data')
+    .option('--tables <tables>', 'Extract tables data')
     .parse(process.argv);
 
 /**
  *
  * Class for data extraction
  * @class
- *
+ * table name in cron should be comma separated value without space
+ * node executables/extract_data.js --mysql true --tables Token,ChainAddresses,TokenAddresses,StakerWhitelistedAddresses,Workflows,WorkflowSteps     --chainId 202
  */
-class ExtractData {
+class ExtractData extends ExtractBase {
 
-    constructor() {
+    constructor(params) {
+        super(params);
         const oThis = this;
+        oThis.chainType = blockScannerGC.auxChainType;
         oThis.chainId = program.chainId;
-
-        oThis.blockScanner = new BlockScanner(oThis.chainId);
-        oThis.redshiftClient = new RedshiftClient(Constant.PRESTAGING_REDSHIFT_CLIENT);
-        oThis.ProcessLocker = new ProcessLockerKlass();
-
+        oThis.startBlock = program.startBlock;
+        oThis.endBlock = program.endBlock;
+        oThis.mysqlParam = program.mysql;
+        oThis.blockScannerParam = program.blockScanner;
+        oThis.tables = program.tables ? program.tables.split(",") : ["Token"];
     }
 
-
-    handle() {
-        cronConstants.setSigIntSignal();
+    perform() {
+        const oThis = this;
+        return super.perform('cron_extract_data_c_' + parseInt(oThis.chainId) + "_" + parseInt(oThis.startBlock) + "_" +
+            parseInt(oThis.endBlock) + "_");
     }
 
-    async perform() {
-        let oThis = this;
-        process.on('SIGINT', oThis.handle);
-        process.on('SIGTERM', oThis.handle);
-        oThis.ProcessLocker.canStartProcess({process_title: 'cron_extract_data_c_' + parseInt(program.chainId) + "_" + parseInt(program.startBlock) + "_" +
-                parseInt(program.endBlock) + "_" + Constant.ENVIRONMENT + "_" + Constant.SUB_ENVIRONMENT + "_" + Constant.ENV_SUFFIX });
-
-
-        try {
-
-            if (program.token !== 'false' && program.token != undefined) {
-                await oThis.extractTokens();
-            }
-
-            if (program.blockScanner !== 'false' && program.blockScanner != undefined){
-                await oThis.extractBlockScannerData(await oThis.getStartBlock(), await oThis.getEndBlock());
-            }
-        } catch (e) {
-            logger.error("Terminating error due to exception");
-            return setTimeout(function(){ process.exit(1);}, 1000);
+    async start() {
+        const oThis = this;
+        if (oThis.mysqlParam !== 'false' && oThis.mysqlParam != undefined) {
+            await oThis.extractMysqlData();
         }
-        logger.log("ending the process with success");
-        return setTimeout(function(){ process.exit(0);}, 1000);
 
+        if (oThis.blockScannerParam !== 'false' && oThis.blockScannerParam != undefined) {
 
+            const getBlockScannerData = new GetBlockScannerData({
+                chainId: oThis.chainId,
+                chainType: oThis.chainType
+            });
+            await getBlockScannerData.perform(oThis.startBlock, oThis.endBlock);
+        }
     }
 
-
-    async extractTokens() {
+    async extractMysqlData() {
         const oThis = this;
         let startTime = Date.now();
-        logger.log("processing started at", startTime);
+        let promiseArray = [];
+        let mysqlService;
 
 
-        let tokenService = new TokenService({chainId: oThis.chainId});
-        await tokenService.processTokens();
+        for (let table of oThis.tables) {
+            mysqlService = new MysqlService({chainId: oThis.chainId, model: table, chainType: oThis.chainType});
+            promiseArray.push(mysqlService.process());
+        }
 
-        let endTime = Date.now();
-        logger.log("processing finished at", endTime);
-
-        logger.log("Total time to process in milliseconds", (endTime - startTime));
-    }
-
-    /**
-     * Method to call block-scanner service by passing start block, end block and chainId
-     *
-     * @param {number} startBlock - start block
-     *
-     * * @param {number} endBlock - end block
-     *
-     */
-    async extractBlockScannerData(startBlock, endBlock) {
-
-        const oThis = this;
-        let isStartBlockGiven;
-        let startTime = Date.now();
-        logger.step("block processing started start block =>" + startBlock + ". end block => " + endBlock);
-
-        logger.step("processing started at", startTime);
-
-        isStartBlockGiven = !!program.startBlock;
-
-        let blockScannerService = new BlockScannerService(oThis.chainId, startBlock, endBlock, isStartBlockGiven);
-
-        let lastProcessedBlock = await blockScannerService.process();
-
-        let endTime = Date.now();
-        logger.win("processing finished at", endTime);
-
-        logger.win("Total time to process in milliseconds", (endTime - startTime));
-    }
-
-
-    /**
-     * get start block based on whether it is passed or not from command
-     *
-     * * @return {number} start block to process
-     *
-     */
-    async getStartBlock() {
-        const oThis = this;
-        return program.startBlock ? parseInt(program.startBlock) : await oThis.getStartBlockFromRedShift();
-    }
-
-    /**
-     * get start block from redshift
-     *
-     * * @return {number} start block from redshift
-     *
-     */
-    getStartBlockFromRedShift() {
-        const oThis = this;
-        return oThis.redshiftClient.parameterizedQuery("select * from " + dataProcessingInfoGC.getTableNameWithSchema + "_" + oThis.chainId + " where property =$1", [dataProcessingInfoGC.lastProcessedBlockProperty]).then((res) => {
-            return parseInt(res.rows[0].value) + 1;
+        return Promise.all(promiseArray).then((res) => {
+            let endTime = Date.now();
+            logger.log("processing finished at", endTime);
+            logger.log("Total time to process in milliseconds", (endTime - startTime));
+            return Promise.resolve({});
+        }).catch((e) => {
+            return Promise.reject(e);
         });
-    }
 
-
-    /**
-     * get last finalized block if end block is not given. else passed end block is returned
-     *
-     * * @return {number} end block
-     *
-     */
-    async getEndBlock() {
-        const oThis = this;
-        let lastFinalizedBlock = await oThis.getEndBlockFromBlockScanner();
-        return program.endBlock && parseInt(program.endBlock) <= lastFinalizedBlock ? parseInt(program.endBlock) : parseInt(lastFinalizedBlock);
-    }
-
-    /**
-     * get last finalized block
-     *
-     * * @return {number} end block
-     *
-     */
-    async getEndBlockFromBlockScanner() {
-
-
-        const oThis = this,
-            finalizedBlockResp = await oThis.blockScanner.getChainCronData();
-
-        return finalizedBlockResp[oThis.chainId]["lastFinalizedBlock"];
     }
 
 
 }
 
-
 const extractData = new ExtractData();
 extractData.perform();
+
+
