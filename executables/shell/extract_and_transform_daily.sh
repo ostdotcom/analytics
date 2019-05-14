@@ -226,11 +226,10 @@ fi
 
 # Restart Pentaho BI Server
 if [[ ! -z $RESTART_ONLY ]]; then
-    ls $BI_SERVER_HOME
+    ls $BI_SERVER_HOME > /dev/null 2>&1
     if [[ $? -eq 0 ]]; then
       cd $BI_SERVER_HOME;
         echo "Stoping Pentaho BI Server..."
-        sh stop-pentaho.sh
         sudo systemctl stop ostAnalytics
         if [[ $? != 0 ]]; then
             echo "Error while stoping Pentaho BI Server"
