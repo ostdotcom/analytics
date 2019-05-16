@@ -202,6 +202,20 @@ function pre_extract_operation(){
 
 }
 
+
+
+function process_chains(){
+    pre_extract_operation
+    for chain_id in $1; do
+      echo "$chain_id"
+
+      extract_data $chain_id
+
+      transform_data $chain_id
+
+    done
+}
+
 while [[ $# -gt 0 ]]
 do
     key="$1";
@@ -220,15 +234,3 @@ do
     esac
 done
 
-
-function process_chains(){
-    pre_extract_operation
-    for chain_id in $1; do
-      echo "$chain_id"
-
-      extract_data $chain_id
-
-      transform_data $chain_id
-
-    done
-}
