@@ -2,6 +2,7 @@ export ENVIRONMENT='development'
 export SUB_ENVIRONMENT='main'
 export ENV_SUFFIX='_d35'
 export SAAS_MYSQL_DATABASE_ENVIRONMENT='staging'
+export ORIGIN_CHAIN_ID='3'
 
 export KIT_MYSQL_CONNECTION_POOL_SIZE='3'
 export KIT_SAAS_SUBENV_MYSQL_HOST='127.0.0.1'

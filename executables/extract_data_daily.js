@@ -1,4 +1,5 @@
 const rootPrefix = "..",
+    Constant = require(rootPrefix + "/configs/constants"),
     program = require("commander"),
     GetBlockScannerData = require(rootPrefix + "/services/get_block_scanner_data_service"),
     blockScannerGC = require(rootPrefix + "/lib/globalConstants/blockScanner"),
@@ -15,7 +16,6 @@ const rootPrefix = "..",
 // commander
 program
     .version('0.1.0')
-    .option('--originChainId <originChainId>', 'Chain id, mandatory param')
     .option('--blockScanner <blockScanner>', 'Extract data from block scanner')
     .option('--startBlock <startBlock>', 'start block number')
     .option('--endBlock <endBlock>', 'end block number')
@@ -28,7 +28,7 @@ program
  * Class for data extraction
  * @class
  * table name in cron should be comma separated value without space
- * node executables/extract_data_daily.js --mysql true --tables Token,ChainAddresses,TokenAddresses,StakerWhitelistedAddresses,Workflows,WorkflowSteps  --originChainId 3
+ * node executables/extract_data_daily.js --mysql true --tables Token,ChainAddresses,TokenAddresses,StakerWhitelistedAddresses,Workflows,WorkflowSteps
  */
 class ExtractDataDaily extends ExtractBase {
 
@@ -36,7 +36,7 @@ class ExtractDataDaily extends ExtractBase {
         super();
         const oThis = this;
         oThis.chainType = blockScannerGC.originChainType;
-        oThis.chainId = program.originChainId;
+        oThis.chainId =  Constant.ORIGIN_CHAIN_ID;
         oThis.startBlock = program.startBlock;
         oThis.endBlock = program.endBlock;
         oThis.mysqlParam = program.mysql;
