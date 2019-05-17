@@ -1,7 +1,7 @@
 <!-- DB_SCHEMA_PREFIX=main_s6 -->
 <!-- AUX_CHAIN_1=205 -->
 
-<Schema name="mysql_{{DB_SCHEMA_PREFIX}}">
+<Schema name="mysql_{{DB_SCHEMA_PREFIX}}_{{AUX_CHAIN_1}}">
 
   <Dimension type="TimeDimension" visible="true" highCardinality="false" name="Dates">
     <Hierarchy name="Date" visible="true" hasAll="true" primaryKey="date_sk">
