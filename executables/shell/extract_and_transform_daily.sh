@@ -42,12 +42,12 @@ fi
 echo "EXTRACT_ONLY: ${EXTRACT_ONLY}"
 echo "TRANSFORM_ONLY: ${TRANSFORM_ONLY}"
 echo "VERIFY_ONLY: ${VERIFY_ONLY}"
+echo "RESTART_ONLY: ${RESTART_ONLY}"
 
 # ENV variables
 echo "ENVIRONMENT: ${ENVIRONMENT}"
 echo "SUB_ENVIRONMENT: ${SUB_ENVIRONMENT}"
 echo "ENV_SUFFIX: ${ENV_SUFFIX}"
-echo "ORIGIN_CHAIN_ID: ${ORIGIN_CHAIN_ID}"
 
 LOCKFILE="/tmp/`basename $0`"
 LOCKFD=200
@@ -163,7 +163,7 @@ if [[ ! -z $EXTRACT_ONLY ]]; then
     echo "******************************** DATA Extraction Started [$(date '+%Y-%m-%d %H:%M:%S')] ********************************"
     SECONDS=0;
     log_file=log/extract_data_daily.log
-    timeout --signal=${TIMEOUT_SIGNAL} ${TIMEOUT_DURATION} /bin/node executables/extract_data_daily.js --originChainId $ORIGIN_CHAIN_ID --mysql true --blockScanner true >> $log_file 2>&1 &
+    timeout --signal=${TIMEOUT_SIGNAL} ${TIMEOUT_DURATION} /bin/node executables/extract_data_daily.js --mysql true --blockScanner true >> $log_file 2>&1 &
     PID=$!
     check_process_status $PID "extract_data_daily" $log_file
 
