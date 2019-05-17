@@ -29,9 +29,9 @@ function error_handler() {
     elif [[ $exit_status != 0 ]]; then
         subject="Error in data ${job_type} for chain ${CHAIN_ID}"
     fi
-    echo "Subject for error mail: ${subject}"
 
     if [[ ! -z ${subject} ]]; then
+        echo "Subject for error mail: ${subject}"
         send_email "${subject}" "${log_file_path}"
         echo "******************************** DATA ${job_type} Error [$(date '+%Y-%m-%d %H:%M:%S')] ********************************"
         exit 1
@@ -224,13 +224,13 @@ while [[ $# -gt 0 ]]
 do
     key="$1";
 
-    usage_str="Usage: ./extract_and_transform.sh --chain-ids <Space Separated Numbers> --start-block-no <Number>";
+    usage_str="Usage: ./extract_and_transform.sh --chain-ids "<Space Separated Numbers>"";
     # Read parameters
     case $key in
         --chain-ids)
             # export IFS=" "
             echo "$2"
-            process_chains $2
+            process_chains "$2"
             shift # past argument
             shift # past value
             exit 1
