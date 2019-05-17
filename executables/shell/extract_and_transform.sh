@@ -29,7 +29,7 @@ function error_handler() {
     elif [[ $exit_status != 0 ]]; then
         subject="Error in data ${job_type} for chain ${CHAIN_ID}"
     fi
-    echo ${subject}
+    echo "Subject for error mail: ${subject}"
 
     if [[ ! -z ${subject} ]]; then
         send_email "${subject}" "${log_file_path}"
@@ -84,9 +84,10 @@ function check_process_status(){
 
 function transform_data(){
 
-    echo "******************************** DATA Transformation Started [$(date '+%Y-%m-%d %H:%M:%S')] ********************************"
+
     SECONDS=0;
     CHAIN_ID=$1
+    echo "******************************** DATA Transformation Started for chain ${CHAIN_ID}  [$(date '+%Y-%m-%d %H:%M:%S')] ********************************"
     # Start transformation
     task=load_aux_token_transfer_cube
     echo "Started data transformation for task: ${task} [$(date '+%Y-%m-%d %H:%M:%S')]";
@@ -101,7 +102,7 @@ function transform_data(){
     duration=$SECONDS;
     echo "Total time: $(($duration / 60)) minutes and $(($duration % 60)) seconds."
 
-    echo "******************************** DATA Transformation Ended [$(date '+%Y-%m-%d %H:%M:%S')] ********************************"
+    echo "******************************** DATA Transformation Ended for chain ${CHAIN_ID} [$(date '+%Y-%m-%d %H:%M:%S')] ********************************"
     echo ""
 
 }
@@ -146,7 +147,7 @@ function extract_data(){
 
     verify_env_vars $CHAIN_ID
 
-    echo "******************************** DATA Extraction Started [$(date '+%Y-%m-%d %H:%M:%S')] ********************************"
+    echo "******************************** DATA Extraction Started for ChainId ${CHAIN_ID} [$(date '+%Y-%m-%d %H:%M:%S')] ********************************"
     SECONDS=0;
     timeout --signal=${TIMEOUT_SIGNAL} ${TIMEOUT_DURATION} /bin/node executables/extract_data.js --blockScanner true --mysql true --chainId ${CHAIN_ID} >> log/extract_data_${CHAIN_ID}.log 2>&1
     status=$?
@@ -165,6 +166,9 @@ function extract_data(){
 
 
 function pre_extract_operation(){
+
+    echo "************************* Pre extract operation started **********************************"
+
     LOCKFILE="/tmp/`basename $0`"
     LOCKFD=200
 
@@ -199,7 +203,7 @@ function pre_extract_operation(){
     SCRIPT_TIMEOUT=300
     NO_LOGFILE_LINES=100
 
-
+    echo "************************* Pre extract operation stopped **********************************"
 }
 
 
