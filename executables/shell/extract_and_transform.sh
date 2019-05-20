@@ -63,18 +63,6 @@ function check_process_status(){
     wait $pid
     status=$?
 
-	while true; do
-		ps cux | grep ${pid} >> /dev/null
-		prc_running=$?
-		if [[ $prc_running == 0 ]]; then
-			echo "Waiting for task to complete for pid: ${pid}"
-			sleep 1
-		else
-			echo "Wait complete for pid: ${pid}"
-			break
-		fi
-	done
-
 	error_handler $status $job_type $log_file_path
 
 	if [[ $SIGNAL_RECEIVED == true ]]; then
@@ -211,7 +199,6 @@ function pre_extract_operation(){
 function process_chains(){
     pre_extract_operation
     for chain_id in $1; do
-      echo "$chain_id"
 
       extract_data $chain_id
 
@@ -224,12 +211,11 @@ while [[ $# -gt 0 ]]
 do
     key="$1";
 
-    usage_str="Usage: ./extract_and_transform.sh --chain-ids "<Space Separated Numbers>"";
+    usage_str="Usage: ./extract_and_transform.sh --chain-ids \"<Space Separated Numbers>\"";
     # Read parameters
     case $key in
         --chain-ids)
             # export IFS=" "
-            echo "$2"
             process_chains "$2"
             shift # past argument
             shift # past value
