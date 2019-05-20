@@ -976,7 +976,7 @@ UNION ALL
 select coalesce(val, 0) as value,
 'unknown_address_type_count' AS metric_name  
 FROM (select sum(total_transactions) as val from ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflow_facts 
-where from_address_type_sk = 0)
+where from_address_type_sk = 0 and (workflow_kind_sk != 0 or token_sk != 0 ))
 )
 UNION ALL
 (
