@@ -63,18 +63,6 @@ function check_process_status(){
     wait $pid
     status=$?
 
-	while true; do
-		ps cux | grep ${pid} >> /dev/null
-		prc_running=$?
-		if [[ $prc_running == 0 ]]; then
-			echo "Waiting for task to complete for pid: ${pid}"
-			sleep 1
-		else
-			echo "Wait complete for pid: ${pid}"
-			break
-		fi
-	done
-
 	error_handler $status $job_type $log_file_path
 
 	if [[ $SIGNAL_RECEIVED == true ]]; then
