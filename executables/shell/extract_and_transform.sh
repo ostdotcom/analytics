@@ -221,7 +221,6 @@ do
             process_chains "$2"
             shift # past argument
             shift # past value
-            exit 1
             ;;
     esac
 done
