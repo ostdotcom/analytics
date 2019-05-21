@@ -41,8 +41,6 @@ export RDS_DB_PARAMETER_GROUP_NAME='ost-staging'
 export RDS_DB_SUBNET_GROUP_NAME='ost-kit-saas-all'
 export RDS_SOURCE_DB_INSTANCE_IDENTIFIER='s6-kit-all'
 export RDS_VPC_SECURITY_GROUP_IDS='sg-0e828f41c1c0a1b11 sg-0b76ede7472254bb0' #space separated  values
-
-export TEMPORARY_MDX_DIRECTORY_FILE_PATH="/Users/tejassangani/OST/pentaho/analytics/pdi/temporary_mdx/"
 export LOCAL_DIR_FILE_PATH='/tmp/analytics_prestaging_data'
 export AUX_BLOCK_SCANNER_CONFIG_FILE_PATH=''
 export ORIGIN_BLOCK_SCANNER_CONFIG_FILE_PATH=''
