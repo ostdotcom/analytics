@@ -839,11 +839,12 @@ FROM (
 
 SELECT count(*) as value,
 'workflow_steps_transactions_count' as metric_name
-FROM ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflow_steps
-where transaction_hash != '' 
-and 
-created_at &lt; '${END_DATE}'
-and created_at >= '${VERIFICATION_START_DATE}'
+FROM ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflow_steps as ws
+inner join ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflows as w on w.id = ws.workflow_id 
+where ws.transaction_hash != '' 
+and ws.created_at &lt; '${END_DATE}'
+and ws.created_at >= '${VERIFICATION_START_DATE}'
+and w.kind != 4
 )
 UNION ALL
 (
@@ -934,7 +935,8 @@ SELECT COALESCE(SUM(total_transactions),0) AS value,
 'workflow_steps_transactions_count' AS metric_name 
 FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflow_facts 
 where workflow_kind_sk not in (SELECT workflow_kind_sk FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.dim_workflow_kinds 
-							where kind in ( 500 , 0)) and  workflow_date_sk &lt; ${END_DATE_SK} and  workflow_date_sk >= ${VERIFICATION_START_DATE_SK}
+							where kind in ( 500 , 0, 4)) and  workflow_date_sk &lt; ${END_DATE_SK} and  workflow_date_sk >= ${VERIFICATION_START_DATE_SK}
+
 
 
 )
