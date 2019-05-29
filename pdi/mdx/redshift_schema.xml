@@ -90,7 +90,7 @@
     </Dimension>
 
 
-    <Measure name="Total Tx Fee" column="total_tx_fees" datatype="Numeric" formatString="#,##0" aggregator="sum" visible="true">
+    <Measure name="Total Tx Fee (Wei)" column="total_tx_fees" datatype="Numeric" formatString="#,##0" aggregator="sum" visible="true">
     </Measure>
 
     <Measure name="Total Gas Price" column="total_gas_price" datatype="Numeric" formatString="#,##0" aggregator="sum" visible="false">
@@ -102,10 +102,13 @@
     <Measure name="Total Transactions" column="total_transactions" datatype="Numeric" formatString="#,##0" aggregator="sum" visible="true">
     </Measure>
 
-    <Measure name="Total Workflow Count" column="total_workflow_count" datatype="Numeric" formatString="#,##0" aggregator="sum" visible="true">
-    </Measure>
+    <!--<Measure name="Total Workflow Count" column="total_workflow_count" datatype="Numeric" formatString="#,##0" aggregator="sum" visible="true">-->
+    <!--</Measure>-->
 
-    <CalculatedMember name="Avg Gas Price" formatString="#0.0#" description="Average Gas Price" formula="[Measures].[Total Gas Price]/[Measures].[Total Transactions]" dimension="Measures" visible="true">
+    <CalculatedMember name="Avg Gas Price (Gwei)" formatString="#0.0#" description="Average Gas Price" formula="[Measures].[Total Gas Price]/([Measures].[Total Transactions]*1000000000)" dimension="Measures" visible="true">
+    </CalculatedMember>
+
+    <CalculatedMember name="Total Tx Fee" formatString="#0.0#" description="readable tx fee" formula="[Measures].[Total Tx Fee(Wei)]/1000000000000000000" dimension="Measures" visible="true">
     </CalculatedMember>
 
   </Cube>

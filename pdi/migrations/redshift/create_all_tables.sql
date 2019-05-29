@@ -209,6 +209,15 @@ VALUES
   'PARTNER COMPANY'
   );
 
+INSERT INTO dim_address_types
+(
+  address_type
+)
+VALUES
+  (
+  'ON BEHAlF OF PARTNER COMPANY'
+  );
+
 
 DROP TABLE IF EXISTS workflow_addresses;
 CREATE TABLE workflow_addresses
