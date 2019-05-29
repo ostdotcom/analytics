@@ -57,16 +57,16 @@
     <Table name="workflow_facts" schema="ost_pentaho_{DB_SCHEMA_PREFIX}">
     </Table>
 
-    <DimensionUsage source="Dates" name="Dates" description="Transaction Mined at" visible="true" foreignKey="tx_date_sk" highCardinality="false">
+    <DimensionUsage source="Dates" name="Dates" caption="Transaction Date" description="Transaction Mined at" visible="true" foreignKey="tx_date_sk" highCardinality="false">
     </DimensionUsage>
 
-    <DimensionUsage source="WorkflowKind" name="Workflow Kind" visible="true" foreignKey="workflow_kind_sk" highCardinality="false">
+    <DimensionUsage source="WorkflowKind" name="Workflow Kind" caption="Workflow Kind" visible="true" foreignKey="workflow_kind_sk" highCardinality="false">
     </DimensionUsage>
 
     <DimensionUsage source="Tokens" name="Tokens" visible="true" foreignKey="token_sk" highCardinality="false">
     </DimensionUsage>
 
-    <DimensionUsage source="AddressType" name="Address Type" visible="true" description="From Address type" foreignKey="from_address_type_sk" highCardinality="false">
+    <DimensionUsage source="AddressType" name="Address Type" caption="Address Type" visible="true" description="From Address type" foreignKey="from_address_type_sk" highCardinality="false">
     </DimensionUsage>
 
 
