@@ -876,7 +876,14 @@ UNION ALL
 select count(distinct(address)) as value,
 'pc_addresses_count' as metric_name
 FROM ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.token_addresses  where 
- kind not in (2,4)
+ kind in (1)
+)
+UNION ALL
+(
+select count(distinct(address)) as value,
+'on_behalf_of_pc_addresses_count' as metric_name
+FROM ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.token_addresses  where 
+ kind not in (2,4,1)
 and kind &lt;=10 
 )
 UNION ALL
@@ -972,6 +979,13 @@ select count(*) as value,
 'pc_addresses_count' AS metric_name 
 FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflow_addresses 
 where address_type_sk = (select address_type_sk from ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.dim_address_types where address_type = 'PARTNER COMPANY')
+)
+UNION ALL
+(
+select count(*) as value, 
+'on_behalf_of_pc_addresses_count' AS metric_name 
+FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflow_addresses 
+where address_type_sk = (select address_type_sk from ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.dim_address_types where address_type = 'ON BEHAlF OF PARTNER COMPANY')
 )
 UNION ALL
 (
