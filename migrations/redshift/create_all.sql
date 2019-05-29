@@ -326,3 +326,48 @@ CREATE TABLE rds_instance_logs
 )DISTKEY(id) SORTKEY(aws_status);
 
 COMMIT;
+
+
+DROP TABLE IF EXISTS stake_currencies;
+CREATE TABLE stake_currencies
+(
+  id                        BIGINT NOT NULL,
+  name                      VARCHAR(255) NOT NULL,
+  symbol                    VARCHAR(255) NOT NULL,
+  number_of_decimal         int,
+  contract_address          VARCHAR(255),
+  constants                 VARCHAR(1000) NOT NULL,
+  addresses                 VARCHAR(1000),
+  status                    INT NOT NULL,
+  created_at                timestamp NOT NULL,
+  updated_at                timestamp NOT NULL
+)DISTKEY (id) SORTKEY(updated_at);
+
+DROP TABLE IF EXISTS currency_conversion_rates;
+CREATE TABLE currency_conversion_rates
+(
+  id                        BIGINT NOT NULL,
+  chain_id                  int NOT NULL,
+  stake_currency_id         int,
+  quote_currency            int NOT NULL,
+  conversion_rate           DECIMAL(21,10) NOT NULL,
+  timestamp                 int NOT NULL,
+  transaction_hash          VARCHAR(255),
+  status                    int NOT NULL,
+  created_at                timestamp NOT NULL,
+  updated_at                timestamp NOT NULL
+)DISTKEY (id) SORTKEY(id);
+
+
+ALTER TABLE tokens  ADD COLUMN stake_currency_id BIGINT DEFAULT NULL;
+
+INSERT INTO data_processing_info
+(property,  value)VALUES( 'stake_currencies_last_updated_at', '1970-01-01 00:00:00');
+
+
+INSERT INTO data_processing_info
+(property,  value)VALUES( 'currency_conversion_rates_last_updated_at', '1970-01-01 00:00:00');
+
+
+
+commit;
