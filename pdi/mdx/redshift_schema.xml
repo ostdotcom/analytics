@@ -14,7 +14,9 @@
       </Level>
       <Level name="Week Of Year" visible="true" column="week_of_the_year" type="Numeric" uniqueMembers="false" levelType="TimeWeeks" hideMemberIf="Never">
       </Level>
-      <Level name="Date" visible="true" column="day" type="Numeric" uniqueMembers="false" levelType="TimeDays" hideMemberIf="Never">
+      <Level name="Day" visible="true" column="day" type="Numeric" uniqueMembers="false" levelType="TimeDays" hideMemberIf="Never">
+      </Level>
+      <Level name="Date" visible="true" column="date_str" type="Date" uniqueMembers="false" levelType="TimeDays" hideMemberIf="Never">
       </Level>
     </Hierarchy>
   </Dimension>
@@ -55,7 +57,7 @@
     <Table name="workflow_facts" schema="ost_pentaho_{DB_SCHEMA_PREFIX}">
     </Table>
 
-    <DimensionUsage source="Dates" name="Dates" description="Workflow Created at" visible="true" foreignKey="workflow_date_sk" highCardinality="false">
+    <DimensionUsage source="Dates" name="Dates" description="Transaction Mined at" visible="true" foreignKey="tx_date_sk" highCardinality="false">
     </DimensionUsage>
 
     <DimensionUsage source="WorkflowKind" name="Workflow Kind" visible="true" foreignKey="workflow_kind_sk" highCardinality="false">

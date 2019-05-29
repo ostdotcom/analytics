@@ -565,10 +565,10 @@ where property = 'last_updated_at_all_workflows_transactions');</sql>
 delete from workflow_facts
 where workflow_date_sk >= ?;
 
-insert into workflow_facts(workflow_kind_sk, token_sk, chain_id, chain_type, workflow_date_sk, from_address_type_sk, tx_status, workflow_status,
+insert into workflow_facts(workflow_kind_sk, token_sk, chain_id, chain_type, workflow_date_sk, tx_date_sk, from_address_type_sk, tx_status, workflow_status,
 total_tx_fees, total_gas_price, total_gas_used, total_transactions, total_workflow_count)
 (select
- workflow_kind_sk, token_sk, chain_id, chain_type, workflow_date_sk, from_address_type_sk, tx_status, workflow_status, 
+ workflow_kind_sk, token_sk, chain_id, chain_type, workflow_date_sk, tx_date_sk, from_address_type_sk, tx_status, workflow_status, 
 sum(tx_fees) as total_tx_fees,
 sum(gas_price) as total_gas_price,
 sum(gas_used) as total_gas_used,
@@ -576,7 +576,7 @@ count(1) as total_transactions,
 count(distinct case when workflow_id = 0 then tx_hash else workflow_id::Varchar(20) end) as total_workflow_count
 from all_workflows_transactions
 where workflow_date_sk >= ?
-group by 1,2,3,4,5,6,7,8);
+group by 1,2,3,4,5,6,7,8,9);
 
 update pentaho_processing_info
 set value = (select coalesce(max(last_updated_at), 0) from all_workflows_transactions)

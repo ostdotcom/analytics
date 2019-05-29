@@ -265,6 +265,7 @@ CREATE TABLE workflow_facts
   chain_id              INT NOT NULL,
   chain_type              VARCHAR(20) NOT NULL,
   workflow_date_sk BIGINT NOT NULL,
+  tx_date_sk       BIGINT NOT NULL,
   from_address_type_sk          VARCHAR(20) NOT NULL,
   tx_status          varchar(20)  NOT NULL,
   workflow_status              VARCHAR(20) NOT NULL,
@@ -368,3 +369,5 @@ VALUES
 
 
 commit;
+
+alter table dim_dates add column date_str date not null;
