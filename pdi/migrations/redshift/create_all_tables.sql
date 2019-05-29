@@ -206,7 +206,7 @@ VALUES
     'OST'
   ),
   (
-  'PARTNER COMPANY'
+  'ON BEHAlF OF PARTNER COMPANY'
   );
 
 INSERT INTO dim_address_types
@@ -215,7 +215,7 @@ INSERT INTO dim_address_types
 )
 VALUES
   (
-  'ON BEHAlF OF PARTNER COMPANY'
+  'PARTNER COMPANY'
   );
 
 
