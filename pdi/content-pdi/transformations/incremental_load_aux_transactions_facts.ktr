@@ -545,7 +545,7 @@ on a.rounded_date_timestamp = d.timestamp
 join dim_times as t
 on a.rounded_time_timestamp = t.timestamp
 join dim_tokens_${CHAIN_ID} as tok
-on a.token_id = tok.token_id)
+on a.token_id = tok.token_id
 left join dim_meta_names_${CHAIN_ID} as mn
 on a.meta_name = mn.meta_name
 and a.token_id = mn.token_id
@@ -595,7 +595,7 @@ drop table temp_incremental_token_transfer_facts_details_aux_${CHAIN_ID};
     </remotesteps>
     <GUI>
       <xloc>176</xloc>
-      <yloc>160</yloc>
+      <yloc>144</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
