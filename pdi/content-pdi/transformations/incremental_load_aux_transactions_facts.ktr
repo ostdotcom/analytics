@@ -537,7 +537,7 @@ create table temp_incremental_token_transfer_facts_aux_${CHAIN_ID} as
        total_transactions AS total_transactions,
        total_transfers AS total_transfers,
        total_volume AS total_volume,
-       (total_volume/POWER(10,tok.decimal))::decimal(40,5) AS total_volume_in_eth,
+       cast((total_volume/POWER(10,tok.decimal)) as decimal(40,10)) AS total_volume_in_eth,
        total_gas_used AS total_gas_used
 FROM incremental_aggregated_transfers_details_aux_${CHAIN_ID} as a
 join dim_dates as d
