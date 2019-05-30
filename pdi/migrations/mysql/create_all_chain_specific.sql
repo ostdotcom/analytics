@@ -124,3 +124,5 @@ CREATE INDEX IDX_transformation_logs_${AUX_CHAIN_ID}_2 ON transformation_logs_${
 
 
   ALTER TABLE `token_transfer_facts_aux_${AUX_CHAIN_ID}` ADD INDEX nu_date_token_meta_name (date_sk, token_sk, meta_name_sk);
+
+  ALTER TABLE `token_transfer_facts_aux_${AUX_CHAIN_ID}` ADD column total_volume_in_eth decimal(40,5) NOT NULL DEFAULT 0 AFTER total_volume;

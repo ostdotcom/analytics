@@ -94,7 +94,7 @@
     <Measure name="TotalGasUsed" column="total_gas_used" datatype="Numeric" formatString="#,##0" aggregator="sum" visible="true">
     </Measure>
 
-    <Measure name="TotalVolume" column="total_volume" datatype="Numeric" formatString="#,##0" aggregator="sum" visible="true">
+    <Measure name="TotalVolume" column="total_volume_in_eth" datatype="Numeric" formatString="#0.0#" aggregator="sum" visible="true">
     </Measure>
 
     <CalculatedMember name="Avg Gas/Transaction" formatString="#0.0#" description="Average Gas Used per Transaction" formula="[Measures].[TotalGasUsed]/[Measures].[TotalTransactions]" dimension="Measures" visible="true">

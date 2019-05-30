@@ -2,36 +2,36 @@
 <transformation>
   <info>
     <name>incremental_load_aux_transactions_facts</name>
-    <description/>
-    <extended_description/>
-    <trans_version/>
+    <description />
+    <extended_description />
+    <trans_version />
     <trans_type>Normal</trans_type>
     <trans_status>0</trans_status>
     <directory>/</directory>
     <parameters>
       <parameter>
         <name>CHAIN_ID</name>
-        <default_value/>
-        <description/>
+        <default_value />
+        <description />
       </parameter>
       <parameter>
         <name>ENV_SUFFIX</name>
-        <default_value/>
-        <description/>
+        <default_value />
+        <description />
       </parameter>
       <parameter>
         <name>SUB_ENV</name>
-        <default_value/>
-        <description/>
+        <default_value />
+        <description />
       </parameter>
     </parameters>
     <log>
       <trans-log-table>
-        <connection/>
-        <schema/>
+        <connection />
+        <schema />
         <table>${KETTLE_TRANS_LOG_TABLE}_${CHAIN_ID}</table>
-        <size_limit_lines/>
-        <interval/>
+        <size_limit_lines />
+        <interval />
         <timeout_days>${TRANSFORMATION_LOGS_RECORD_TIMEOUT}</timeout_days>
         <field>
           <id>ID_BATCH</id>
@@ -57,37 +57,37 @@
           <id>LINES_READ</id>
           <enabled>Y</enabled>
           <name>LINES_READ</name>
-          <subject/>
+          <subject />
         </field>
         <field>
           <id>LINES_WRITTEN</id>
           <enabled>Y</enabled>
           <name>LINES_WRITTEN</name>
-          <subject/>
+          <subject />
         </field>
         <field>
           <id>LINES_UPDATED</id>
           <enabled>Y</enabled>
           <name>LINES_UPDATED</name>
-          <subject/>
+          <subject />
         </field>
         <field>
           <id>LINES_INPUT</id>
           <enabled>Y</enabled>
           <name>LINES_INPUT</name>
-          <subject/>
+          <subject />
         </field>
         <field>
           <id>LINES_OUTPUT</id>
           <enabled>Y</enabled>
           <name>LINES_OUTPUT</name>
-          <subject/>
+          <subject />
         </field>
         <field>
           <id>LINES_REJECTED</id>
           <enabled>Y</enabled>
           <name>LINES_REJECTED</name>
-          <subject/>
+          <subject />
         </field>
         <field>
           <id>ERRORS</id>
@@ -141,11 +141,11 @@
         </field>
       </trans-log-table>
       <perf-log-table>
-        <connection/>
-        <schema/>
-        <table/>
-        <interval/>
-        <timeout_days/>
+        <connection />
+        <schema />
+        <table />
+        <interval />
+        <timeout_days />
         <field>
           <id>ID_BATCH</id>
           <enabled>Y</enabled>
@@ -223,10 +223,10 @@
         </field>
       </perf-log-table>
       <channel-log-table>
-        <connection/>
-        <schema/>
-        <table/>
-        <timeout_days/>
+        <connection />
+        <schema />
+        <table />
+        <timeout_days />
         <field>
           <id>ID_BATCH</id>
           <enabled>Y</enabled>
@@ -289,10 +289,10 @@
         </field>
       </channel-log-table>
       <step-log-table>
-        <connection/>
-        <schema/>
-        <table/>
-        <timeout_days/>
+        <connection />
+        <schema />
+        <table />
+        <timeout_days />
         <field>
           <id>ID_BATCH</id>
           <enabled>Y</enabled>
@@ -365,10 +365,10 @@
         </field>
       </step-log-table>
       <metrics-log-table>
-        <connection/>
-        <schema/>
-        <table/>
-        <timeout_days/>
+        <connection />
+        <schema />
+        <table />
+        <timeout_days />
         <field>
           <id>ID_BATCH</id>
           <enabled>Y</enabled>
@@ -417,9 +417,9 @@
       </metrics-log-table>
     </log>
     <maxdate>
-      <connection/>
-      <table/>
-      <field/>
+      <connection />
+      <table />
+      <field />
       <offset>0.0</offset>
       <maxdiff>0.0</maxdiff>
     </maxdate>
@@ -430,7 +430,7 @@
     <feedback_shown>Y</feedback_shown>
     <feedback_size>50000</feedback_size>
     <using_thread_priorities>Y</using_thread_priorities>
-    <shared_objects_file/>
+    <shared_objects_file />
     <capture_step_performance>Y</capture_step_performance>
     <step_performance_capturing_delay>1000</step_performance_capturing_delay>
     <step_performance_capturing_size_limit>100</step_performance_capturing_size_limit>
@@ -453,16 +453,16 @@
   </notepads>
   <connection>
     <name>analytics_mysql_connection</name>
-    <server/>
+    <server />
     <type>MYSQL</type>
     <access>JNDI</access>
     <database>analyticsMysqlConnection_${SUB_ENV}${ENV_SUFFIX}</database>
     <port>1521</port>
-    <username/>
+    <username />
     <password>Encrypted </password>
-    <servername/>
-    <data_tablespace/>
-    <index_tablespace/>
+    <servername />
+    <data_tablespace />
+    <index_tablespace />
     <attributes>
       <attribute>
         <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
@@ -511,13 +511,13 @@
   <step>
     <name>Load Aux Token Transfer Facts</name>
     <type>ExecSQL</type>
-    <description/>
+    <description />
     <distribute>N</distribute>
-    <custom_distribution/>
+    <custom_distribution />
     <copies>1</copies>
     <partitioning>
       <method>none</method>
-      <schema_name/>
+      <schema_name />
     </partitioning>
     <connection>analytics_mysql_connection</connection>
     <execute_each_row>N</execute_each_row>
@@ -537,19 +537,20 @@ create table temp_incremental_token_transfer_facts_aux_${CHAIN_ID} as
        total_transactions AS total_transactions,
        total_transfers AS total_transfers,
        total_volume AS total_volume,
-       total_gas_used AS total_gas_used	
+       (total_volume/POWER(10,tok.decimal))::decimal(40,5) AS total_volume_in_eth,
+       total_gas_used AS total_gas_used
 FROM incremental_aggregated_transfers_details_aux_${CHAIN_ID} as a
-left join dim_dates as d
+join dim_dates as d
 on a.rounded_date_timestamp = d.timestamp
+join dim_times as t
+on a.rounded_time_timestamp = t.timestamp
+join dim_tokens_${CHAIN_ID} as tok
+on a.token_id = tok.token_id)
 left join dim_meta_names_${CHAIN_ID} as mn
 on a.meta_name = mn.meta_name
 and a.token_id = mn.token_id
 left join dim_meta_types as mt
 on a.meta_type = mt.meta_type
-left join dim_times as t
-on a.rounded_time_timestamp = t.timestamp
-left join dim_tokens_${CHAIN_ID} as tok
-on a.token_id = tok.token_id)
 ;
 
 
@@ -570,7 +571,7 @@ OR    (date_sk = (SELECT min_date_sk
 
 
 
-INSERT into token_transfer_facts_aux_${CHAIN_ID}(time_sk, date_sk, token_sk, meta_type_sk, meta_name_sk, status, total_transactions, total_transfers, total_volume, total_gas_used)
+INSERT into token_transfer_facts_aux_${CHAIN_ID}(time_sk, date_sk, token_sk, meta_type_sk, meta_name_sk, status, total_transactions, total_transfers, total_volume, total_volume_in_eth, total_gas_used)
 (select * from temp_incremental_token_transfer_facts_aux_${CHAIN_ID} order by date_sk desc , time_sk desc, token_sk);
 
 
@@ -578,14 +579,14 @@ drop table temp_incremental_token_transfer_facts_aux_${CHAIN_ID};
 drop table temp_incremental_token_transfer_facts_details_aux_${CHAIN_ID};
 </sql>
     <set_params>N</set_params>
-    <insert_field/>
-    <update_field/>
-    <delete_field/>
-    <read_field/>
+    <insert_field />
+    <update_field />
+    <delete_field />
+    <read_field />
     <arguments>
     </arguments>
-    <attributes/>
-    <cluster_schema/>
+    <attributes />
+    <cluster_schema />
     <remotesteps>
       <input>
       </input>
@@ -603,5 +604,5 @@ drop table temp_incremental_token_transfer_facts_details_aux_${CHAIN_ID};
   <slave-step-copy-partition-distribution>
   </slave-step-copy-partition-distribution>
   <slave_transformation>N</slave_transformation>
-  <attributes/>
+  <attributes />
 </transformation>
