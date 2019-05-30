@@ -550,7 +550,7 @@ left join dim_meta_names_${CHAIN_ID} as mn
 on a.meta_name = mn.meta_name
 and a.token_id = mn.token_id
 left join dim_meta_types as mt
-on a.meta_type = mt.meta_type
+on a.meta_type = mt.meta_type)
 ;
 
 
@@ -594,7 +594,7 @@ drop table temp_incremental_token_transfer_facts_details_aux_${CHAIN_ID};
       </output>
     </remotesteps>
     <GUI>
-      <xloc>192</xloc>
+      <xloc>176</xloc>
       <yloc>160</yloc>
       <draw>Y</draw>
     </GUI>
