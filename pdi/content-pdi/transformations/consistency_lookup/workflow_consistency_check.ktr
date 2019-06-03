@@ -985,7 +985,7 @@ UNION ALL
 select count(*) as value, 
 'on_behalf_of_pc_addresses_count' AS metric_name 
 FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflow_addresses 
-where address_type_sk = (select address_type_sk from ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.dim_address_types where address_type = 'ON BEHAlF OF PARTNER COMPANY')
+where address_type_sk = (select address_type_sk from ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.dim_address_types where address_type = 'ON BEHALF OF PARTNER COMPANY')
 )
 UNION ALL
 (

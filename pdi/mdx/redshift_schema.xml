@@ -110,7 +110,7 @@
     <CalculatedMember name="Avg Gas Price (Gwei)" formatString="#0.0#" description="Average Gas Price" formula="[Measures].[Total Gas Price]/([Measures].[Total Transactions]*1000000000)" dimension="Measures" visible="true">
     </CalculatedMember>
 
-    <CalculatedMember name="Total Tx Fee" formatString="#0.0#" description="readable tx fee" formula="[Measures].[Total Tx Fee(Wei)]/1000000000000000000" dimension="Measures" visible="true">
+    <CalculatedMember name="Total Tx Fee" formatString="#0.0#" description="readable tx fee" formula="[Measures].[Total Tx Fee (Wei)]/1000000000000000000" dimension="Measures" visible="true">
     </CalculatedMember>
 
   </Cube>

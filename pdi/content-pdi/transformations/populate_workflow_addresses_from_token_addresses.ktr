@@ -529,7 +529,7 @@ when kind in (1)
 when kind in (2, 4) 
 	then (select address_type_sk from ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.dim_address_types where address_type='OST')
 else 
-	(select address_type_sk from ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.dim_address_types where address_type='ON BEHAlF OF PARTNER COMPANY')
+	(select address_type_sk from ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.dim_address_types where address_type='ON BEHALF OF PARTNER COMPANY')
 end
 from ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.token_addresses 
 where 

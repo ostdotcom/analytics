@@ -206,7 +206,7 @@ VALUES
     'OST'
   ),
   (
-  'ON BEHAlF OF PARTNER COMPANY'
+  'ON BEHALF OF PARTNER COMPANY'
   );
 
 INSERT INTO dim_address_types
