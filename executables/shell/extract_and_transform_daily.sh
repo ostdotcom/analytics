@@ -82,7 +82,7 @@ if [[ ! -z ${ENV_SUFFIX} ]]; then
 else
     EMAIL_SUBJECT_TAG="${EMAIL_SUBJECT_TAG}: ";
 fi
-TIMEOUT_DURATION=1800
+TIMEOUT_DURATION=3600
 NO_LOGFILE_LINES=100
 
 function trap_handler(){
