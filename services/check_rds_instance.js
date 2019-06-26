@@ -114,8 +114,8 @@ class CheckRDSInstance {
      */
     async checkAvailabilityOfRDSInstance(params) {
         const oThis = this;
-        const maxTimeInMinsToWait = 60, // wait for that much time to change status of instance to available before sending error
-            warningTimeInMinsToWait = 30; // wait for that much time to send warning mail
+        const maxTimeInMinsToWait = 180, // wait for that much time to change status of instance to available before sending error
+            warningTimeInMinsToWait = 60; // wait for that much time to send warning mail
         let creationTime = params.creationTime;
         let warnEmailSent = false;
         let timeStep = 0;
