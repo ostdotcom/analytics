@@ -146,7 +146,7 @@ class CheckRDSInstance {
             } else if (!warnEmailSent && (((currentTime - creationTime) / 60) >= warningTimeInMinsToWait)) {
                 logger.warn("CHECK Availability of RDS Instance Warning Timeout Reached");
                 oThis.applicationMailer.perform({
-                    subject: 'Warning: RDSInstanceLogs not available for more than 30 mins',
+                    subject: `Warning: RDSInstanceLogs not available for more than ${warningTimeInMinsToWait} mins`,
                     body: checkAvailabilityResp
                 });
                 warnEmailSent = true;
@@ -155,7 +155,7 @@ class CheckRDSInstance {
                 let r = responseHelper.error({
                     internal_error_identifier: 'msw_chri_1',
                     api_error_identifier: 'api_error_identifier',
-                    debug_options: {error: "CHECK Availability of RDS Instance MAX Timeout Reached"}
+                    debug_options: {error: `Availability of RDS Instance MAX Timeout-${maxTimeInMinsToWait} mins Reached`}
                 });
                 oThis.applicationMailer.perform({
                     subject: 'Error: RDSInstanceLogs not available for long time',
