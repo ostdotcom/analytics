@@ -853,6 +853,7 @@ select count(*) as value,
 FROM ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflows  as w where 
  w.id in (select distinct(workflow_id) from ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflow_steps where transaction_hash != '')
 and status = 2 
+and kind != 4
 and created_at &lt; '${END_DATE}'
 and created_at >= '${VERIFICATION_START_DATE}'
 )
@@ -863,6 +864,7 @@ select count(*) as value,
 FROM ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflows  as w where 
  w.id in (select distinct(workflow_id) from ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflow_steps where transaction_hash != '')
 and status in (3, 4) 
+and kind != 4
 and created_at &lt; '${END_DATE}'
 and created_at >= '${VERIFICATION_START_DATE}'
 )
@@ -899,6 +901,7 @@ FROM ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflows  as 
  w.id in (select distinct(workflow_id) from ${PRESTAGING_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.workflow_steps where transaction_hash != '')
 and created_at &lt; '${END_DATE}'
 and created_at >= '${VERIFICATION_START_DATE}'
+and kind != 4
 )
 
 )
@@ -953,7 +956,7 @@ select COALESCE(count(distinct workflow_id),0) as value,
 'workflow_success_count' AS metric_name 
 FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.all_workflows_transactions where workflow_status  = 'success'
 and workflow_kind_sk not in (SELECT workflow_kind_sk FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.dim_workflow_kinds 
-							where kind in ( 500, 0 )) 
+							where kind in ( 500, 0, 4)) 
 and  workflow_date_sk &lt; ${END_DATE_SK} and  workflow_date_sk >= ${VERIFICATION_START_DATE_SK}
 )
 UNION ALL
@@ -962,7 +965,7 @@ select COALESCE(count(distinct workflow_id),0) as value,
 'workflow_failed_count' AS metric_name 
 FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.all_workflows_transactions where workflow_status  = 'fail'
 and workflow_kind_sk not in (SELECT workflow_kind_sk FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.dim_workflow_kinds 
-							where kind in ( 500 , 0)) 
+							where kind in ( 500 , 0, 4)) 
 and  workflow_date_sk &lt; ${END_DATE_SK} and  workflow_date_sk >= ${VERIFICATION_START_DATE_SK}
 )
 UNION ALL
@@ -1000,7 +1003,7 @@ select COALESCE(count(distinct workflow_id),0) as value,
 'all_workflows_count' AS metric_name  
 FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.all_workflows_transactions  
 where workflow_kind_sk not in (SELECT workflow_kind_sk FROM ${PENTAHO_REDSHIFT_SCHEMA_PREFIX}_${SUB_ENV}${ENV_SUFFIX}.dim_workflow_kinds 
-							where kind in ( 500 , 0)) and  workflow_date_sk &lt; ${END_DATE_SK}  and  workflow_date_sk >= ${VERIFICATION_START_DATE_SK}
+							where kind in ( 500 , 0, 4)) and  workflow_date_sk &lt; ${END_DATE_SK}  and  workflow_date_sk >= ${VERIFICATION_START_DATE_SK}
 )
 
 )
