@@ -197,8 +197,13 @@ function pre_extract_operation(){
 
 
 function process_chains(){
+
     pre_extract_operation
-    for chain_id in $1; do
+
+    # Loop through comma separated chain ids
+    chain_ids=$1
+    IFS=,
+    for chain_id in ${chain_ids}; do
 
       extract_data $chain_id
 
